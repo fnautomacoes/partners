@@ -19,14 +19,6 @@
     "config": {
         "optimize-autoloader": true,
         "audit": {
-            "abandoned": "ignore"
-        },
-        "allow-plugins": {
-            "php-http/discovery": true
-        }
-    },
-    "policy": {
-        "advisories": {
             "ignore": ["PKSA-y2cr-5h3j-g3ys"]
         }
     }
