@@ -34,7 +34,7 @@ services:
       - PHP_MEMORY_LIMIT=256M
       - PHP_UPLOAD_MAX_FILESIZE=10M
       - PHP_POST_MAX_SIZE=10M
-      - DB_HOST=${DB_HOST}
+      - DB_HOST=${DB_HOST:-postgres}
       - DB_PORT=${DB_PORT:-5432}
       - DB_NAME=${DB_NAME:-pacoticket_parceiros}
       - DB_USER=${DB_USER}
