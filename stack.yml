@@ -24,8 +24,8 @@ services:
         - "traefik.http.routers.pacoticket.tls.certresolver=letsencrypt"
         - "traefik.http.services.pacoticket.loadbalancer.server.port=80"
     volumes:
-      - /root/pacoticket-parceiros:/app
-      - /root/pacoticket-parceiros/backend/.docker/nginx.conf:/opt/docker/etc/nginx/vhost.conf
+      - /opt/parcerias/partners:/app
+      - /opt/parcerias/partners/backend/.docker/nginx.conf:/opt/docker/etc/nginx/vhost.conf
     networks:
       - network_swarm_public
     environment:
