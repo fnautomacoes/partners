@@ -1,0 +1,129 @@
+{
+  "spec": "02-spec-partners.md",
+  "feature": "Partner Management CRUD",
+  "created": "2026-06-09",
+  "updated": "2026-06-09",
+  "model": "sonnet",
+  "dispatch_mode": "in_session",
+  "subagent_type": null,
+  "tasks": [
+    {
+      "id": "02.T001",
+      "subject": "Create CommissionService with tier calculation",
+      "description": "Implement CommissionService.php with calculateTier() and getPendingCommission() per FR-010.",
+      "fr_refs": ["FR-010"],
+      "files": ["backend/src/Services/CommissionService.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-09",
+      "completed_at": "2026-06-09",
+      "evidence": "Created CommissionService.php with calculateTier, getPendingCommission, getActiveClientCount, getRecentActivity"
+    },
+    {
+      "id": "02.T002",
+      "subject": "Implement partner list endpoint",
+      "description": "PartnerController::index() per FR-001.",
+      "fr_refs": ["FR-001"],
+      "files": ["backend/src/Controllers/PartnerController.php"],
+      "blocked_by": ["02.T001"],
+      "status": "done",
+      "started_at": "2026-06-09",
+      "completed_at": "2026-06-09",
+      "evidence": "Implemented index() returning partners with tier, activeClients, pendingCommission"
+    },
+    {
+      "id": "02.T003",
+      "subject": "Implement create partner endpoint",
+      "description": "PartnerController::store() per FR-002, FR-003, FR-004.",
+      "fr_refs": ["FR-002", "FR-003", "FR-004"],
+      "files": ["backend/src/Controllers/PartnerController.php"],
+      "blocked_by": ["02.T002"],
+      "status": "done",
+      "started_at": "2026-06-09",
+      "completed_at": "2026-06-09",
+      "evidence": "Implemented store() with atomic User+Partner creation, temp password, email validation"
+    },
+    {
+      "id": "02.T004",
+      "subject": "Implement view partner endpoint",
+      "description": "PartnerController::show() per FR-005.",
+      "fr_refs": ["FR-005"],
+      "files": ["backend/src/Controllers/PartnerController.php"],
+      "blocked_by": ["02.T002"],
+      "status": "done",
+      "started_at": "2026-06-09",
+      "completed_at": "2026-06-09",
+      "evidence": "Implemented show() returning full partner profile with tier"
+    },
+    {
+      "id": "02.T005",
+      "subject": "Implement update partner endpoint",
+      "description": "PartnerController::update() per FR-006, FR-007.",
+      "fr_refs": ["FR-006", "FR-007"],
+      "files": ["backend/src/Controllers/PartnerController.php"],
+      "blocked_by": ["02.T004"],
+      "status": "done",
+      "started_at": "2026-06-09",
+      "completed_at": "2026-06-09",
+      "evidence": "Implemented update() with contact info and permissions update"
+    },
+    {
+      "id": "02.T006",
+      "subject": "Implement soft-delete partner endpoint",
+      "description": "PartnerController::destroy() per FR-008.",
+      "fr_refs": ["FR-008"],
+      "files": ["backend/src/Controllers/PartnerController.php"],
+      "blocked_by": ["02.T004"],
+      "status": "done",
+      "started_at": "2026-06-09",
+      "completed_at": "2026-06-09",
+      "evidence": "Implemented destroy() setting status=INACTIVE"
+    },
+    {
+      "id": "02.T007",
+      "subject": "Block deactivated partners from login",
+      "description": "Modify AuthController::login() per FR-009.",
+      "fr_refs": ["FR-009"],
+      "files": ["backend/src/Controllers/AuthController.php"],
+      "blocked_by": ["02.T006"],
+      "status": "done",
+      "started_at": "2026-06-09",
+      "completed_at": "2026-06-09",
+      "evidence": "Added partnerStatus check in login, returns ACCOUNT_INACTIVE for inactive partners"
+    },
+    {
+      "id": "02.T008",
+      "subject": "Implement partner dashboard endpoint",
+      "description": "PartnerController::dashboard() per FR-011, FR-012.",
+      "fr_refs": ["FR-011", "FR-012"],
+      "files": ["backend/src/Controllers/PartnerController.php"],
+      "blocked_by": ["02.T001"],
+      "status": "done",
+      "started_at": "2026-06-09",
+      "completed_at": "2026-06-09",
+      "evidence": "Implemented dashboard() using JWT partnerId, returns tier, activeClients, pendingCommission, recentActivity"
+    },
+    {
+      "id": "02.T009",
+      "subject": "Register partner routes in index.php",
+      "description": "Add 6 partner routes with middleware.",
+      "fr_refs": [],
+      "files": ["backend/public/index.php"],
+      "blocked_by": ["02.T003", "02.T008"],
+      "status": "done",
+      "started_at": "2026-06-09",
+      "completed_at": "2026-06-09",
+      "evidence": "Added 6 routes: GET/POST /partners, GET /partners/me/dashboard, GET/PUT/DELETE /partners/:id"
+    }
+  ],
+  "verification": {
+    "create_partner_login": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "list_partners_calculated": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "partner_dashboard": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "duplicate_email_409": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "deactivated_no_login": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "partner_no_list_access": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "atomic_creation": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "soft_delete_preserves": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" }
+  }
+}

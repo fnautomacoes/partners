@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: pacoticket-backend
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-28800}
+      - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-604800}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - APP_ENV=${APP_ENV:-development}
+      - APP_URL=${APP_URL:-http://localhost}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_MODE=${SMTP_MODE:-starttls}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-}
+    volumes:
+      - ./backend:/var/www/html
+      - pdf_storage:/data/pdfs
+    depends_on:
+      - redis
+    networks:
+      - pacoticket-network
+
+  frontend:
+    build: ./frontend
+    container_name: pacoticket-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - pacoticket-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: pacoticket-redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - pacoticket-network
+
+volumes:
+  pdf_storage:
+  redis_data:
+
+networks:
+  pacoticket-network:
+    driver: bridge
