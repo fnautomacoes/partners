@@ -1,99 +1,79 @@
 version: '3.8'
 
 services:
-  backend:
-    image: ${REGISTRY:-localhost}/pacoticket-backend:${TAG:-latest}
+  pacoticket:
+    image: webdevops/php-nginx:8.2-alpine
     deploy:
-      replicas: 2
-      update_config:
-        parallelism: 1
-        delay: 10s
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == manager-jedy
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
       restart_policy:
-        condition: on-failure
+        condition: any
         delay: 5s
         max_attempts: 3
+        window: 120s
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/api`)"
-        - "traefik.http.routers.backend.entrypoints=websecure"
-        - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
-        - "traefik.http.services.backend.loadbalancer.server.port=9000"
+        - "traefik.http.routers.pacoticket.rule=Host(`${DOMAIN:-parceiros.pacoticket.com}`)"
+        - "traefik.http.routers.pacoticket.entrypoints=websecure"
+        - "traefik.http.routers.pacoticket.tls.certresolver=letsencrypt"
+        - "traefik.http.services.pacoticket.loadbalancer.server.port=80"
+    volumes:
+      - '/root/pacoticket-parceiros:/app'
+      - '/root/pacoticket-parceiros/backend/.docker/nginx.conf:/etc/nginx/conf.d/default.conf'
+    networks:
+      - network_swarm_public
     environment:
+      - WEB_DOCUMENT_ROOT=/app/frontend
+      - PHP_DISPLAY_ERRORS=0
+      - PHP_MEMORY_LIMIT=256M
+      - PHP_UPLOAD_MAX_FILESIZE=10M
+      - PHP_POST_MAX_SIZE=10M
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT:-5432}
-      - DB_NAME=${DB_NAME}
+      - DB_NAME=${DB_NAME:-pacoticket_parceiros}
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-28800}
       - JWT_REFRESH_EXPIRES_IN=${JWT_REFRESH_EXPIRES_IN:-604800}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - REDIS_URL=redis://redis:6379
       - APP_ENV=production
-      - APP_URL=https://${DOMAIN}
-      - SMTP_HOST=${SMTP_HOST}
+      - APP_URL=https://${DOMAIN:-parceiros.pacoticket.com}
+      - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_MODE=${SMTP_MODE:-starttls}
-      - SMTP_USER=${SMTP_USER}
-      - SMTP_PASS=${SMTP_PASS}
-      - SMTP_FROM=${SMTP_FROM}
-      - GOTENBERG_URL=http://gotenberg:3000
-      - PDF_STORAGE_PATH=/data/pdfs
-      - PACOTICKET_API_URL=${PACOTICKET_API_URL}
-      - PACOTICKET_BEARER_TOKEN=${PACOTICKET_BEARER_TOKEN}
-    volumes:
-      - pdf_storage:/data/pdfs
-    networks:
-      - pacoticket-network
-      - traefik-public
-
-  frontend:
-    image: ${REGISTRY:-localhost}/pacoticket-frontend:${TAG:-latest}
-    deploy:
-      replicas: 2
-      update_config:
-        parallelism: 1
-        delay: 10s
-      restart_policy:
-        condition: on-failure
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
-        - "traefik.http.routers.frontend.entrypoints=websecure"
-        - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-        - "traefik.http.services.frontend.loadbalancer.server.port=80"
-    networks:
-      - pacoticket-network
-      - traefik-public
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-}
+      - PACOTICKET_API_URL=${PACOTICKET_API_URL:-}
+      - PACOTICKET_BEARER_TOKEN=${PACOTICKET_BEARER_TOKEN:-}
+    working_dir: /app
 
   redis:
     image: redis:7-alpine
     deploy:
       replicas: 1
+      placement:
+        constraints:
+          - node.hostname == manager-jedy
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
       restart_policy:
-        condition: on-failure
-    volumes:
-      - redis_data:/data
+        condition: any
+        delay: 5s
+        max_attempts: 3
     networks:
-      - pacoticket-network
-
-  gotenberg:
-    image: gotenberg/gotenberg:8
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-    networks:
-      - pacoticket-network
-
-volumes:
-  pdf_storage:
-    driver: local
-  redis_data:
-    driver: local
+      - network_swarm_public
 
 networks:
-  pacoticket-network:
-    driver: overlay
-  traefik-public:
+  network_swarm_public:
     external: true
