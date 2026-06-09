@@ -25,7 +25,7 @@ services:
         - "traefik.http.services.pacoticket.loadbalancer.server.port=80"
     volumes:
       - /root/pacoticket-parceiros:/app
-      - /root/pacoticket-parceiros/backend/.docker/nginx.conf:/etc/nginx/conf.d/default.conf
+      - /root/pacoticket-parceiros/backend/.docker/nginx.conf:/opt/docker/etc/nginx/vhost.conf
     networks:
       - network_swarm_public
     environment:
