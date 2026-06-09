@@ -93,8 +93,8 @@ class PartnerController
         $pdo->beginTransaction();
         try {
             $stmt = $pdo->prepare('
-                INSERT INTO "User" (email, "passwordHash", role)
-                VALUES (:email, :passwordHash, :role)
+                INSERT INTO "User" (id, email, "passwordHash", role)
+                VALUES (gen_random_uuid(), :email, :passwordHash, :role)
                 RETURNING id
             ');
             $stmt->execute([
@@ -105,8 +105,8 @@ class PartnerController
             $userId = $stmt->fetchColumn();
 
             $stmt = $pdo->prepare('
-                INSERT INTO "Partner" ("userId", name, phone, document, "canSetRecurrence", "canSetDueDate")
-                VALUES (:userId, :name, :phone, :document, :canSetRecurrence, :canSetDueDate)
+                INSERT INTO "Partner" (id, "userId", name, phone, document, "canSetRecurrence", "canSetDueDate")
+                VALUES (gen_random_uuid(), :userId, :name, :phone, :document, :canSetRecurrence, :canSetDueDate)
                 RETURNING *
             ');
             $stmt->execute([

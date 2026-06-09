@@ -76,8 +76,8 @@ class AuthController
         $expiresAt = date('Y-m-d H:i:s', time() + $this->jwtService->getRefreshExpiry());
 
         $stmt = $pdo->prepare('
-            INSERT INTO "RefreshToken" ("userId", "tokenHash", "expiresAt")
-            VALUES (:userId, :tokenHash, :expiresAt)
+            INSERT INTO "RefreshToken" (id, "userId", "tokenHash", "expiresAt")
+            VALUES (gen_random_uuid(), :userId, :tokenHash, :expiresAt)
         ');
         $stmt->execute([
             ':userId' => $user['id'],
@@ -171,8 +171,8 @@ class AuthController
         $expiresAt = date('Y-m-d H:i:s', time() + $this->jwtService->getRefreshExpiry());
 
         $stmt = $pdo->prepare('
-            INSERT INTO "RefreshToken" ("userId", "tokenHash", "expiresAt")
-            VALUES (:userId, :tokenHash, :expiresAt)
+            INSERT INTO "RefreshToken" (id, "userId", "tokenHash", "expiresAt")
+            VALUES (gen_random_uuid(), :userId, :tokenHash, :expiresAt)
         ');
         $stmt->execute([
             ':userId' => $user['id'],
@@ -280,8 +280,8 @@ class AuthController
         $expiresAt = date('Y-m-d H:i:s', time() + 900);
 
         $stmt = $pdo->prepare('
-            INSERT INTO "PasswordResetToken" ("userId", "tokenHash", "expiresAt")
-            VALUES (:userId, :tokenHash, :expiresAt)
+            INSERT INTO "PasswordResetToken" (id, "userId", "tokenHash", "expiresAt")
+            VALUES (gen_random_uuid(), :userId, :tokenHash, :expiresAt)
         ');
         $stmt->execute([
             ':userId' => $user['id'],
