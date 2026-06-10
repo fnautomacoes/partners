@@ -1,0 +1,69 @@
+{
+  "spec": "05-spec-commissions.md",
+  "feature": "Commission Calculation and Payment",
+  "created": "2026-06-10",
+  "updated": "2026-06-10",
+  "model": "sonnet",
+  "dispatch_mode": "in_session",
+  "subagent_type": null,
+  "tasks": [
+    {
+      "id": "05.T001",
+      "subject": "Create CommissionController with summary and index",
+      "description": "Implement CommissionController.php with summary() (FR-007) and index() (FR-006) with role-based filtering.",
+      "fr_refs": ["FR-006", "FR-007"],
+      "files": ["backend/src/Controllers/CommissionController.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created CommissionController.php with summary() SUM by status, index() role-based with JOINs"
+    },
+    {
+      "id": "05.T002",
+      "subject": "Implement commission calculate endpoint",
+      "description": "Add calculate() to CommissionController per FR-001/002/003/004/005: batch calculation with ClientCommissionRule, skip frozen, setup once, upsert.",
+      "fr_refs": ["FR-001", "FR-002", "FR-003", "FR-004", "FR-005"],
+      "files": ["backend/src/Controllers/CommissionController.php"],
+      "blocked_by": ["05.T001"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added calculate() with ClientCommissionRule lookup, frozen/expired skip, setup once check, ON CONFLICT upsert"
+    },
+    {
+      "id": "05.T003",
+      "subject": "Implement commission pay endpoint",
+      "description": "Add pay() to CommissionController per FR-008: mark commission as PAID with paidAt timestamp.",
+      "fr_refs": ["FR-008"],
+      "files": ["backend/src/Controllers/CommissionController.php"],
+      "blocked_by": ["05.T001"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added pay() with status=PAID, paidAt=NOW(), idempotent if already paid"
+    },
+    {
+      "id": "05.T004",
+      "subject": "Register commission routes in index.php",
+      "description": "Add 4 commission routes to backend/public/index.php with auth/superadmin middleware.",
+      "fr_refs": [],
+      "files": ["backend/public/index.php"],
+      "blocked_by": ["05.T001", "05.T002", "05.T003"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added 4 routes: GET /summary, GET /commissions, POST /calculate, PUT /:id/pay"
+    }
+  ],
+  "verification": {
+    "calculate_creates_commission": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "index_partner_filtered": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "summary_totals": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "recalc_no_duplicates": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "frozen_skipped": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "setup_once": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "db_percentage_from_rule": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "regression_clients": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" }
+  }
+}

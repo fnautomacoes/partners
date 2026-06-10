@@ -1,0 +1,68 @@
+{
+  "spec": "06-spec-invoices.md",
+  "feature": "Invoice Sync with PacoTicket API",
+  "created": "2026-06-10",
+  "updated": "2026-06-10",
+  "model": "sonnet",
+  "dispatch_mode": "in_session",
+  "subagent_type": null,
+  "tasks": [
+    {
+      "id": "06.T001",
+      "subject": "Add listInvoices to PacoTicketApiService",
+      "description": "Add listInvoices() method to PacoTicketApiService.php for FR-001. GET /api/invoices/listar from PacoTicket.",
+      "fr_refs": ["FR-001"],
+      "files": ["backend/src/Services/PacoTicketApiService.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added listInvoices() with GET /invoices/listar, returns array or null"
+    },
+    {
+      "id": "06.T002",
+      "subject": "Create InvoiceController with index",
+      "description": "Implement InvoiceController.php with index() per FR-004/005: role-based filtering with clientId, status, month, year filters.",
+      "fr_refs": ["FR-004", "FR-005"],
+      "files": ["backend/src/Controllers/InvoiceController.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created InvoiceController.php with index() role-based filtering + all query filters"
+    },
+    {
+      "id": "06.T003",
+      "subject": "Implement invoice sync endpoint",
+      "description": "Add sync() to InvoiceController per FR-001/002/003/006: fetch from PacoTicket, match by pacoticketId, upsert by pacoticketRef, handle failure gracefully.",
+      "fr_refs": ["FR-001", "FR-002", "FR-003", "FR-006"],
+      "files": ["backend/src/Controllers/InvoiceController.php"],
+      "blocked_by": ["06.T001", "06.T002"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added sync() with PacoTicket fetch, client match by pacoticketId, ON CONFLICT upsert"
+    },
+    {
+      "id": "06.T004",
+      "subject": "Register invoice routes in index.php",
+      "description": "Add 2 invoice routes to backend/public/index.php: GET /invoices [auth], POST /invoices/sync [superadmin].",
+      "fr_refs": [],
+      "files": ["backend/public/index.php"],
+      "blocked_by": ["06.T002", "06.T003"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added 2 routes: GET /invoices [auth], POST /invoices/sync [superadmin]"
+    }
+  ],
+  "verification": {
+    "sync_creates_invoice": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "index_partner_filtered": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "resync_no_duplicates": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "api_failure_safe": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "invoice_no_client_handled": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "db_pacoticketref_unique": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "regression_commissions": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" }
+  }
+}

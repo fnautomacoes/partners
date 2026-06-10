@@ -1,0 +1,82 @@
+{
+  "spec": "08-spec-pdf.md",
+  "feature": "PDF Proposal Generation via Gotenberg",
+  "created": "2026-06-10",
+  "updated": "2026-06-10",
+  "model": "sonnet",
+  "dispatch_mode": "in_session",
+  "subagent_type": null,
+  "tasks": [
+    {
+      "id": "08.T001",
+      "subject": "Create GotenbergService",
+      "description": "Implement GotenbergService.php with generatePdf() that POSTs multipart to Gotenberg per FR-001/002.",
+      "fr_refs": ["FR-001", "FR-002"],
+      "files": ["backend/src/Services/GotenbergService.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created GotenbergService.php with generatePdf() multipart POST, mm to cm conversion"
+    },
+    {
+      "id": "08.T002",
+      "subject": "Create PdfController with generate",
+      "description": "Implement PdfController.php with generate() per FR-003/004/005/006: save to disk, register ProposalPdf, add activity if leadId.",
+      "fr_refs": ["FR-003", "FR-004", "FR-005", "FR-006"],
+      "files": ["backend/src/Controllers/PdfController.php"],
+      "blocked_by": ["08.T001"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created PdfController.php with generate() - disk save, ProposalPdf record, PDF_SENT activity"
+    },
+    {
+      "id": "08.T003",
+      "subject": "Add proposal list and download methods",
+      "description": "Add index(), indexAll(), download() to PdfController per FR-007/008 with path traversal protection.",
+      "fr_refs": ["FR-007", "FR-008"],
+      "files": ["backend/src/Controllers/PdfController.php"],
+      "blocked_by": ["08.T002"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added index(), indexAll(), download() with realpath() path traversal protection"
+    },
+    {
+      "id": "08.T004",
+      "subject": "Add proposal delete method",
+      "description": "Add destroy() to PdfController per FR-009: delete record and file from disk.",
+      "fr_refs": ["FR-009"],
+      "files": ["backend/src/Controllers/PdfController.php"],
+      "blocked_by": ["08.T002"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added destroy() with file deletion and path traversal check"
+    },
+    {
+      "id": "08.T005",
+      "subject": "Register PDF routes in index.php",
+      "description": "Add 5 PDF routes to backend/public/index.php with auth middleware.",
+      "fr_refs": [],
+      "files": ["backend/public/index.php"],
+      "blocked_by": ["08.T002", "08.T003", "08.T004"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added 5 PDF routes: POST /plan, GET /proposals, GET /proposals/all, GET /download, DELETE"
+    }
+  ],
+  "verification": {
+    "generate_saves_disk": { "status": "pending", "evidence": null, "note": "POST /pdf/plan gera PDF e salva em disco" },
+    "list_partner_only": { "status": "pending", "evidence": null, "note": "GET /proposals lista apenas do parceiro" },
+    "download_works": { "status": "pending", "evidence": null, "note": "GET /proposals/:id/download retorna arquivo" },
+    "delete_removes_all": { "status": "pending", "evidence": null, "note": "DELETE remove registro e arquivo" },
+    "leadid_activity": { "status": "pending", "evidence": null, "note": "leadId válido registra PDF_SENT" },
+    "path_traversal_blocked": { "status": "pending", "evidence": null, "note": "Path traversal attempt retorna erro" },
+    "gotenberg_unavailable": { "status": "pending", "evidence": null, "note": "Gotenberg indisponível retorna 502" },
+    "db_htmlhash": { "status": "pending", "evidence": null, "note": "htmlHash SHA-256 para cada proposta" },
+    "regression_funnel": { "status": "pending", "evidence": null, "note": "Funnel endpoints funcionam" }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "spec": "10-spec-activity-log.md",
+  "feature": "Activity Log Audit Trail",
+  "created": "2026-06-10",
+  "updated": "2026-06-10",
+  "model": "sonnet",
+  "dispatch_mode": "in_session",
+  "subagent_type": null,
+  "tasks": [
+    {
+      "id": "10.T001",
+      "subject": "Create ActivityLogController with index",
+      "description": "Implement ActivityLogController.php with index() per FR-001/002/003/004/005/006: role-based filtering with partnerId, action, limit.",
+      "fr_refs": ["FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-006"],
+      "files": ["backend/src/Controllers/ActivityLogController.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created ActivityLogController.php with index() role-based + partnerId/action/limit filters"
+    },
+    {
+      "id": "10.T002",
+      "subject": "Register activity-log route in index.php",
+      "description": "Add GET /api/activity-log route to backend/public/index.php with auth middleware.",
+      "fr_refs": [],
+      "files": ["backend/public/index.php"],
+      "blocked_by": ["10.T001"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added GET /api/activity-log route with auth middleware"
+    }
+  ],
+  "verification": {
+    "partner_logs": { "status": "pending", "evidence": null, "note": "GET /activity-log retorna logs do parceiro" },
+    "superadmin_all": { "status": "pending", "evidence": null, "note": "SuperAdmin vê todos os logs" },
+    "action_filter": { "status": "pending", "evidence": null, "note": "Filtro ?action=CLIENT_CREATED funciona" },
+    "partner_isolation": { "status": "pending", "evidence": null, "note": "Partner não vê logs de outro" },
+    "limit_works": { "status": "pending", "evidence": null, "note": "?limit=10 retorna máximo 10" },
+    "order_desc": { "status": "pending", "evidence": null, "note": "Ordem DESC por createdAt" },
+    "regression_config": { "status": "pending", "evidence": null, "note": "System Config funciona" }
+  }
+}

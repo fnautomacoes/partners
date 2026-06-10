@@ -1,0 +1,105 @@
+{
+  "spec": "04-spec-clients.md",
+  "feature": "Client Management CRUD with PacoTicket Integration",
+  "created": "2026-06-10",
+  "updated": "2026-06-10",
+  "model": "sonnet",
+  "dispatch_mode": "in_session",
+  "subagent_type": null,
+  "tasks": [
+    {
+      "id": "04.T001",
+      "subject": "Create PacoTicketApiService",
+      "description": "Implement PacoTicketApiService.php with createCompany() and updateCompany() using curl. Tolerant to failure per FR-004.",
+      "fr_refs": ["FR-004", "FR-006"],
+      "files": ["backend/src/Services/PacoTicketApiService.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created PacoTicketApiService.php with createCompany() and updateCompany() using curl, returns null on failure"
+    },
+    {
+      "id": "04.T002",
+      "subject": "Create ClientController with index and show",
+      "description": "Implement ClientController.php with index() (FR-001 role-based) and show() (FR-008 with joins).",
+      "fr_refs": ["FR-001", "FR-008"],
+      "files": ["backend/src/Controllers/ClientController.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created ClientController.php with index() role-based + filters, show() with plan/addons/commissionRule joins"
+    },
+    {
+      "id": "04.T003",
+      "subject": "Implement client store with CommissionRule",
+      "description": "Add store() to ClientController: validate plan (FR-009), create Client with JWT partnerId (FR-002), create CommissionRule with tier (FR-003), call PacoTicket (FR-004).",
+      "fr_refs": ["FR-002", "FR-003", "FR-004", "FR-009"],
+      "files": ["backend/src/Controllers/ClientController.php"],
+      "blocked_by": ["04.T001", "04.T002"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added store() with plan validation, Client+CommissionRule transaction, PacoTicket try/catch"
+    },
+    {
+      "id": "04.T004",
+      "subject": "Implement client update with PacoTicket mirror",
+      "description": "Add update() to ClientController: update contact info (FR-005), mirror to PacoTicket if pacoticketId exists (FR-006).",
+      "fr_refs": ["FR-005", "FR-006"],
+      "files": ["backend/src/Controllers/ClientController.php"],
+      "blocked_by": ["04.T001", "04.T002"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added update() with contact fields + PacoTicket mirror if pacoticketId exists"
+    },
+    {
+      "id": "04.T005",
+      "subject": "Implement client soft-delete",
+      "description": "Add destroy() to ClientController: soft-delete setting status=INACTIVE (FR-007). SuperAdmin only.",
+      "fr_refs": ["FR-007"],
+      "files": ["backend/src/Controllers/ClientController.php"],
+      "blocked_by": ["04.T002"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added destroy() with soft-delete (status=INACTIVE)"
+    },
+    {
+      "id": "04.T006",
+      "subject": "Implement ClientAddon CRUD methods",
+      "description": "Add indexAddons(), storeAddon(), updateAddon(), destroyAddon() to ClientController per FR-010.",
+      "fr_refs": ["FR-010"],
+      "files": ["backend/src/Controllers/ClientController.php"],
+      "blocked_by": ["04.T002"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added indexAddons, storeAddon, updateAddon, destroyAddon with ownership checks"
+    },
+    {
+      "id": "04.T007",
+      "subject": "Register client routes in index.php",
+      "description": "Add 9 client routes to backend/public/index.php with auth/superadmin middleware.",
+      "fr_refs": [],
+      "files": ["backend/public/index.php"],
+      "blocked_by": ["04.T003", "04.T004", "04.T005", "04.T006"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added 9 client routes: GET/POST/PUT/DELETE /clients, GET/POST/PUT/DELETE /clients/:id/addons"
+    }
+  ],
+  "verification": {
+    "partner_crud": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "commission_rule_created": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "pacoticket_fault_tolerance": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "partner_isolation": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "plan_inactive_400": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "db_partnerid_jwt": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "db_commission_rule_exists": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "regression_plans": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" }
+  }
+}

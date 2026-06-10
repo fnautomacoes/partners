@@ -1,0 +1,83 @@
+{
+  "spec": "07-spec-funnel.md",
+  "feature": "Funnel CRM for Lead Management",
+  "created": "2026-06-10",
+  "updated": "2026-06-10",
+  "model": "sonnet",
+  "dispatch_mode": "in_session",
+  "subagent_type": null,
+  "tasks": [
+    {
+      "id": "07.T001",
+      "subject": "Create FunnelController with stage CRUD",
+      "description": "Implement FunnelController.php with indexStages() (FR-001/002), storeStage(), updateStage(), destroyStage() (FR-003/004).",
+      "fr_refs": ["FR-001", "FR-002", "FR-003", "FR-004"],
+      "files": ["backend/src/Controllers/FunnelController.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created FunnelController.php with 4 stage methods + auto-create 6 default stages"
+    },
+    {
+      "id": "07.T002",
+      "subject": "Add lead CRUD methods to FunnelController",
+      "description": "Add indexLeads(), storeLead(), showLead(), updateLead(), destroyLead() per FR-005/006/007.",
+      "fr_refs": ["FR-005", "FR-006", "FR-007"],
+      "files": ["backend/src/Controllers/FunnelController.php"],
+      "blocked_by": ["07.T001"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added 5 lead CRUD methods + auto STAGE_CHANGE activity on stageId change"
+    },
+    {
+      "id": "07.T003",
+      "subject": "Add activity methods to FunnelController",
+      "description": "Add indexActivities() and storeActivity() per FR-008.",
+      "fr_refs": ["FR-008"],
+      "files": ["backend/src/Controllers/FunnelController.php"],
+      "blocked_by": ["07.T002"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added indexActivities() and storeActivity() with type validation"
+    },
+    {
+      "id": "07.T004",
+      "subject": "Implement lead promote endpoint",
+      "description": "Add promote() to FunnelController per FR-009/010/011: validate lead, create Client + CommissionRule, call PacoTicket, mark lead WON.",
+      "fr_refs": ["FR-009", "FR-010", "FR-011"],
+      "files": ["backend/src/Controllers/FunnelController.php"],
+      "blocked_by": ["07.T002"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added promote() with validation, Client+CommissionRule transaction, PacoTicket call, WON status"
+    },
+    {
+      "id": "07.T005",
+      "subject": "Register funnel routes in index.php",
+      "description": "Add 11 funnel routes to backend/public/index.php with auth middleware.",
+      "fr_refs": [],
+      "files": ["backend/public/index.php"],
+      "blocked_by": ["07.T001", "07.T002", "07.T003", "07.T004"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added 12 funnel routes: 4 stages + 8 leads (CRUD + activities + promote)"
+    }
+  ],
+  "verification": {
+    "stages_auto_create": { "status": "pending", "evidence": null, "note": "GET /stages cria 6 estágios padrão" },
+    "lead_crud": { "status": "pending", "evidence": null, "note": "Partner cria lead, move entre estágios" },
+    "activities": { "status": "pending", "evidence": null, "note": "POST /activities registra nota" },
+    "promote": { "status": "pending", "evidence": null, "note": "POST /promote converte lead em cliente" },
+    "delete_stage_move": { "status": "pending", "evidence": null, "note": "DELETE estágio com leads move para próximo" },
+    "delete_last_stage_error": { "status": "pending", "evidence": null, "note": "DELETE último estágio erro LAST_STAGE" },
+    "promote_no_email": { "status": "pending", "evidence": null, "note": "Promote sem email erro 400" },
+    "db_partner_isolation": { "status": "pending", "evidence": null, "note": "partnerId = JWT para leads" },
+    "db_stage_change": { "status": "pending", "evidence": null, "note": "STAGE_CHANGE em LeadActivity" },
+    "regression_clients": { "status": "pending", "evidence": null, "note": "Clients endpoints funcionam" }
+  }
+}

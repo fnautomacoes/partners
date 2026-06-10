@@ -92,4 +92,56 @@ class MailService
 
         return $mail->send();
     }
+
+    public function testConnection(?array $testConfig = null): array
+    {
+        $config = $testConfig ?? $this->config;
+
+        if (empty($config['host'])) {
+            return ['success' => false, 'message' => 'SMTP host not configured'];
+        }
+
+        $mail = new PHPMailer(true);
+
+        try {
+            $mail->isSMTP();
+            $mail->Host = $config['host'];
+            $mail->Port = (int) ($config['port'] ?? 587);
+            $mail->SMTPAuth = true;
+            $mail->Username = $config['user'] ?? '';
+            $mail->Password = $config['pass'] ?? '';
+            $mail->Timeout = 10;
+
+            switch ($config['mode'] ?? 'starttls') {
+                case 'ssl':
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                    break;
+                case 'none':
+                    $mail->SMTPSecure = '';
+                    $mail->SMTPAutoTLS = false;
+                    break;
+                default:
+                    $mail->SMTPSecure = '';
+                    $mail->SMTPAutoTLS = true;
+            }
+
+            $mail->SMTPOptions = [
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                    'allow_self_signed' => true,
+                ],
+            ];
+
+            if ($mail->smtpConnect()) {
+                $mail->smtpClose();
+                return ['success' => true, 'message' => 'SMTP connection successful'];
+            }
+
+            return ['success' => false, 'message' => 'Failed to connect to SMTP server'];
+
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
 }

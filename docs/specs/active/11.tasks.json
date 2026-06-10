@@ -1,0 +1,45 @@
+{
+  "spec": "11-spec-commission-tiers.md",
+  "feature": "Commission Tiers CRUD",
+  "created": "2026-06-10",
+  "updated": "2026-06-10",
+  "model": "sonnet",
+  "dispatch_mode": "in_session",
+  "subagent_type": null,
+  "tasks": [
+    {
+      "id": "11.T001",
+      "subject": "Create CommissionTierController with full CRUD",
+      "description": "Implement CommissionTierController.php with index(), store(), update(), destroy() per FR-001/002/003/004/005/006.",
+      "fr_refs": ["FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-006"],
+      "files": ["backend/src/Controllers/CommissionTierController.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created CommissionTierController.php with full CRUD + soft-delete check + percentage validation"
+    },
+    {
+      "id": "11.T002",
+      "subject": "Register commission-tiers routes in index.php",
+      "description": "Add 4 commission-tiers routes to backend/public/index.php with superadmin middleware.",
+      "fr_refs": [],
+      "files": ["backend/public/index.php"],
+      "blocked_by": ["11.T001"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added 4 routes: GET/POST/PUT/DELETE /api/commission-tiers with superadmin middleware"
+    }
+  ],
+  "verification": {
+    "list_ordered": { "status": "pending", "evidence": null, "note": "GET lista tiers ordenados" },
+    "create_tier": { "status": "pending", "evidence": null, "note": "POST cria tier com percentage válido" },
+    "update_tier": { "status": "pending", "evidence": null, "note": "PUT atualiza tier existente" },
+    "delete_unlinked": { "status": "pending", "evidence": null, "note": "DELETE remove tier sem vínculos" },
+    "soft_delete_linked": { "status": "pending", "evidence": null, "note": "DELETE tier com vínculos → soft-delete" },
+    "percentage_validation": { "status": "pending", "evidence": null, "note": "percentage > 100 → erro" },
+    "order_correct": { "status": "pending", "evidence": null, "note": "SELECT confirma order" },
+    "regression_commissions": { "status": "pending", "evidence": null, "note": "Commissions funcionam" }
+  }
+}
