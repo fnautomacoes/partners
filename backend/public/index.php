@@ -9,6 +9,9 @@ use Core\Router;
 use Core\Middleware;
 use Controllers\AuthController;
 use Controllers\PartnerController;
+use Controllers\PlanController;
+use Controllers\ModulePriceController;
+use Controllers\ResourcePriceController;
 
 $router = new Router();
 
@@ -32,6 +35,28 @@ $router->get('/api/partners/me/dashboard', [PartnerController::class, 'dashboard
 $router->get('/api/partners/:id',          [PartnerController::class, 'show'],     ['superadmin']);
 $router->put('/api/partners/:id',          [PartnerController::class, 'update'],   ['superadmin']);
 $router->delete('/api/partners/:id',       [PartnerController::class, 'destroy'],  ['superadmin']);
+
+// Plan routes (SuperAdmin CRUD)
+$router->get('/api/plans',                 [PlanController::class, 'index'],         ['auth']);
+$router->put('/api/plans/reorder',         [PlanController::class, 'reorder'],       ['superadmin']);
+$router->get('/api/plans/:id',             [PlanController::class, 'show'],          ['auth']);
+$router->post('/api/plans',                [PlanController::class, 'store'],         ['superadmin']);
+$router->put('/api/plans/:id',             [PlanController::class, 'update'],        ['superadmin']);
+$router->delete('/api/plans/:id',          [PlanController::class, 'destroy'],       ['superadmin']);
+
+// Plan routes (Partner own plans)
+$router->post('/api/plans/partner',        [PlanController::class, 'storePartner'],   ['auth']);
+$router->put('/api/plans/partner/:id',     [PlanController::class, 'updatePartner'],  ['auth']);
+$router->delete('/api/plans/partner/:id',  [PlanController::class, 'destroyPartner'], ['auth']);
+
+// Module pricing routes
+$router->get('/api/plans/modules/prices',           [ModulePriceController::class, 'index'],   ['auth']);
+$router->put('/api/plans/modules/prices',           [ModulePriceController::class, 'upsert'],  ['superadmin']);
+$router->delete('/api/plans/modules/prices/:moduleKey', [ModulePriceController::class, 'destroy'], ['superadmin']);
+
+// Resource pricing routes
+$router->get('/api/resource-prices',       [ResourcePriceController::class, 'index'],  ['auth']);
+$router->put('/api/resource-prices',       [ResourcePriceController::class, 'update'], ['superadmin']);
 
 // Health check
 $router->get('/api/health', [new class {

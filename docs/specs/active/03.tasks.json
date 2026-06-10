@@ -1,0 +1,92 @@
+{
+  "spec": "03-spec-plans.md",
+  "feature": "Plans & Pricing CRUD",
+  "created": "2026-06-09",
+  "updated": "2026-06-10",
+  "model": "sonnet",
+  "dispatch_mode": "in_session",
+  "subagent_type": null,
+  "tasks": [
+    {
+      "id": "03.T001",
+      "subject": "Create PlanController with CRUD methods",
+      "description": "Implement PlanController.php with index(), show(), store(), update(), destroy(), reorder() per FR-001 to FR-005, FR-013.",
+      "fr_refs": ["FR-001", "FR-002", "FR-003", "FR-004", "FR-005", "FR-013"],
+      "files": ["backend/src/Controllers/PlanController.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created PlanController.php with index, show, store, update, destroy, reorder + formatPlan/getAddons"
+    },
+    {
+      "id": "03.T002",
+      "subject": "Add partner plan methods to PlanController",
+      "description": "Implement storePartner(), updatePartner(), destroyPartner() with ownerId from JWT per FR-011, FR-012.",
+      "fr_refs": ["FR-011", "FR-012"],
+      "files": ["backend/src/Controllers/PlanController.php"],
+      "blocked_by": ["03.T001"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added storePartner, updatePartner, destroyPartner with ownerId from JWT, ownership checks"
+    },
+    {
+      "id": "03.T003",
+      "subject": "Create ModulePriceController",
+      "description": "Implement ModulePriceController.php with index(), upsert(), destroy() per FR-006, FR-007, FR-008.",
+      "fr_refs": ["FR-006", "FR-007", "FR-008"],
+      "files": ["backend/src/Controllers/ModulePriceController.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created ModulePriceController.php with index (role-filtered), upsert (ON CONFLICT), destroy (hide if in use)"
+    },
+    {
+      "id": "03.T004",
+      "subject": "Create ResourcePriceController",
+      "description": "Implement ResourcePriceController.php with index(), update() per FR-009, FR-010.",
+      "fr_refs": ["FR-009", "FR-010"],
+      "files": ["backend/src/Controllers/ResourcePriceController.php"],
+      "blocked_by": [],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Created ResourcePriceController.php with index (role-filtered), update (batch)"
+    },
+    {
+      "id": "03.T005",
+      "subject": "Register plan routes in index.php",
+      "description": "Add 9 plan routes to backend/public/index.php with appropriate middleware.",
+      "fr_refs": [],
+      "files": ["backend/public/index.php"],
+      "blocked_by": ["03.T001", "03.T002"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added 9 routes: GET/POST/PUT/DELETE /plans, PUT /reorder, POST/PUT/DELETE /plans/partner/:id"
+    },
+    {
+      "id": "03.T006",
+      "subject": "Register pricing routes in index.php",
+      "description": "Add 5 module/resource pricing routes to backend/public/index.php.",
+      "fr_refs": [],
+      "files": ["backend/public/index.php"],
+      "blocked_by": ["03.T003", "03.T004"],
+      "status": "done",
+      "started_at": "2026-06-10",
+      "completed_at": "2026-06-10",
+      "evidence": "Added 5 routes: GET/PUT/DELETE /plans/modules/prices, GET/PUT /resource-prices"
+    }
+  ],
+  "verification": {
+    "superadmin_crud": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "module_prices": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "partner_creates_own": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "partner_forbidden_other": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "module_hide_not_delete": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "db_ownerid_correct": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" },
+    "regression_auth": { "status": "pending", "evidence": null, "note": "Deferred until environment setup" }
+  }
+}
