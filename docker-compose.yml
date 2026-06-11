@@ -23,6 +23,10 @@ services:
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
       - SMTP_FROM=${SMTP_FROM:-}
+      - GOTENBERG_URL=${GOTENBERG_URL:-http://gotenberg:3000}
+      - PDF_STORAGE_PATH=${PDF_STORAGE_PATH:-/data/pdfs}
+      - PACOTICKET_API_URL=${PACOTICKET_API_URL:-}
+      - PACOTICKET_BEARER_TOKEN=${PACOTICKET_BEARER_TOKEN:-}
     volumes:
       - ./backend:/var/www/html
       - pdf_storage:/data/pdfs
@@ -46,6 +50,12 @@ services:
     container_name: pacoticket-redis
     volumes:
       - redis_data:/data
+    networks:
+      - pacoticket-network
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: pacoticket-gotenberg
     networks:
       - pacoticket-network
 
