@@ -19,29 +19,50 @@ services:
         window: 120s
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.pacoticket.rule=Host(`parceiros.seudominio.com`)"
+        - "traefik.http.routers.pacoticket.rule=Host(`parcerias.pacoticket.com.br`)"
         - "traefik.http.routers.pacoticket.entrypoints=websecure"
         - "traefik.http.routers.pacoticket.tls.certresolver=letsencrypt"
         - "traefik.http.services.pacoticket.loadbalancer.server.port=80"
     volumes:
       - /opt/parcerias/partners:/app
       - /opt/parcerias/partners/backend/.docker/nginx.conf:/opt/docker/etc/nginx/vhost.conf
+      - pacoticket_pdfs:/data/pdfs
     networks:
       - network_swarm_public
     environment:
+      # Webserver
       - WEB_DOCUMENT_ROOT=/app/frontend
       - PHP_DISPLAY_ERRORS=0
       - PHP_MEMORY_LIMIT=256M
+      # Database
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_NAME=pacoticket_parceiros
       - DB_USER=seu_usuario
       - DB_PASS=sua_senha
+      # JWT (gerar com: openssl rand -hex 64)
       - JWT_SECRET=trocar_por_string_64_chars_hex
       - JWT_REFRESH_SECRET=trocar_por_outra_string_64_chars
+      - JWT_EXPIRES_IN=28800
+      - JWT_REFRESH_EXPIRES_IN=604800
+      # Redis
       - REDIS_URL=redis://pacoticket_redis:6379
+      # App
       - APP_ENV=production
-      - APP_URL=https://parceiros.seudominio.com
+      - APP_URL=https://parcerias.pacoticket.com.br
+      # PacoTicket API
+      - PACOTICKET_API_URL=
+      - PACOTICKET_BEARER_TOKEN=
+      # PDF (Gotenberg)
+      - GOTENBERG_URL=http://pacoticket_gotenberg:3000
+      - PDF_STORAGE_PATH=/data/pdfs
+      # SMTP (fallback - configurável também pelo banco SystemConfig)
+      - SMTP_HOST=
+      - SMTP_PORT=587
+      - SMTP_MODE=starttls
+      - SMTP_USER=
+      - SMTP_PASS=
+      - SMTP_FROM=
     working_dir: /app
 
   redis:
@@ -57,8 +78,32 @@ services:
           memory: 256M
       restart_policy:
         condition: any
+    volumes:
+      - pacoticket_redis_data:/data
     networks:
       - network_swarm_public
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == manager-jedy
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+      restart_policy:
+        condition: any
+    networks:
+      - network_swarm_public
+
+volumes:
+  pacoticket_pdfs:
+    driver: local
+  pacoticket_redis_data:
+    driver: local
 
 networks:
   network_swarm_public:

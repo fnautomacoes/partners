@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperAdmin - PacoTicket Parceiros</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">PacoTicket</div>
+            <div class="text-xs text-gray-400 mt-1">Painel Administrativo</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-section="dashboard">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
+            </a>
+            <a href="#" class="nav-item" data-section="partners">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                Parceiros
+            </a>
+            <a href="#" class="nav-item" data-section="plans">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                Planos
+            </a>
+            <a href="#" class="nav-item" data-section="clients">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                Clientes
+            </a>
+            <a href="#" class="nav-item" data-section="commissions">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Comissões
+            </a>
+            <a href="#" class="nav-item" data-section="invoices">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Faturas
+            </a>
+            <a href="#" class="nav-item" data-section="tiers">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                Tiers Comissão
+            </a>
+            <a href="#" class="nav-item" data-section="config">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Configurações
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <button onclick="logout()" class="nav-item text-red-400 hover:text-red-300">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Sair
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <h1 class="header-title" id="pageTitle">Dashboard</h1>
+            <div class="header-actions">
+                <div class="user-menu">
+                    <button class="user-menu-btn" onclick="toggleUserMenu()">
+                        <div class="user-avatar" id="userAvatar">A</div>
+                        <span class="text-sm" id="userName">Admin</span>
+                    </button>
+                    <div class="user-dropdown hidden" id="userDropdown">
+                        <button onclick="showChangePassword()">Alterar Senha</button>
+                        <button onclick="logout()">Sair</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="content">
+            <!-- Dashboard Section -->
+            <section id="section-dashboard" class="section active">
+                <div class="stats-grid" id="dashboardStats">
+                    <div class="stat-card">
+                        <div class="stat-label">Total de Parceiros</div>
+                        <div class="stat-value" id="statPartners">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Clientes Ativos</div>
+                        <div class="stat-value" id="statClients">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Comissões Pendentes</div>
+                        <div class="stat-value" id="statPendingCommissions">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Receita Mensal</div>
+                        <div class="stat-value" id="statRevenue">-</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Últimos Parceiros</h2>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Clientes</th>
+                                    <th>Tier</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentPartnersTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Partners Section -->
+            <section id="section-partners" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Parceiros</h2>
+                        <button class="btn btn-primary" onclick="showPartnerModal()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Novo Parceiro
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Telefone</th>
+                                    <th>Clientes</th>
+                                    <th>Tier</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="partnersTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Plans Section -->
+            <section id="section-plans" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Planos Globais</h2>
+                        <button class="btn btn-primary" onclick="showPlanModal()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Novo Plano
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Preço Base</th>
+                                    <th>Setup</th>
+                                    <th>Usuários</th>
+                                    <th>Filas</th>
+                                    <th>WhatsApp</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="plansTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Preços de Módulos</h2>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Módulo</th>
+                                    <th>Preço</th>
+                                    <th>Visível</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modulePricesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clients Section -->
+            <section id="section-clients" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Clientes</h2>
+                    </div>
+                    <div class="mb-4 flex gap-4">
+                        <select class="form-select" id="clientPartnerFilter" style="max-width:200px">
+                            <option value="">Todos os parceiros</option>
+                        </select>
+                        <select class="form-select" id="clientStatusFilter" style="max-width:150px">
+                            <option value="">Todos status</option>
+                            <option value="ACTIVE">Ativo</option>
+                            <option value="INACTIVE">Inativo</option>
+                            <option value="SUSPENDED">Suspenso</option>
+                        </select>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Empresa</th>
+                                    <th>Parceiro</th>
+                                    <th>Plano</th>
+                                    <th>Mensalidade</th>
+                                    <th>Ativação</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Commissions Section -->
+            <section id="section-commissions" class="section hidden">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Pendente</div>
+                        <div class="stat-value" id="commPending">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pago Este Mês</div>
+                        <div class="stat-value" id="commPaidMonth">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pago Total</div>
+                        <div class="stat-value" id="commPaidTotal">-</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Comissões</h2>
+                        <button class="btn btn-primary" onclick="calculateCommissions()">
+                            Calcular Comissões
+                        </button>
+                    </div>
+                    <div class="mb-4 flex gap-4">
+                        <select class="form-select" id="commPartnerFilter" style="max-width:200px">
+                            <option value="">Todos os parceiros</option>
+                        </select>
+                        <select class="form-select" id="commStatusFilter" style="max-width:150px">
+                            <option value="">Todos status</option>
+                            <option value="PENDING">Pendente</option>
+                            <option value="PAID">Pago</option>
+                        </select>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Parceiro</th>
+                                    <th>Cliente</th>
+                                    <th>Período</th>
+                                    <th>Mensalidade</th>
+                                    <th>Setup</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commissionsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Invoices Section -->
+            <section id="section-invoices" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Faturas</h2>
+                        <button class="btn btn-primary" onclick="syncInvoices()">
+                            Sincronizar PacoTicket
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Referência</th>
+                                    <th>Cliente</th>
+                                    <th>Valor</th>
+                                    <th>Vencimento</th>
+                                    <th>Pagamento</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoicesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Commission Tiers Section -->
+            <section id="section-tiers" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Níveis de Comissão</h2>
+                        <button class="btn btn-primary" onclick="showTierModal()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Novo Tier
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ordem</th>
+                                    <th>Nome</th>
+                                    <th>Mín. Clientes</th>
+                                    <th>Máx. Clientes</th>
+                                    <th>Percentual</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tiersTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Config Section -->
+            <section id="section-config" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Configurações do Sistema</h2>
+                    </div>
+                    <form id="configForm">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Nome da Empresa</label>
+                                <input type="text" class="form-input" name="company_name">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Logo URL</label>
+                                <input type="text" class="form-input" name="company_logo">
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold mt-4 mb-4">Configurações SMTP</h3>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Host SMTP</label>
+                                <input type="text" class="form-input" name="smtp_host">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Porta</label>
+                                <input type="text" class="form-input" name="smtp_port">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Modo</label>
+                                <select class="form-select" name="smtp_mode">
+                                    <option value="starttls">STARTTLS</option>
+                                    <option value="ssl">SSL</option>
+                                    <option value="none">Nenhum</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Usuário</label>
+                                <input type="text" class="form-input" name="smtp_user">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Senha</label>
+                                <input type="password" class="form-input" name="smtp_pass">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email Remetente</label>
+                                <input type="email" class="form-input" name="smtp_from">
+                            </div>
+                        </div>
+                        <div class="flex gap-4 mt-4">
+                            <button type="submit" class="btn btn-primary">Salvar Configurações</button>
+                            <button type="button" class="btn btn-secondary" onclick="testSmtp()">Testar SMTP</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Partner Modal -->
+    <div class="modal-overlay hidden" id="partnerModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="partnerModalTitle">Novo Parceiro</h3>
+                <button class="modal-close" onclick="closeModal('partnerModal')">&times;</button>
+            </div>
+            <form id="partnerForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="partnerFormId">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nome Completo *</label>
+                            <input type="text" class="form-input" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-input" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" class="form-input" name="phone">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Documento (CPF/CNPJ)</label>
+                            <input type="text" class="form-input" name="document">
+                        </div>
+                    </div>
+                    <div class="form-group" id="partnerPasswordGroup">
+                        <label class="form-label">Senha Inicial *</label>
+                        <input type="password" class="form-input" name="password" minlength="8">
+                        <p class="text-xs text-gray mt-2">Mínimo 8 caracteres</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('partnerModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Plan Modal -->
+    <div class="modal-overlay hidden" id="planModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title" id="planModalTitle">Novo Plano</h3>
+                <button class="modal-close" onclick="closeModal('planModal')">&times;</button>
+            </div>
+            <form id="planForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="planFormId">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nome do Plano *</label>
+                            <input type="text" class="form-input" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Recorrência</label>
+                            <select class="form-select" name="recurrence">
+                                <option value="MONTHLY">Mensal</option>
+                                <option value="QUARTERLY">Trimestral</option>
+                                <option value="SEMIANNUAL">Semestral</option>
+                                <option value="ANNUAL">Anual</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Preço Base *</label>
+                            <input type="number" step="0.01" class="form-input" name="basePrice" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Taxa de Setup</label>
+                            <input type="number" step="0.01" class="form-input" name="setupFee" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Usuários Inclusos</label>
+                            <input type="number" class="form-input" name="usersIncluded" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Filas Inclusas</label>
+                            <input type="number" class="form-input" name="queuesIncluded" value="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">WhatsApp Inclusos</label>
+                            <input type="number" class="form-input" name="whatsappIncluded" value="1">
+                        </div>
+                    </div>
+                    <h4 class="font-semibold mt-4 mb-2">Módulos</h4>
+                    <div class="grid-3" id="planModulesCheckboxes"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('planModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tier Modal -->
+    <div class="modal-overlay hidden" id="tierModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="tierModalTitle">Novo Tier</h3>
+                <button class="modal-close" onclick="closeModal('tierModal')">&times;</button>
+            </div>
+            <form id="tierForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="tierFormId">
+                    <div class="form-group">
+                        <label class="form-label">Nome *</label>
+                        <input type="text" class="form-input" name="name" required>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Mín. Clientes *</label>
+                            <input type="number" class="form-input" name="minClients" required min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Máx. Clientes</label>
+                            <input type="number" class="form-input" name="maxClients">
+                            <p class="text-xs text-gray mt-1">Deixe vazio para ilimitado</p>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Percentual (%) *</label>
+                            <input type="number" step="0.01" class="form-input" name="percentage" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ordem *</label>
+                            <input type="number" class="form-input" name="order" required min="1">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('tierModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal-overlay hidden" id="passwordModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Alterar Senha</h3>
+                <button class="modal-close" onclick="closeModal('passwordModal')">&times;</button>
+            </div>
+            <form id="passwordForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Senha Atual *</label>
+                        <input type="password" class="form-input" name="currentPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nova Senha *</label>
+                        <input type="password" class="form-input" name="newPassword" required minlength="8">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirmar Nova Senha *</label>
+                        <input type="password" class="form-input" name="confirmPassword" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('passwordModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Alterar Senha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/superadmin.js"></script>
+</body>
+</html>

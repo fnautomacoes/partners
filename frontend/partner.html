@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal do Parceiro - PacoTicket</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">PacoTicket</div>
+            <div class="text-xs text-gray-400 mt-1">Portal do Parceiro</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-section="dashboard">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
+            </a>
+            <a href="#" class="nav-item" data-section="clients">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                Meus Clientes
+            </a>
+            <a href="#" class="nav-item" data-section="funnel">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                Funil de Vendas
+            </a>
+            <a href="#" class="nav-item" data-section="plans">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                Meus Planos
+            </a>
+            <a href="#" class="nav-item" data-section="commissions">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Comissões
+            </a>
+            <a href="#" class="nav-item" data-section="proposals">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Propostas PDF
+            </a>
+            <a href="#" class="nav-item" data-section="simulator">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                Simulador
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <button onclick="logout()" class="nav-item text-red-400 hover:text-red-300">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Sair
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <h1 class="header-title" id="pageTitle">Dashboard</h1>
+            <div class="header-actions">
+                <div class="user-menu">
+                    <button class="user-menu-btn" onclick="toggleUserMenu()">
+                        <div class="user-avatar" id="userAvatar">P</div>
+                        <span class="text-sm" id="userName">Parceiro</span>
+                    </button>
+                    <div class="user-dropdown hidden" id="userDropdown">
+                        <button onclick="showChangePassword()">Alterar Senha</button>
+                        <button onclick="logout()">Sair</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="content">
+            <!-- Dashboard Section -->
+            <section id="section-dashboard" class="section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Clientes Ativos</div>
+                        <div class="stat-value" id="statClients">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Meu Tier</div>
+                        <div class="stat-value" id="statTier">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Comissão Pendente</div>
+                        <div class="stat-value" id="statPending">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Leads no Funil</div>
+                        <div class="stat-value" id="statLeads">-</div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Últimos Clientes</h2>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr><th>Empresa</th><th>Plano</th><th>Status</th></tr>
+                                </thead>
+                                <tbody id="recentClientsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Leads Recentes</h2>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr><th>Nome</th><th>Estágio</th><th>Criado</th></tr>
+                                </thead>
+                                <tbody id="recentLeadsTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clients Section -->
+            <section id="section-clients" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Meus Clientes</h2>
+                        <button class="btn btn-primary" onclick="showClientModal()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Novo Cliente
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Empresa</th>
+                                    <th>Contato</th>
+                                    <th>Plano</th>
+                                    <th>Mensalidade</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Funnel Section -->
+            <section id="section-funnel" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Funil de Vendas</h2>
+                        <button class="btn btn-primary" onclick="showLeadModal()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Novo Lead
+                        </button>
+                    </div>
+                </div>
+                <div class="kanban-board" id="funnelBoard"></div>
+            </section>
+
+            <!-- Plans Section -->
+            <section id="section-plans" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Planos Disponíveis</h2>
+                    </div>
+                    <p class="text-sm text-gray mb-4">Planos globais disponíveis para todos os parceiros:</p>
+                    <div id="globalPlansGrid" class="grid-3"></div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Meus Planos Personalizados</h2>
+                        <button class="btn btn-primary" onclick="showPartnerPlanModal()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Criar Plano
+                        </button>
+                    </div>
+                    <div id="myPlansGrid" class="grid-3"></div>
+                </div>
+            </section>
+
+            <!-- Commissions Section -->
+            <section id="section-commissions" class="section hidden">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Pendente</div>
+                        <div class="stat-value text-warning" id="commPending">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Pago Este Mês</div>
+                        <div class="stat-value text-success" id="commPaidMonth">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Recebido</div>
+                        <div class="stat-value" id="commPaidTotal">-</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Histórico de Comissões</h2>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Período</th>
+                                    <th>Recorrente</th>
+                                    <th>Setup</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commissionsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Proposals Section -->
+            <section id="section-proposals" class="section hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Propostas Geradas</h2>
+                        <button class="btn btn-primary" onclick="showProposalModal()">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Gerar Proposta
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Plano</th>
+                                    <th>Cliente</th>
+                                    <th>Criado em</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="proposalsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Simulator Section -->
+            <section id="section-simulator" class="section hidden">
+                <div class="grid-2">
+                    <div class="card">
+                        <h2 class="card-title mb-4">Simulador de Preços</h2>
+                        <form id="simulatorForm">
+                            <div class="form-group">
+                                <label class="form-label">Plano Base</label>
+                                <select class="form-select" id="simPlan" onchange="updateSimulator()">
+                                    <option value="">Selecione um plano</option>
+                                </select>
+                            </div>
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label class="form-label">Usuários Extras</label>
+                                    <input type="number" class="form-input" id="simUsers" value="0" min="0" onchange="updateSimulator()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Filas Extras</label>
+                                    <input type="number" class="form-input" id="simQueues" value="0" min="0" onchange="updateSimulator()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">WhatsApp Extras</label>
+                                    <input type="number" class="form-input" id="simWhatsapp" value="0" min="0" onchange="updateSimulator()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Instagram</label>
+                                    <input type="number" class="form-input" id="simInstagram" value="0" min="0" onchange="updateSimulator()">
+                                </div>
+                            </div>
+                            <h4 class="font-semibold mt-4 mb-2">Módulos</h4>
+                            <div id="simModules" class="grid-2"></div>
+                        </form>
+                    </div>
+                    <div class="card">
+                        <h2 class="card-title mb-4">Resultado</h2>
+                        <div id="simulatorResult">
+                            <p class="text-gray text-center">Selecione um plano para simular</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Client Modal -->
+    <div class="modal-overlay hidden" id="clientModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title" id="clientModalTitle">Novo Cliente</h3>
+                <button class="modal-close" onclick="closeModal('clientModal')">&times;</button>
+            </div>
+            <form id="clientForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="clientFormId">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nome da Empresa *</label>
+                            <input type="text" class="form-input" name="companyName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CNPJ</label>
+                            <input type="text" class="form-input" name="cnpj">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nome do Contato *</label>
+                            <input type="text" class="form-input" name="contactName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-input" name="contactEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" class="form-input" name="contactPhone">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Plano *</label>
+                            <select class="form-select" name="planId" required id="clientPlanSelect"></select>
+                        </div>
+                    </div>
+                    <h4 class="font-semibold mt-4 mb-2">Recursos Extras</h4>
+                    <div class="grid-4">
+                        <div class="form-group">
+                            <label class="form-label">Usuários</label>
+                            <input type="number" class="form-input" name="extraUsers" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Filas</label>
+                            <input type="number" class="form-input" name="extraQueues" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">WhatsApp</label>
+                            <input type="number" class="form-input" name="extraWhatsapp" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Instagram</label>
+                            <input type="number" class="form-input" name="extraInstagram" value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('clientModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lead Modal -->
+    <div class="modal-overlay hidden" id="leadModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="leadModalTitle">Novo Lead</h3>
+                <button class="modal-close" onclick="closeModal('leadModal')">&times;</button>
+            </div>
+            <form id="leadForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="leadFormId">
+                    <div class="form-group">
+                        <label class="form-label">Nome / Empresa *</label>
+                        <input type="text" class="form-input" name="name" required>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-input" name="email">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefone</label>
+                            <input type="text" class="form-input" name="phone">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Estágio</label>
+                        <select class="form-select" name="stageId" id="leadStageSelect"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Valor Estimado</label>
+                        <input type="number" step="0.01" class="form-input" name="estimatedValue">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Notas</label>
+                        <textarea class="form-textarea" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('leadModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Partner Plan Modal -->
+    <div class="modal-overlay hidden" id="partnerPlanModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">Criar Plano Personalizado</h3>
+                <button class="modal-close" onclick="closeModal('partnerPlanModal')">&times;</button>
+            </div>
+            <form id="partnerPlanForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Plano Base *</label>
+                        <select class="form-select" name="basePlanId" required id="basePlanSelect"></select>
+                        <p class="text-xs text-gray mt-1">Seu plano personalizado será baseado neste plano global</p>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nome do Plano *</label>
+                            <input type="text" class="form-input" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Acréscimo no Preço</label>
+                            <input type="number" step="0.01" class="form-input" name="priceAddition" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Acréscimo no Setup</label>
+                            <input type="number" step="0.01" class="form-input" name="setupAddition" value="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('partnerPlanModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Criar Plano</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Proposal Modal -->
+    <div class="modal-overlay hidden" id="proposalModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Gerar Proposta PDF</h3>
+                <button class="modal-close" onclick="closeModal('proposalModal')">&times;</button>
+            </div>
+            <form id="proposalForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Plano *</label>
+                        <select class="form-select" name="planId" required id="proposalPlanSelect"></select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nome do Cliente (opcional)</label>
+                        <input type="text" class="form-input" name="clientName">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('proposalModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Gerar PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal-overlay hidden" id="passwordModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Alterar Senha</h3>
+                <button class="modal-close" onclick="closeModal('passwordModal')">&times;</button>
+            </div>
+            <form id="passwordForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Senha Atual *</label>
+                        <input type="password" class="form-input" name="currentPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nova Senha *</label>
+                        <input type="password" class="form-input" name="newPassword" required minlength="8">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirmar Nova Senha *</label>
+                        <input type="password" class="form-input" name="confirmPassword" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('passwordModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Alterar Senha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/partner.js"></script>
+</body>
+</html>
