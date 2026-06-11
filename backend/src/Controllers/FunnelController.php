@@ -203,27 +203,38 @@ class FunnelController
         $pdo = Database::getInstance();
         $partnerId = $request->user['partnerId'] ?? null;
 
-        $where = ['"partnerId" = :partnerId'];
+        $where = ['l."partnerId" = :partnerId'];
         $params = [':partnerId' => $partnerId];
 
         if (!empty($request->query['stageId'])) {
-            $where[] = '"stageId" = :stageId';
+            $where[] = 'l."stageId" = :stageId';
             $params[':stageId'] = $request->query['stageId'];
         }
 
         if (!empty($request->query['status'])) {
-            $where[] = 'status = :status';
+            $where[] = 'l.status = :status';
             $params[':status'] = $request->query['status'];
         }
 
         $whereClause = 'WHERE ' . implode(' AND ', $where);
 
-        $sql = 'SELECT * FROM "Lead" ' . $whereClause . ' ORDER BY "createdAt" DESC';
+        $sql = '
+            SELECT l.*, s.name as "stageName", s.color as "stageColor"
+            FROM "Lead" l
+            LEFT JOIN "FunnelStage" s ON s.id = l."stageId"
+            ' . $whereClause . '
+            ORDER BY l."createdAt" DESC
+        ';
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $leads = $stmt->fetchAll();
 
-        $result = array_map(fn($l) => $this->formatLead($l), $leads);
+        $result = array_map(function($l) {
+            $formatted = $this->formatLead($l);
+            $formatted['stageName'] = $l['stageName'] ?? null;
+            $formatted['stageColor'] = $l['stageColor'] ?? null;
+            return $formatted;
+        }, $leads);
         $response->success($result);
     }
 
@@ -326,7 +337,7 @@ class FunnelController
         $result['activities'] = array_map(fn($a) => [
             'id' => $a['id'],
             'type' => $a['type'],
-            'content' => $a['content'],
+            'description' => $a['description'],
             'createdAt' => $a['createdAt'],
         ], $activities);
 
@@ -383,13 +394,14 @@ class FunnelController
             $newStageName = $stmtNew->fetchColumn() ?: 'Unknown';
 
             $stmtActivity = $pdo->prepare('
-                INSERT INTO "LeadActivity" (id, "leadId", type, content)
-                VALUES (gen_random_uuid(), :leadId, :type, :content)
+                INSERT INTO "LeadActivity" (id, "leadId", "partnerId", type, description)
+                VALUES (gen_random_uuid(), :leadId, :partnerId, :type, :description)
             ');
             $stmtActivity->execute([
                 ':leadId' => $leadId,
+                ':partnerId' => $partnerId,
                 ':type' => 'STAGE_CHANGE',
-                ':content' => "Stage changed from '$oldStageName' to '$newStageName'",
+                ':description' => "Stage changed from '$oldStageName' to '$newStageName'",
             ]);
         }
 
@@ -441,7 +453,7 @@ class FunnelController
         $result = array_map(fn($a) => [
             'id' => $a['id'],
             'type' => $a['type'],
-            'content' => $a['content'],
+            'description' => $a['description'],
             'createdAt' => $a['createdAt'],
         ], $activities);
 
@@ -462,7 +474,7 @@ class FunnelController
         }
 
         $type = $request->body['type'] ?? 'NOTE';
-        $content = trim($request->body['content'] ?? '');
+        $description = trim($request->body['description'] ?? $request->body['content'] ?? '');
 
         $validTypes = ['NOTE', 'STAGE_CHANGE', 'PDF_SENT', 'CALL', 'EMAIL', 'WHATSAPP'];
         if (!in_array($type, $validTypes, true)) {
@@ -471,14 +483,15 @@ class FunnelController
         }
 
         $stmt = $pdo->prepare('
-            INSERT INTO "LeadActivity" (id, "leadId", type, content)
-            VALUES (gen_random_uuid(), :leadId, :type, :content)
+            INSERT INTO "LeadActivity" (id, "leadId", "partnerId", type, description)
+            VALUES (gen_random_uuid(), :leadId, :partnerId, :type, :description)
             RETURNING id
         ');
         $stmt->execute([
             ':leadId' => $leadId,
+            ':partnerId' => $partnerId,
             ':type' => $type,
-            ':content' => $content,
+            ':description' => $description,
         ]);
 
         $result = $stmt->fetch();
@@ -561,25 +574,26 @@ class FunnelController
             $stmtRule->execute([
                 ':clientId' => $clientId,
                 ':partnerId' => $partnerId,
-                ':tierConfigId' => $tierInfo['tierId'],
-                ':tierName' => $tierInfo['tierName'],
+                ':tierConfigId' => $tierInfo['id'],
+                ':tierName' => $tierInfo['name'],
                 ':percentage' => $tierInfo['percentage'],
                 ':setupPct' => $tierInfo['setupCommissionPct'],
                 ':setupAmount' => $setupCommissionAmount,
-                ':commissionOnSetup' => $tierInfo['setupCommissionPct'] > 0 ? 'true' : 'false',
+                ':commissionOnSetup' => $tierInfo['commissionOnSetup'] ? 'true' : 'false',
             ]);
 
             $stmtLead = $pdo->prepare('UPDATE "Lead" SET status = :status, "updatedAt" = NOW() WHERE id = :id');
             $stmtLead->execute([':status' => 'WON', ':id' => $leadId]);
 
             $stmtActivity = $pdo->prepare('
-                INSERT INTO "LeadActivity" (id, "leadId", type, content)
-                VALUES (gen_random_uuid(), :leadId, :type, :content)
+                INSERT INTO "LeadActivity" (id, "leadId", "partnerId", type, description)
+                VALUES (gen_random_uuid(), :leadId, :partnerId, :type, :description)
             ');
             $stmtActivity->execute([
                 ':leadId' => $leadId,
+                ':partnerId' => $partnerId,
                 ':type' => 'NOTE',
-                ':content' => 'Lead promoted to client (ID: ' . $clientId . ')',
+                ':description' => 'Lead promoted to client (ID: ' . $clientId . ')',
             ]);
 
             $pdo->commit();

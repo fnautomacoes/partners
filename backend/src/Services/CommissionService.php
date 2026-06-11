@@ -50,18 +50,24 @@ class CommissionService
             'name' => $applicableTier['name'],
             'percentage' => (float) $applicableTier['percentage'],
             'activeClients' => $activeCount,
+            'commissionOnSetup' => (bool) ($applicableTier['commissionOnSetup'] ?? false),
+            'setupCommissionPct' => (float) ($applicableTier['setupCommissionPct'] ?? $applicableTier['percentage']),
         ];
     }
 
     private function getFallbackTier(int $activeCount): array
     {
-        if ($activeCount >= 10) {
-            return ['id' => null, 'name' => 'Master', 'percentage' => 35.0, 'activeClients' => $activeCount];
-        } elseif ($activeCount >= 3) {
-            return ['id' => null, 'name' => 'Parceiro', 'percentage' => 25.0, 'activeClients' => $activeCount];
-        } else {
-            return ['id' => null, 'name' => 'Indicador', 'percentage' => 15.0, 'activeClients' => $activeCount];
-        }
+        $percentage = $activeCount >= 10 ? 35.0 : ($activeCount >= 3 ? 25.0 : 15.0);
+        $name = $activeCount >= 10 ? 'Master' : ($activeCount >= 3 ? 'Parceiro' : 'Indicador');
+
+        return [
+            'id' => null,
+            'name' => $name,
+            'percentage' => $percentage,
+            'activeClients' => $activeCount,
+            'commissionOnSetup' => false,
+            'setupCommissionPct' => $percentage,
+        ];
     }
 
     public function getPendingCommission(string $partnerId): float
@@ -95,7 +101,7 @@ class CommissionService
         $pdo = Database::getInstance();
 
         $stmt = $pdo->prepare('
-            SELECT action, details, "createdAt" FROM "ActivityLog"
+            SELECT action, description, "createdAt" FROM "ActivityLog"
             WHERE "partnerId" = :partnerId
             ORDER BY "createdAt" DESC
             LIMIT :limit

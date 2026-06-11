@@ -206,15 +206,12 @@ async function saveClient(e) {
 
     const data = {
         companyName: form.companyName.value,
-        cnpj: form.cnpj.value || null,
         contactName: form.contactName.value,
-        contactEmail: form.contactEmail.value,
-        contactPhone: form.contactPhone.value || null,
+        email: form.contactEmail.value,
+        phone: form.contactPhone.value || null,
         planId: form.planId.value,
-        extraUsers: parseInt(form.extraUsers.value) || 0,
-        extraQueues: parseInt(form.extraQueues.value) || 0,
-        extraWhatsapp: parseInt(form.extraWhatsapp.value) || 0,
-        extraInstagram: parseInt(form.extraInstagram.value) || 0
+        recurrence: 'MONTHLY',
+        dueDate: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]
     };
 
     try {
@@ -277,7 +274,7 @@ function renderFunnel() {
                         <div class="kanban-card" onclick="showLeadModal(${JSON.stringify(lead).replace(/"/g, '&quot;')})">
                             <div class="kanban-card-title">${escapeHtml(lead.name)}</div>
                             <div class="kanban-card-meta">
-                                ${lead.estimatedValue ? formatCurrency(lead.estimatedValue) : ''}
+                                ${lead.value ? formatCurrency(lead.value) : ''}
                                 ${lead.phone ? `<br>${escapeHtml(lead.phone)}` : ''}
                             </div>
                         </div>
@@ -299,7 +296,7 @@ function showLeadModal(lead = null) {
         form.email.value = lead.email || '';
         form.phone.value = lead.phone || '';
         form.stageId.value = lead.stageId;
-        form.estimatedValue.value = lead.estimatedValue || '';
+        form.estimatedValue.value = lead.value || '';
         form.notes.value = lead.notes || '';
     }
 
@@ -316,7 +313,7 @@ async function saveLead(e) {
         email: form.email.value || null,
         phone: form.phone.value || null,
         stageId: form.stageId.value,
-        estimatedValue: form.estimatedValue.value ? parseFloat(form.estimatedValue.value) : null,
+        value: form.estimatedValue.value ? parseFloat(form.estimatedValue.value) : null,
         notes: form.notes.value || null
     };
 

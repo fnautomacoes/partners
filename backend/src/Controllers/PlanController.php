@@ -460,6 +460,9 @@ class PlanController
             'updatedAt' => $plan['updatedAt'],
             'modules' => $modules,
             'resources' => $resources,
+            'usersIncluded' => (int) ($plan['users'] ?? 1),
+            'queuesIncluded' => (int) ($plan['queues'] ?? 1),
+            'whatsappIncluded' => (int) ($plan['connections'] ?? 1),
         ];
     }
 

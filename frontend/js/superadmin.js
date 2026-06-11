@@ -339,9 +339,9 @@ async function savePlan(e) {
         recurrence: form.recurrence.value,
         basePrice: parseFloat(form.basePrice.value),
         setupFee: parseFloat(form.setupFee.value) || 0,
-        usersIncluded: parseInt(form.usersIncluded.value) || 1,
-        queuesIncluded: parseInt(form.queuesIncluded.value) || 1,
-        whatsappIncluded: parseInt(form.whatsappIncluded.value) || 1
+        users: parseInt(form.usersIncluded.value) || 1,
+        queues: parseInt(form.queuesIncluded.value) || 1,
+        connections: parseInt(form.whatsappIncluded.value) || 1
     };
 
     modulePrices.forEach(m => {

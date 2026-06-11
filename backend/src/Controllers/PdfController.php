@@ -101,13 +101,14 @@ class PdfController
 
         if ($leadId) {
             $stmtActivity = $pdo->prepare('
-                INSERT INTO "LeadActivity" (id, "leadId", type, content)
-                VALUES (gen_random_uuid(), :leadId, :type, :content)
+                INSERT INTO "LeadActivity" (id, "leadId", "partnerId", type, description)
+                VALUES (gen_random_uuid(), :leadId, :partnerId, :type, :description)
             ');
             $stmtActivity->execute([
                 ':leadId' => $leadId,
+                ':partnerId' => $partnerId,
                 ':type' => 'PDF_SENT',
-                ':content' => "Proposal PDF generated: $planName ($proposalCode)",
+                ':description' => "Proposal PDF generated: $planName ($proposalCode)",
             ]);
         }
 

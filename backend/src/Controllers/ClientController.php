@@ -53,9 +53,10 @@ class ClientController
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
         $sql = '
-            SELECT c.*, p.name as "planName", p."totalPrice" as "planPrice"
+            SELECT c.*, p.name as "planName", p."totalPrice" as "planPrice", pt.name as "partnerName"
             FROM "Client" c
             LEFT JOIN "Plan" p ON p.id = c."planId"
+            LEFT JOIN "Partner" pt ON pt.id = c."partnerId"
             ' . $whereClause . '
             ORDER BY c."createdAt" DESC
         ';
@@ -251,13 +252,13 @@ class ClientController
                 }
             } catch (\Exception $e) {
                 $stmt = $pdo->prepare('
-                    INSERT INTO "ActivityLog" (id, "partnerId", action, details)
-                    VALUES (gen_random_uuid(), :partnerId, :action, :details)
+                    INSERT INTO "ActivityLog" (id, "partnerId", action, description)
+                    VALUES (gen_random_uuid(), :partnerId, :action, :description)
                 ');
                 $stmt->execute([
                     ':partnerId' => $partnerId,
                     ':action' => 'PACOTICKET_ERROR',
-                    ':details' => json_encode(['error' => $e->getMessage(), 'clientId' => $client['id']]),
+                    ':description' => json_encode(['error' => $e->getMessage(), 'clientId' => $client['id']]),
                 ]);
             }
 
@@ -332,13 +333,13 @@ class ClientController
                 $this->pacoTicketService->updateCompany($client['pacoticketId'], $mirrorData);
             } catch (\Exception $e) {
                 $stmt = $pdo->prepare('
-                    INSERT INTO "ActivityLog" (id, "partnerId", action, details)
-                    VALUES (gen_random_uuid(), :partnerId, :action, :details)
+                    INSERT INTO "ActivityLog" (id, "partnerId", action, description)
+                    VALUES (gen_random_uuid(), :partnerId, :action, :description)
                 ');
                 $stmt->execute([
                     ':partnerId' => $client['partnerId'],
                     ':action' => 'PACOTICKET_UPDATE_ERROR',
-                    ':details' => json_encode(['error' => $e->getMessage(), 'clientId' => $id]),
+                    ':description' => json_encode(['error' => $e->getMessage(), 'clientId' => $id]),
                 ]);
             }
         }
@@ -590,6 +591,7 @@ class ClientController
 
     private function formatClient(array $client): array
     {
+        $price = isset($client['planPrice']) ? (float) $client['planPrice'] : null;
         return [
             'id' => $client['id'],
             'partnerId' => $client['partnerId'],
@@ -598,14 +600,19 @@ class ClientController
             'contactName' => $client['contactName'],
             'email' => $client['email'],
             'phone' => $client['phone'],
+            'contactEmail' => $client['email'],
+            'contactPhone' => $client['phone'],
             'recurrence' => $client['recurrence'],
             'dueDate' => $client['dueDate'],
             'status' => $client['status'],
             'pacoticketId' => $client['pacoticketId'],
             'createdAt' => $client['createdAt'],
             'updatedAt' => $client['updatedAt'],
+            'activationDate' => $client['createdAt'],
             'planName' => $client['planName'] ?? null,
-            'planPrice' => isset($client['planPrice']) ? (float) $client['planPrice'] : null,
+            'planPrice' => $price,
+            'monthlyPrice' => $price,
+            'partnerName' => $client['partnerName'] ?? null,
         ];
     }
 }
