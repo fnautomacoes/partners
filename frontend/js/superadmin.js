@@ -95,7 +95,7 @@ async function loadDashboard() {
         }
 
         if (commRes.success) {
-            document.getElementById('statPendingCommissions').textContent = formatCurrency(commRes.data.pendingTotal || 0);
+            document.getElementById('statPendingCommissions').textContent = formatCurrency(commRes.data.pending || 0);
         }
     } catch (e) {
         showToast('Erro ao carregar dashboard', 'error');
@@ -111,7 +111,7 @@ function renderRecentPartners() {
             <td>${escapeHtml(p.name)}</td>
             <td>${escapeHtml(p.email)}</td>
             <td>${p.activeClients || 0}</td>
-            <td><span class="badge badge-primary">${escapeHtml(p.tierName || 'Sem tier')}</span></td>
+            <td><span class="badge badge-primary">${escapeHtml(p.tier || 'Sem tier')}</span></td>
             <td><span class="badge ${p.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}">${p.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}</span></td>
         </tr>
     `).join('') || '<tr><td colspan="5" class="text-center text-gray">Nenhum parceiro</td></tr>';
@@ -145,7 +145,7 @@ function renderPartners() {
             <td>${escapeHtml(p.email)}</td>
             <td>${escapeHtml(p.phone || '-')}</td>
             <td>${p.activeClients || 0}</td>
-            <td><span class="badge badge-primary">${escapeHtml(p.tierName || '-')}</span></td>
+            <td><span class="badge badge-primary">${escapeHtml(p.tier || '-')}</span></td>
             <td><span class="badge ${p.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}">${p.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}</span></td>
             <td>
                 <button class="btn btn-sm btn-secondary mr-2" onclick="editPartner('${p.id}')">Editar</button>
@@ -464,9 +464,9 @@ async function loadCommissions() {
         if (listRes.success) renderCommissions(listRes.data);
 
         if (summaryRes.success) {
-            document.getElementById('commPending').textContent = formatCurrency(summaryRes.data.pendingTotal || 0);
-            document.getElementById('commPaidMonth').textContent = formatCurrency(summaryRes.data.paidThisMonth || 0);
-            document.getElementById('commPaidTotal').textContent = formatCurrency(summaryRes.data.paidTotal || 0);
+            document.getElementById('commPending').textContent = formatCurrency(summaryRes.data.pending || 0);
+            document.getElementById('commPaidMonth').textContent = formatCurrency(summaryRes.data.paid || 0);
+            document.getElementById('commPaidTotal').textContent = formatCurrency(summaryRes.data.total || 0);
         }
     } catch (e) {
         showToast('Erro ao carregar comissões', 'error');
@@ -480,7 +480,7 @@ function renderCommissions(commissions) {
             <td>${escapeHtml(c.partnerName || '-')}</td>
             <td>${escapeHtml(c.clientName || '-')}</td>
             <td>${c.periodMonth}/${c.periodYear}</td>
-            <td>${formatCurrency(c.recurringCommission)}</td>
+            <td>${formatCurrency(c.commissionAmount)}</td>
             <td>${formatCurrency(c.setupCommission)}</td>
             <td class="font-semibold">${formatCurrency(c.totalCommission)}</td>
             <td><span class="badge ${c.status === 'PAID' ? 'badge-success' : 'badge-warning'}">${c.status === 'PAID' ? 'Pago' : 'Pendente'}</span></td>

@@ -62,13 +62,19 @@ class PartnerController
     {
         $email = $request->body['email'] ?? '';
         $name = $request->body['name'] ?? '';
-        $phone = $request->body['phone'] ?? '';
+        $phone = $request->body['phone'] ?? null;
         $document = $request->body['document'] ?? null;
+        $password = $request->body['password'] ?? '';
         $canSetRecurrence = (bool) ($request->body['canSetRecurrence'] ?? false);
         $canSetDueDate = (bool) ($request->body['canSetDueDate'] ?? false);
 
-        if (!$email || !$name || !$phone) {
-            $response->error('INVALID_INPUT', 'Email, name, and phone are required', 400);
+        if (!$email || !$name) {
+            $response->error('INVALID_INPUT', 'Email and name are required', 400);
+            return;
+        }
+
+        if (!$password || strlen($password) < 8) {
+            $response->error('INVALID_INPUT', 'Password must be at least 8 characters', 400);
             return;
         }
 
@@ -87,8 +93,7 @@ class PartnerController
             return;
         }
 
-        $tempPassword = Crypto::randomHex(8);
-        $passwordHash = Crypto::hashPassword($tempPassword);
+        $passwordHash = Crypto::hashPassword($password);
 
         $pdo->beginTransaction();
         try {
@@ -132,7 +137,6 @@ class PartnerController
                 'canSetRecurrence' => (bool) $partner['canSetRecurrence'],
                 'canSetDueDate' => (bool) $partner['canSetDueDate'],
                 'createdAt' => $partner['createdAt'],
-                'temporaryPassword' => $tempPassword,
             ]);
         } catch (\Exception $e) {
             $pdo->rollBack();
@@ -218,6 +222,15 @@ class PartnerController
             $updates[] = '"canSetDueDate" = :canSetDueDate';
             $params[':canSetDueDate'] = $request->body['canSetDueDate'] ? 'true' : 'false';
         }
+        if (isset($request->body['status'])) {
+            $status = $request->body['status'];
+            if (!in_array($status, ['ACTIVE', 'INACTIVE'], true)) {
+                $response->error('INVALID_INPUT', 'Invalid status', 400);
+                return;
+            }
+            $updates[] = 'status = :status';
+            $params[':status'] = $status;
+        }
 
         if (empty($updates)) {
             $response->error('INVALID_INPUT', 'No fields to update', 400);
@@ -290,16 +303,28 @@ class PartnerController
             return;
         }
 
+        $pdo = Database::getInstance();
+
         $tier = $this->commissionService->calculateTier($partnerId);
         $pending = $this->commissionService->getPendingCommission($partnerId);
-        $recentActivity = $this->commissionService->getRecentActivity($partnerId, 5);
+
+        $stmt = $pdo->prepare('
+            SELECT c.id, c."companyName", c.status, p.name as "planName"
+            FROM "Client" c
+            LEFT JOIN "Plan" p ON p.id = c."planId"
+            WHERE c."partnerId" = :partnerId
+            ORDER BY c."createdAt" DESC
+            LIMIT 5
+        ');
+        $stmt->execute([':partnerId' => $partnerId]);
+        $recentClients = $stmt->fetchAll();
 
         $response->success([
             'tier' => $tier['name'],
             'tierPercentage' => $tier['percentage'],
             'activeClients' => $tier['activeClients'],
             'pendingCommission' => $pending,
-            'recentActivity' => $recentActivity,
+            'recentClients' => $recentClients,
         ]);
     }
 }

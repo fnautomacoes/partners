@@ -77,7 +77,7 @@ async function loadDashboard() {
         if (dashRes.success) {
             const d = dashRes.data;
             document.getElementById('statClients').textContent = d.activeClients || 0;
-            document.getElementById('statTier').textContent = d.tierName || 'Sem tier';
+            document.getElementById('statTier').textContent = d.tier || 'Sem tier';
             document.getElementById('statPending').textContent = formatCurrency(d.pendingCommission || 0);
 
             clients = d.recentClients || [];
@@ -443,9 +443,9 @@ async function loadCommissions() {
         if (listRes.success) renderCommissions(listRes.data);
 
         if (summaryRes.success) {
-            document.getElementById('commPending').textContent = formatCurrency(summaryRes.data.pendingTotal || 0);
-            document.getElementById('commPaidMonth').textContent = formatCurrency(summaryRes.data.paidThisMonth || 0);
-            document.getElementById('commPaidTotal').textContent = formatCurrency(summaryRes.data.paidTotal || 0);
+            document.getElementById('commPending').textContent = formatCurrency(summaryRes.data.pending || 0);
+            document.getElementById('commPaidMonth').textContent = formatCurrency(summaryRes.data.paid || 0);
+            document.getElementById('commPaidTotal').textContent = formatCurrency(summaryRes.data.total || 0);
         }
     } catch (e) {
         showToast('Erro ao carregar comissões', 'error');
@@ -458,7 +458,7 @@ function renderCommissions(commissions) {
         <tr>
             <td>${escapeHtml(c.clientName || '-')}</td>
             <td>${c.periodMonth}/${c.periodYear}</td>
-            <td>${formatCurrency(c.recurringCommission)}</td>
+            <td>${formatCurrency(c.commissionAmount)}</td>
             <td>${formatCurrency(c.setupCommission)}</td>
             <td class="font-semibold">${formatCurrency(c.totalCommission)}</td>
             <td><span class="badge ${c.status === 'PAID' ? 'badge-success' : 'badge-warning'}">${c.status === 'PAID' ? 'Pago' : 'Pendente'}</span></td>

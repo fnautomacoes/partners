@@ -69,7 +69,7 @@ class CommissionService
         $pdo = Database::getInstance();
 
         $stmt = $pdo->prepare('
-            SELECT COALESCE(SUM(amount), 0) as total FROM "Commission"
+            SELECT COALESCE(SUM("commissionAmount" + "setupCommission"), 0) as total FROM "Commission"
             WHERE "partnerId" = :partnerId AND status = :status
         ');
         $stmt->execute([':partnerId' => $partnerId, ':status' => 'PENDING']);
