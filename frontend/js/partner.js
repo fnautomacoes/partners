@@ -45,15 +45,6 @@ function showSection(section) {
 
     document.getElementById('pageTitle').textContent = getSectionTitle(section);
 
-    const summaryPanel = document.getElementById('proposalSummaryPanel');
-    if (summaryPanel) {
-        if (section === 'proposals') {
-            summaryPanel.classList.remove('hidden');
-        } else {
-            summaryPanel.classList.add('hidden');
-        }
-    }
-
     const loaders = {
         dashboard: loadDashboard,
         funnel: loadFunnel,

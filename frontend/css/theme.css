@@ -1693,12 +1693,17 @@ tr:hover { background: var(--gray-50); }
     color: var(--gray-600);
 }
 
-/* Proposal summary - INLINE version (not fixed) */
+/* Proposal summary - INLINE version (not fixed, part of page scroll) */
 .proposal-summary-inline {
     background: var(--primary);
     color: white;
     border-radius: 0.5rem;
     margin-top: 1.5rem;
+}
+
+.proposal-summary-inline .proposal-summary-body {
+    max-height: none;
+    overflow-y: visible;
 }
 
 /* Proposal summary - Legacy fixed version (kept for backwards compatibility) */
