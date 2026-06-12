@@ -21,6 +21,7 @@
     --gray-900: #111827;
     --sidebar-width: 256px;
     --header-height: 64px;
+    --top-nav-height: 56px;
 }
 
 * { box-sizing: border-box; }
@@ -31,6 +32,63 @@ body {
     padding: 0;
     background-color: var(--gray-100);
     color: var(--gray-800);
+}
+
+/* Top Navigation (SuperAdmin) */
+.top-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--top-nav-height);
+    background: white;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    z-index: 100;
+}
+
+.top-nav-tabs {
+    display: flex;
+    gap: 0.5rem;
+    height: 100%;
+    align-items: center;
+}
+
+.top-nav-tab {
+    padding: 0.5rem 1rem;
+    color: var(--gray-600);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.top-nav-tab:hover {
+    color: var(--primary);
+}
+
+.top-nav-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.top-nav-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.main-content-full {
+    margin-top: var(--top-nav-height);
+    min-height: calc(100vh - var(--top-nav-height));
+    padding: 0;
 }
 
 .sidebar {
@@ -1635,7 +1693,15 @@ tr:hover { background: var(--gray-50); }
     color: var(--gray-600);
 }
 
-/* Proposal summary */
+/* Proposal summary - INLINE version (not fixed) */
+.proposal-summary-inline {
+    background: var(--primary);
+    color: white;
+    border-radius: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Proposal summary - Legacy fixed version (kept for backwards compatibility) */
 .proposal-summary {
     position: fixed;
     bottom: 0;
@@ -1747,4 +1813,27 @@ tr:hover { background: var(--gray-50); }
     .tier-progress-card { flex-direction: column; }
     .tier-progress-percentage { text-align: left; margin-top: 1rem; }
     .proposal-summary { width: 100%; }
+    .proposal-summary-inline { margin: 1rem; }
 }
+
+/* Alert boxes */
+.alert {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid;
+    font-size: 0.875rem;
+}
+
+.alert-warning {
+    background: #fef3c7;
+    border-color: #fbbf24;
+    color: #92400e;
+}
+
+.alert-warning strong {
+    font-weight: 600;
+}
+
+/* Spacing utility classes */
+.mb-6 { margin-bottom: 1.5rem; }
+.mt-6 { margin-top: 1.5rem; }

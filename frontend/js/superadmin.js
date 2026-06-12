@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!currentUser) return;
 
     document.getElementById('userName').textContent = currentUser.email.split('@')[0];
-    document.getElementById('userAvatar').textContent = currentUser.email[0].toUpperCase();
 
     setupNavigation();
     setupForms();
@@ -34,21 +33,11 @@ function showSection(section) {
     const navItem = document.querySelector(`.nav-item[data-section="${section}"]`);
     if (navItem) navItem.classList.add('active');
 
+    document.getElementById('pageTitle').textContent = getSectionTitle(section);
+
     document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
     const sectionEl = document.getElementById(`section-${section}`);
     if (sectionEl) sectionEl.classList.remove('hidden');
-
-    const titles = {
-        dashboard: 'Dashboard',
-        partners: 'Parceiros',
-        plans: 'Planos',
-        clients: 'Clientes',
-        commissions: 'Comissoes',
-        invoices: 'Faturas',
-        proposals: 'Propostas',
-        config: 'Configuracoes'
-    };
-    document.getElementById('pageTitle').textContent = titles[section] || section;
 
     const loaders = {
         dashboard: loadDashboard,
@@ -78,6 +67,9 @@ function setupForms() {
 
     const resourceForm = document.getElementById('resourcePricesForm');
     if (resourceForm) resourceForm.addEventListener('submit', saveResourcePrices);
+
+    const moduleForm = document.getElementById('moduleForm');
+    if (moduleForm) moduleForm.addEventListener('submit', saveModule);
 }
 
 function setupFilters() {
@@ -979,15 +971,41 @@ function renderModulePricesTable() {
     if (!tbody) return;
 
     tbody.innerHTML = modulePrices.map(m => `
-        <tr>
-            <td>${escapeHtml(m.label)}</td>
-            <td>${formatCurrency(m.price)}</td>
-            <td><span class="badge ${m.isVisible ? 'badge-success' : 'badge-secondary'}">${m.isVisible ? 'Sim' : 'Nao'}</span></td>
+        <tr data-module-key="${m.moduleKey}">
             <td>
-                <button class="btn-link" onclick="editModulePrice('${m.moduleKey}', ${m.price}, ${m.isVisible})">Editar</button>
+                <label class="form-checkbox">
+                    <input type="checkbox" name="${m.moduleKey}_visible" ${m.isVisible ? 'checked' : ''}>
+                    <span></span>
+                </label>
+            </td>
+            <td>${escapeHtml(m.label)}</td>
+            <td>
+                <input type="number" step="0.01" class="form-input" name="${m.moduleKey}_price" value="${m.price || 0}" style="max-width: 100px">
+            </td>
+            <td>
+                <input type="number" step="0.01" class="form-input" name="${m.moduleKey}_setup" value="${m.setupFee || 0}" style="max-width: 100px">
+            </td>
+            <td>
+                <button class="btn-link btn-link-danger" onclick="deleteModule('${m.moduleKey}')">Excluir</button>
             </td>
         </tr>
     `).join('');
+}
+
+async function deleteModule(moduleKey) {
+    if (!confirm('Excluir este modulo?')) return;
+
+    try {
+        const res = await apiRequest(`/api/plans/modules/prices/${moduleKey}`, { method: 'DELETE' });
+        if (res.success) {
+            showToast('Modulo excluido!', 'success');
+            loadConfig();
+        } else {
+            showToast(res.message || 'Erro', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao excluir modulo', 'error');
+    }
 }
 
 async function editModulePrice(moduleKey, currentPrice, isVisible) {
@@ -1065,6 +1083,11 @@ function showTierModal(tier = null) {
         form.maxClients.value = tier.maxClients || '';
         form.percentage.value = tier.percentage;
         form.order.value = tier.order;
+        if (form.commissionDuration) form.commissionDuration.value = tier.commissionDuration || '';
+        if (form.supportMode) form.supportMode.value = tier.supportMode || 'CLIENT';
+        if (form.notes) form.notes.value = tier.notes || '';
+        if (form.allowNewSales) form.allowNewSales.checked = tier.allowNewSales !== false;
+        if (form.setupCommission) form.setupCommission.checked = tier.setupCommission || false;
     }
 
     document.getElementById('tierModal').classList.remove('hidden');
@@ -1085,7 +1108,12 @@ async function saveTier(e) {
         minClients: parseInt(form.minClients.value),
         maxClients: form.maxClients.value ? parseInt(form.maxClients.value) : null,
         percentage: parseFloat(form.percentage.value),
-        order: parseInt(form.order.value)
+        order: parseInt(form.order.value),
+        commissionDuration: form.commissionDuration?.value ? parseInt(form.commissionDuration.value) : null,
+        supportMode: form.supportMode?.value || 'CLIENT',
+        notes: form.notes?.value || null,
+        allowNewSales: form.allowNewSales?.checked !== false,
+        setupCommission: form.setupCommission?.checked || false
     };
 
     try {
@@ -1320,4 +1348,104 @@ function getInvoiceStatusBadge(status) {
 function getInvoiceStatusLabel(status) {
     const map = { PAID: 'Pago', PENDING: 'Pendente', OVERDUE: 'Vencido', CANCELLED: 'Cancelado' };
     return map[status] || status;
+}
+
+function getSectionTitle(section) {
+    const titles = {
+        dashboard: 'Dashboard',
+        partners: 'Parceiros',
+        plans: 'Planos',
+        clients: 'Clientes',
+        commissions: 'Comissoes',
+        invoices: 'Faturas',
+        proposals: 'Propostas',
+        config: 'Configuracoes'
+    };
+    return titles[section] || 'Dashboard';
+}
+
+function saveModulePrices() {
+    const rows = document.querySelectorAll('#modulePricesTable tr[data-module-key]');
+    const modules = [];
+
+    rows.forEach(row => {
+        const moduleKey = row.dataset.moduleKey;
+        const checkbox = row.querySelector(`input[name="${moduleKey}_visible"]`);
+        const priceInput = row.querySelector(`input[name="${moduleKey}_price"]`);
+        const setupInput = row.querySelector(`input[name="${moduleKey}_setup"]`);
+        const moduleData = modulePrices.find(m => m.moduleKey === moduleKey);
+
+        if (moduleKey) {
+            modules.push({
+                moduleKey,
+                label: moduleData?.label || moduleKey,
+                price: parseFloat(priceInput?.value) || 0,
+                setupFee: parseFloat(setupInput?.value) || 0,
+                isVisible: checkbox?.checked || false
+            });
+        }
+    });
+
+    apiRequest('/api/plans/modules/prices', {
+        method: 'PUT',
+        body: JSON.stringify({ modules })
+    }).then(res => {
+        if (res.success) {
+            showToast('Precos de modulos salvos!', 'success');
+            loadConfig();
+        } else {
+            showToast(res.message || 'Erro ao salvar', 'error');
+        }
+    }).catch(() => showToast('Erro ao salvar precos de modulos', 'error'));
+}
+
+function showModuleModal(module = null) {
+    const form = document.getElementById('moduleForm');
+    form.reset();
+    document.getElementById('moduleFormId').value = module?.moduleKey || '';
+    document.getElementById('moduleModalTitle').textContent = module ? 'Editar Modulo' : 'Novo Modulo';
+
+    if (module) {
+        form.moduleKey.value = module.moduleKey;
+        form.moduleKey.disabled = true;
+        form.label.value = module.label;
+        form.price.value = module.price || 0;
+        form.setupFee.value = module.setupFee || 0;
+        form.isVisible.checked = module.isVisible !== false;
+    } else {
+        form.moduleKey.disabled = false;
+    }
+
+    document.getElementById('moduleModal').classList.remove('hidden');
+}
+
+async function saveModule(e) {
+    e.preventDefault();
+    const form = e.target;
+    const isEdit = !!document.getElementById('moduleFormId').value;
+
+    const data = {
+        moduleKey: form.moduleKey.value,
+        label: form.label.value,
+        price: parseFloat(form.price.value) || 0,
+        setupFee: parseFloat(form.setupFee.value) || 0,
+        isVisible: form.isVisible.checked
+    };
+
+    try {
+        const res = await apiRequest('/api/plans/modules/prices', {
+            method: 'PUT',
+            body: JSON.stringify({ modules: [data] })
+        });
+
+        if (res.success) {
+            showToast(isEdit ? 'Modulo atualizado!' : 'Modulo criado!', 'success');
+            closeModal('moduleModal');
+            loadConfig();
+        } else {
+            showToast(res.message || 'Erro', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao salvar modulo', 'error');
+    }
 }

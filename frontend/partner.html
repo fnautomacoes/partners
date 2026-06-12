@@ -32,7 +32,7 @@
                 Comissoes
             </a>
             <a href="#" class="nav-item" data-section="pricing">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
                 Tabela de Precos
             </a>
             <a href="#" class="nav-item" data-section="proposals">
@@ -43,7 +43,7 @@
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                 Meu Perfil
             </a>
-            <a href="/docs.html" class="nav-item">
+            <a href="docs.html" class="nav-item">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                 Docs
             </a>
@@ -291,7 +291,7 @@
                             <h3 class="card-title">Propostas geradas</h3>
                         </div>
                         <div class="flex gap-2 items-center">
-                            <span class="text-sm text-gray">Mostrando até 50</span>
+                            <span class="text-sm text-gray">Mostrando ate 50</span>
                             <button class="btn-link" onclick="loadProposals()">Atualizar</button>
                         </div>
                     </div>
@@ -340,45 +340,45 @@
                                 <div class="resource-input-row">
                                     <span class="resource-label">WhatsApp Nao Oficial (por conexao)</span>
                                     <div class="resource-input-group">
-                                        <button class="resource-btn" onclick="changeResource('whatsappUnofficial', -1)">-</button>
+                                        <button type="button" class="resource-btn" onclick="changeResource('whatsappUnofficial', -1)">-</button>
                                         <input type="number" class="resource-input" id="propWhatsappUnofficial" value="0" min="0" onchange="updateProposalSummary()">
-                                        <button class="resource-btn" onclick="changeResource('whatsappUnofficial', 1)">+</button>
+                                        <button type="button" class="resource-btn" onclick="changeResource('whatsappUnofficial', 1)">+</button>
                                     </div>
                                     <span class="resource-total" id="totalWhatsappUnofficial">R$ 0,00</span>
                                 </div>
                                 <div class="resource-input-row">
                                     <span class="resource-label">WhatsApp Oficial / WABA (por conexao)</span>
                                     <div class="resource-input-group">
-                                        <button class="resource-btn" onclick="changeResource('whatsappOfficial', -1)">-</button>
+                                        <button type="button" class="resource-btn" onclick="changeResource('whatsappOfficial', -1)">-</button>
                                         <input type="number" class="resource-input" id="propWhatsappOfficial" value="0" min="0" onchange="updateProposalSummary()">
-                                        <button class="resource-btn" onclick="changeResource('whatsappOfficial', 1)">+</button>
+                                        <button type="button" class="resource-btn" onclick="changeResource('whatsappOfficial', 1)">+</button>
                                     </div>
                                     <span class="resource-total" id="totalWhatsappOfficial">R$ 0,00</span>
                                 </div>
                                 <div class="resource-input-row">
                                     <span class="resource-label">Instagram (por conexao)</span>
                                     <div class="resource-input-group">
-                                        <button class="resource-btn" onclick="changeResource('instagram', -1)">-</button>
+                                        <button type="button" class="resource-btn" onclick="changeResource('instagram', -1)">-</button>
                                         <input type="number" class="resource-input" id="propInstagram" value="0" min="0" onchange="updateProposalSummary()">
-                                        <button class="resource-btn" onclick="changeResource('instagram', 1)">+</button>
+                                        <button type="button" class="resource-btn" onclick="changeResource('instagram', 1)">+</button>
                                     </div>
                                     <span class="resource-total" id="totalInstagram">R$ 0,00</span>
                                 </div>
                                 <div class="resource-input-row">
                                     <span class="resource-label">Usuario adicional (por usuario)</span>
                                     <div class="resource-input-group">
-                                        <button class="resource-btn" onclick="changeResource('user', -1)">-</button>
+                                        <button type="button" class="resource-btn" onclick="changeResource('user', -1)">-</button>
                                         <input type="number" class="resource-input" id="propUser" value="0" min="0" onchange="updateProposalSummary()">
-                                        <button class="resource-btn" onclick="changeResource('user', 1)">+</button>
+                                        <button type="button" class="resource-btn" onclick="changeResource('user', 1)">+</button>
                                     </div>
                                     <span class="resource-total" id="totalUser">R$ 0,00</span>
                                 </div>
                                 <div class="resource-input-row">
                                     <span class="resource-label">Fila adicional (por fila)</span>
                                     <div class="resource-input-group">
-                                        <button class="resource-btn" onclick="changeResource('queue', -1)">-</button>
+                                        <button type="button" class="resource-btn" onclick="changeResource('queue', -1)">-</button>
                                         <input type="number" class="resource-input" id="propQueue" value="0" min="0" onchange="updateProposalSummary()">
-                                        <button class="resource-btn" onclick="changeResource('queue', 1)">+</button>
+                                        <button type="button" class="resource-btn" onclick="changeResource('queue', 1)">+</button>
                                     </div>
                                     <span class="resource-total" id="totalQueue">R$ 0,00</span>
                                 </div>
@@ -387,8 +387,8 @@
                     </div>
                 </div>
 
-                <!-- Proposal Summary -->
-                <div class="proposal-summary" id="proposalSummary">
+                <!-- Proposal Summary - Inline at the end -->
+                <div class="proposal-summary-inline" id="proposalSummaryPanel">
                     <div class="proposal-summary-header">
                         <h4>Resumo da Proposta</h4>
                     </div>
@@ -405,19 +405,17 @@
                             <span>Taxa de Setup (cobrada 1x)</span>
                             <span id="summarySetupFee">R$ 0,00</span>
                         </div>
-                        <div class="proposal-summary-row text-sm text-gray">
-                            <span>Comissao mensal (15%)</span>
+                        <div class="proposal-summary-row text-sm" style="opacity: 0.8">
+                            <span>Comissao mensal (<span id="summaryCommissionPercent">15</span>%)</span>
                             <span id="summaryCommission">R$ 0,00/mes</span>
                         </div>
 
                         <div class="proposal-setup-info">
                             <h5>Taxa de Setup Adicional</h5>
-                            <p>Ao definir uma margem de setup adicional, voce aumenta o valor de setup no momento da ativacao, e sua comissao de ativacao.</p>
+                            <p>Ao definir uma margem de setup adicional, voce aumenta o valor de setup no momento da ativacao.</p>
                             <div class="form-group mt-2">
-                                <label class="form-label">Margem adicional de setup</label>
-                                <input type="number" class="form-input" id="propSetupExtra" value="0" min="0" step="0.01" onchange="updateProposalSummary()">
+                                <input type="number" class="form-input" id="propSetupExtra" value="0" min="0" step="0.01" onchange="updateProposalSummary()" style="background: white; color: #333;">
                             </div>
-                            <p class="text-xs text-gray mt-2">A comissao sobre a margem de setup (R$ 0,00 - 100% de acrescimo) e sua comissao de ativacao. Se ativado atualmente, o comissionamento aparece sobre a mensalidade, quando houver fatura paga do cliente.</p>
                             <div class="proposal-setup-totals mt-3">
                                 <div class="proposal-summary-row">
                                     <span>Setup total cobrado do cliente</span>
@@ -427,13 +425,13 @@
                         </div>
 
                         <div class="form-group mt-4">
-                            <label class="form-label">Nome do plano personalizado</label>
-                            <input type="text" class="form-input" id="propCustomPlanName" placeholder="Ex: Plano Especial Cliente X">
+                            <label class="form-label" style="color: white;">Nome do plano personalizado</label>
+                            <input type="text" class="form-input" id="propCustomPlanName" placeholder="Ex: Plano Especial Cliente X" style="background: white; color: #333;">
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">Vincular a lead (opcional)</label>
-                            <select class="form-select" id="propLeadSelect">
+                            <label class="form-label" style="color: white;">Vincular a lead (opcional)</label>
+                            <select class="form-select" id="propLeadSelect" style="background: white; color: #333;">
                                 <option value="">- Nenhum lead -</option>
                             </select>
                         </div>
@@ -442,7 +440,7 @@
                             <button class="btn btn-secondary" onclick="savePlanOnly()">Salvar Plano</button>
                             <button class="btn btn-primary" onclick="generateProposalPDF()">Gerar a PDF</button>
                         </div>
-                        <p class="text-xs text-gray text-center mt-2">
+                        <p class="text-xs text-center mt-2" style="opacity: 0.8">
                             <label><input type="checkbox" id="propSavePlan"> Salvar PDF sem salvar plano</label>
                         </p>
                     </div>
@@ -507,7 +505,7 @@
 
     <!-- Client Modal -->
     <div class="modal-overlay hidden" id="clientModal">
-        <div class="modal modal-lg">
+        <div class="modal">
             <div class="modal-header">
                 <h3 class="modal-title" id="clientModalTitle">Novo Cliente</h3>
                 <button class="modal-close" onclick="closeModal('clientModal')">&times;</button>
@@ -515,53 +513,40 @@
             <form id="clientForm">
                 <div class="modal-body">
                     <input type="hidden" name="id" id="clientFormId">
+                    <div class="form-group">
+                        <label class="form-label">Empresa *</label>
+                        <input type="text" class="form-input" name="companyName" required>
+                    </div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Nome da Empresa *</label>
-                            <input type="text" class="form-input" name="companyName" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">CNPJ</label>
-                            <input type="text" class="form-input" name="cnpj">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nome do Contato *</label>
+                            <label class="form-label">Contato *</label>
                             <input type="text" class="form-input" name="contactName" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email *</label>
                             <input type="email" class="form-input" name="email" required>
                         </div>
+                    </div>
+                    <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Telefone</label>
-                            <input type="text" class="form-input" name="phone">
+                            <label class="form-label">Telefone *</label>
+                            <input type="text" class="form-input" name="phone" placeholder="5511999999999" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Plano *</label>
-                            <select class="form-select" name="planId" required id="clientPlanSelect"></select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Recorrencia</label>
-                            <select class="form-select" name="recurrence">
-                                <option value="MONTHLY">Mensal</option>
-                                <option value="QUARTERLY">Trimestral</option>
-                                <option value="SEMIANNUAL">Semestral</option>
-                                <option value="ANNUAL">Anual</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Vencimento</label>
-                            <input type="date" class="form-input" name="dueDate">
+                            <label class="form-label">Senha (PacoTicket) *</label>
+                            <input type="password" class="form-input" name="password" minlength="8">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Senha de acesso (para criar conta no PacoTicket)</label>
-                        <input type="password" class="form-input" name="password" minlength="8">
+                        <label class="form-label">Plano *</label>
+                        <select class="form-select" name="planId" required id="clientPlanSelect">
+                            <option value="">Selecione...</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('clientModal')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="submit" class="btn btn-primary">Cadastrar Cliente</button>
                 </div>
             </form>
         </div>
@@ -578,34 +563,42 @@
                 <div class="modal-body">
                     <input type="hidden" name="id" id="leadFormId">
                     <div class="form-group">
-                        <label class="form-label">Nome / Empresa *</label>
-                        <input type="text" class="form-input" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Nome da Empresa</label>
-                        <input type="text" class="form-input" name="companyName">
+                        <label class="form-label">Nome do contato *</label>
+                        <input type="text" class="form-input" name="name" placeholder="Joao Silva" required>
                     </div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-input" name="email">
+                            <label class="form-label">Empresa</label>
+                            <input type="text" class="form-input" name="companyName" placeholder="Empresa Ltda">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Telefone</label>
-                            <input type="text" class="form-input" name="phone">
+                            <input type="text" class="form-input" name="phone" placeholder="(11) 99999-9999">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Estagio</label>
-                        <select class="form-select" name="stageId" id="leadStageSelect"></select>
+                        <label class="form-label">E-mail</label>
+                        <input type="email" class="form-input" name="email" placeholder="contato@empresa.com">
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Estagio</label>
+                            <select class="form-select" name="stageId" id="leadStageSelect"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Plano de Interesse</label>
+                            <select class="form-select" name="planId" id="leadPlanSelect">
+                                <option value="">-- Nenhum --</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Valor Estimado</label>
-                        <input type="number" step="0.01" class="form-input" name="estimatedValue">
+                        <label class="form-label">Valor estimado (R$)</label>
+                        <input type="number" step="0.01" class="form-input" name="estimatedValue" placeholder="0.00">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Notas</label>
-                        <textarea class="form-textarea" name="notes" rows="3"></textarea>
+                        <label class="form-label">Observacoes</label>
+                        <textarea class="form-textarea" name="notes" rows="3" placeholder="Anotacoes sobre o lead..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">

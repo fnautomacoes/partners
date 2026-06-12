@@ -43,16 +43,16 @@ function showSection(section) {
     const sectionEl = document.getElementById(`section-${section}`);
     if (sectionEl) sectionEl.classList.remove('hidden');
 
-    const titles = {
-        dashboard: 'Dashboard',
-        funnel: 'Funil de Vendas',
-        clients: 'Meus Clientes',
-        commissions: 'Comissoes',
-        pricing: 'Tabela de Precos',
-        proposals: 'Propostas',
-        profile: 'Meu Perfil'
-    };
-    document.getElementById('pageTitle').textContent = titles[section] || section;
+    document.getElementById('pageTitle').textContent = getSectionTitle(section);
+
+    const summaryPanel = document.getElementById('proposalSummaryPanel');
+    if (summaryPanel) {
+        if (section === 'proposals') {
+            summaryPanel.classList.remove('hidden');
+        } else {
+            summaryPanel.classList.add('hidden');
+        }
+    }
 
     const loaders = {
         dashboard: loadDashboard,
@@ -131,6 +131,7 @@ async function loadFunnel() {
         if (stagesRes.success) {
             stages = stagesRes.data;
             populateStageSelects();
+            populateLeadPlanSelect();
         }
 
         if (leadsRes.success) {
@@ -146,6 +147,13 @@ async function loadFunnel() {
 function populateStageSelects() {
     const options = stages.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
     document.getElementById('leadStageSelect').innerHTML = options;
+}
+
+function populateLeadPlanSelect() {
+    const select = document.getElementById('leadPlanSelect');
+    if (!select) return;
+    select.innerHTML = '<option value="">-- Nenhum --</option>' +
+        plans.filter(p => p.isActive).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
 }
 
 function renderKanban() {
@@ -194,12 +202,15 @@ function showLeadModal(lead = null, stageId = null) {
     document.getElementById('leadFormId').value = lead?.id || '';
     document.getElementById('leadModalTitle').textContent = lead ? 'Editar Lead' : 'Novo Lead';
 
+    populateLeadPlanSelect();
+
     if (lead) {
         form.name.value = lead.name || '';
         form.companyName.value = lead.companyName || '';
         form.email.value = lead.email || '';
         form.phone.value = lead.phone || '';
         form.stageId.value = lead.stageId || '';
+        form.planId.value = lead.planId || '';
         form.estimatedValue.value = lead.estimatedValue || '';
         form.notes.value = lead.notes || '';
     } else if (stageId) {
@@ -220,6 +231,7 @@ async function saveLead(e) {
         email: form.email.value || null,
         phone: form.phone.value || null,
         stageId: form.stageId.value,
+        planId: form.planId.value || null,
         estimatedValue: form.estimatedValue.value ? parseFloat(form.estimatedValue.value) : null,
         notes: form.notes.value || null
     };
@@ -883,7 +895,10 @@ function populateLeadSelect() {
 }
 
 function changeResource(type, delta) {
-    const input = document.getElementById('prop' + type.charAt(0).toUpperCase() + type.slice(1));
+    const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
+    const inputId = 'prop' + capitalizedType;
+    const input = document.getElementById(inputId);
+    if (!input) return;
     let val = parseInt(input.value) || 0;
     val = Math.max(0, val + delta);
     input.value = val;
@@ -907,13 +922,21 @@ function updateProposalSummary() {
         monthlyTotal += parseFloat(cb.value) || 0;
     });
 
-    const resourceIds = ['whatsappUnofficial', 'whatsappOfficial', 'instagram', 'user', 'queue'];
-    resourceIds.forEach(rid => {
-        const qty = parseInt(document.getElementById('prop' + rid.charAt(0).toUpperCase() + rid.slice(1))?.value) || 0;
+    const resourceMap = {
+        whatsappUnofficial: 'WhatsappUnofficial',
+        whatsappOfficial: 'WhatsappOfficial',
+        instagram: 'Instagram',
+        user: 'User',
+        queue: 'Queue'
+    };
+
+    Object.keys(resourceMap).forEach(rid => {
+        const cap = resourceMap[rid];
+        const qty = parseInt(document.getElementById('prop' + cap)?.value) || 0;
         const price = resourcePrices.find(r => r.key === rid)?.price || 0;
         const total = qty * price;
         monthlyTotal += total;
-        const totalEl = document.getElementById('total' + rid.charAt(0).toUpperCase() + rid.slice(1));
+        const totalEl = document.getElementById('total' + cap);
         if (totalEl) totalEl.textContent = formatCurrency(total);
     });
 
@@ -1151,4 +1174,17 @@ function getInvoiceStatusBadge(status) {
 function getInvoiceStatusLabel(status) {
     const map = { PAID: 'Pago', PENDING: 'Pendente', OVERDUE: 'Vencido', CANCELLED: 'Cancelado' };
     return map[status] || status;
+}
+
+function getSectionTitle(section) {
+    const titles = {
+        dashboard: 'Dashboard',
+        funnel: 'Funil de Vendas',
+        clients: 'Meus Clientes',
+        commissions: 'Comissoes',
+        pricing: 'Tabela de Precos',
+        proposals: 'Propostas',
+        profile: 'Meu Perfil'
+    };
+    return titles[section] || 'Dashboard';
 }
