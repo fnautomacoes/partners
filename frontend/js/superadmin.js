@@ -334,14 +334,8 @@ async function loadPlans() {
         ]);
 
         if (plansRes.success) {
-            // Deduplicate plans by ID and filter out proposals
-            const seen = new Set();
-            allPlans = plansRes.data.filter(p => {
-                // Skip if already seen, if it's a proposal, or if it has no name (invalid data)
-                if (seen.has(p.id) || p.proposalCode || !p.name) return false;
-                seen.add(p.id);
-                return true;
-            });
+            // Filter only actual plans (isActive and has valid data)
+            allPlans = plansRes.data.filter(p => p.isActive && p.name);
             filterPlans('all');
             populatePlanFilters();
         }
