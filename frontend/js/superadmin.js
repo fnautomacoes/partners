@@ -152,10 +152,14 @@ function renderTierDistribution(tiers) {
     container.innerHTML = tiers.map((t, i) => `
         <div class="tier-item ${colors[i % colors.length]}">
             <div class="tier-item-info">
-                <div class="tier-item-name">${escapeHtml(t.name)} - ${t.percentage || 0}%</div>
-                <div class="tier-item-range">${t.minClients || 0}${t.maxClients ? '-' + t.maxClients : '+'} clientes</div>
+                <div class="tier-item-name">${escapeHtml(t.name)}</div>
+                <div class="tier-item-percentage">${t.percentage || 0}% de comissao</div>
+                <div class="tier-item-range">${t.minClients || 0}${t.maxClients ? ' - ' + t.maxClients : '+'} clientes</div>
             </div>
-            <div class="tier-item-count">${t.count || 0}</div>
+            <div class="tier-item-stats">
+                <div class="tier-item-count">${t.count || 0}</div>
+                <div class="tier-item-count-label">parceiros</div>
+            </div>
         </div>
     `).join('');
 }
@@ -406,13 +410,22 @@ function renderPlansGrid() {
                     <span class="plan-card-price-sub">/mes</span>
                 </div>
                 <div class="plan-card-resources">
-                    <span class="plan-resource-icon" title="Usuarios">&#128100; ${users}</span>
-                    <span class="plan-resource-icon" title="Filas">&#128209; ${queues}</span>
-                    <span class="plan-resource-icon" title="Conexoes">&#128241; ${connections}</span>
+                    <span class="plan-resource-icon" title="Usuarios">
+                        <span class="resource-icon">&#128100;</span>
+                        <span class="resource-count">${users}</span>
+                    </span>
+                    <span class="plan-resource-icon" title="Filas">
+                        <span class="resource-icon">&#128209;</span>
+                        <span class="resource-count">${queues}</span>
+                    </span>
+                    <span class="plan-resource-icon" title="Conexoes">
+                        <span class="resource-icon">&#128241;</span>
+                        <span class="resource-count">${connections}</span>
+                    </span>
                 </div>
                 ${planModules.length > 0 ? `
                 <div class="plan-card-modules">
-                    ${planModules.map(m => `<span class="plan-module-tag">&#128230; ${escapeHtml(m)}</span>`).join('')}
+                    ${planModules.map(m => `<span class="plan-module-tag">${getModuleIcon(m.key)} ${escapeHtml(m.label)}</span>`).join('')}
                 </div>
                 ` : ''}
                 <div class="plan-card-info">
@@ -440,10 +453,46 @@ function getPlanModules(plan) {
     const modules = [];
     modulePrices.forEach(m => {
         if (plan[m.moduleKey] === true || plan.modules?.[m.moduleKey] === true) {
-            modules.push(m.label);
+            modules.push({ label: m.label, key: m.moduleKey });
         }
     });
     return modules;
+}
+
+function getModuleIcon(moduleKey) {
+    const icons = {
+        useKanban: '&#128203;',
+        useChatbot: '&#129302;',
+        useFlowBuilder: '&#128300;',
+        useAgendamentos: '&#128197;',
+        useApiExterna: '&#128279;',
+        useWebhooks: '&#128268;',
+        useChatInterno: '&#128172;',
+        useAvaliacoes: '&#11088;',
+        useCampanhas: '&#128227;',
+        useRelatorios: '&#128202;',
+        useIntegracaoEmail: '&#128231;',
+        useIntegracaoWhatsapp: '&#128172;',
+        useMultiAtendentes: '&#128101;',
+        useFilasInteligentes: '&#129504;',
+        useRespostasRapidas: '&#9889;',
+        useEtiquetas: '&#127991;',
+        useTransferenciaAtendimento: '&#128256;',
+        useHistoricoCompleto: '&#128218;',
+        useExportacaoDados: '&#128229;',
+        useCustomizacaoInterface: '&#127912;',
+        useSuporteVip: '&#128081;',
+        useSLA: '&#9201;',
+        useGPT: '&#129302;',
+        useIA: '&#129302;',
+        useAutoresponder: '&#9889;',
+        useNPS: '&#11088;',
+        useCRM: '&#128188;',
+        useIntegracoes: '&#128279;',
+        useAppAndroid005: '&#128241;',
+        useTypebotExterno: '&#129302;'
+    };
+    return icons[moduleKey] || '&#128230;';
 }
 
 function renderPlanModuleCheckboxes() {
