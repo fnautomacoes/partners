@@ -392,9 +392,12 @@ function renderPlansGrid() {
         const isGlobal = !p.ownerId;
         const users = p.usersIncluded || p.resources?.users || p.users || 1;
         const queues = p.queuesIncluded || p.resources?.queues || p.queues || 1;
-        const connections = (p.connectionsWhatsappUnofficial || 0) + (p.connectionsWhatsappOfficial || 0) + (p.connectionsInstagram || 0) || p.resources?.connections || p.connections || 1;
+        const whatsappUnofficial = p.connectionsWhatsappUnofficial || 0;
+        const whatsappOfficial = p.connectionsWhatsappOfficial || 0;
+        const instagram = p.connectionsInstagram || 0;
 
         const planModules = getPlanModules(p);
+        const connectionsList = getConnectionsList(whatsappUnofficial, whatsappOfficial, instagram);
 
         return `
             <div class="plan-card">
@@ -418,11 +421,8 @@ function renderPlansGrid() {
                         <span class="resource-icon">&#128209;</span>
                         <span class="resource-count">${queues}</span>
                     </span>
-                    <span class="plan-resource-icon" title="Conexoes">
-                        <span class="resource-icon">&#128241;</span>
-                        <span class="resource-count">${connections}</span>
-                    </span>
                 </div>
+                ${connectionsList ? `<div class="plan-card-connections">${connectionsList}</div>` : ''}
                 ${planModules.length > 0 ? `
                 <div class="plan-card-modules">
                     ${planModules.map(m => `<span class="plan-module-tag">${getModuleIcon(m.key)} ${escapeHtml(m.label)}</span>`).join('')}
@@ -461,38 +461,96 @@ function getPlanModules(plan) {
 
 function getModuleIcon(moduleKey) {
     const icons = {
+        // Kanban / Tarefas
         useKanban: '&#128203;',
+        // Chatbot / IA
         useChatbot: '&#129302;',
+        useTypebotExterno: '&#129302;',
+        useGPT: '&#129302;',
+        useGPTAssistant: '&#129302;',
+        useIA: '&#129302;',
+        useOpenAI: '&#129302;',
+        // Flow / Automacao
         useFlowBuilder: '&#128300;',
+        useAutoresponder: '&#9889;',
+        // Agendamentos / Calendario
         useAgendamentos: '&#128197;',
+        useScheduleMessages: '&#128197;',
+        // API / Webhooks / Integracoes
         useApiExterna: '&#128279;',
         useWebhooks: '&#128268;',
-        useChatInterno: '&#128172;',
-        useAvaliacoes: '&#11088;',
-        useCampanhas: '&#128227;',
-        useRelatorios: '&#128202;',
-        useIntegracaoEmail: '&#128231;',
-        useIntegracaoWhatsapp: '&#128172;',
-        useMultiAtendentes: '&#128101;',
-        useFilasInteligentes: '&#129504;',
-        useRespostasRapidas: '&#9889;',
-        useEtiquetas: '&#127991;',
-        useTransferenciaAtendimento: '&#128256;',
-        useHistoricoCompleto: '&#128218;',
-        useExportacaoDados: '&#128229;',
-        useCustomizacaoInterface: '&#127912;',
-        useSuporteVip: '&#128081;',
-        useSLA: '&#9201;',
-        useGPT: '&#129302;',
-        useIA: '&#129302;',
-        useAutoresponder: '&#9889;',
-        useNPS: '&#11088;',
-        useCRM: '&#128188;',
         useIntegracoes: '&#128279;',
         useAppAndroid005: '&#128241;',
-        useTypebotExterno: '&#129302;'
+        // Chat
+        useChatInterno: '&#128172;',
+        useChamadasWhatsApp: '&#128222;',
+        // Avaliacoes / NPS
+        useAvaliacoes: '&#11088;',
+        useNPS: '&#11088;',
+        // Campanhas / Marketing
+        useCampanhas: '&#128227;',
+        // Relatorios / Dashboards
+        useRelatorios: '&#128202;',
+        useDashboard: '&#128202;',
+        // Email
+        useIntegracaoEmail: '&#128231;',
+        useEmail: '&#128231;',
+        // Equipe / Multi atendentes
+        useMultiAtendentes: '&#128101;',
+        // Filas
+        useFilasInteligentes: '&#129504;',
+        // Respostas rapidas
+        useRespostasRapidas: '&#9889;',
+        // Etiquetas / Tags
+        useEtiquetas: '&#127991;',
+        useTags: '&#127991;',
+        // Transferencia
+        useTransferenciaAtendimento: '&#128256;',
+        // Historico
+        useHistoricoCompleto: '&#128218;',
+        // Exportacao
+        useExportacaoDados: '&#128229;',
+        // Customizacao
+        useCustomizacaoInterface: '&#127912;',
+        // Suporte VIP
+        useSuporteVip: '&#128081;',
+        // SLA
+        useSLA: '&#9201;',
+        // CRM
+        useCRM: '&#128188;',
+        // Boletos / Financeiro
+        useBoletos: '&#128176;',
+        useFinanceiro: '&#128176;',
+        // Facebook
+        useFacebook: '&#128266;',
+        // Instagram
+        useInstagram: '&#128247;',
+        // Telegram
+        useTelegram: '&#128172;',
+        // Pixel Tracker
+        usePixelTracker: '&#128205;',
+        // Inteligencia Artificial
+        useInteligenciaArtificial: '&#129504;',
+        // Ligacoes VoIP
+        useLigacoesVoIP: '&#128222;',
+        // Typebot
+        useTypebot: '&#129302;'
     };
     return icons[moduleKey] || '&#128230;';
+}
+
+function getConnectionsList(whatsappUnofficial, whatsappOfficial, instagram) {
+    const parts = [];
+    if (whatsappUnofficial > 0) {
+        parts.push(`<span class="connection-tag connection-whatsapp">${whatsappUnofficial}x WApp</span>`);
+    }
+    if (whatsappOfficial > 0) {
+        parts.push(`<span class="connection-tag connection-waba">${whatsappOfficial}x WABA</span>`);
+    }
+    if (instagram > 0) {
+        parts.push(`<span class="connection-tag connection-instagram">${instagram}x Insta</span>`);
+    }
+    return parts.join(' ');
 }
 
 function renderPlanModuleCheckboxes() {
