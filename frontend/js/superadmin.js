@@ -386,9 +386,11 @@ function renderPlansGrid() {
 
     container.innerHTML = plans.map(p => {
         const isGlobal = !p.ownerId;
-        const users = p.usersIncluded || p.resources?.users || 0;
-        const queues = p.queuesIncluded || p.resources?.queues || 0;
-        const whatsapp = p.whatsappIncluded || p.resources?.connections || 0;
+        const users = p.usersIncluded || p.resources?.users || p.users || 1;
+        const queues = p.queuesIncluded || p.resources?.queues || p.queues || 1;
+        const connections = (p.connectionsWhatsappUnofficial || 0) + (p.connectionsWhatsappOfficial || 0) + (p.connectionsInstagram || 0) || p.resources?.connections || p.connections || 1;
+
+        const planModules = getPlanModules(p);
 
         return `
             <div class="plan-card">
@@ -404,10 +406,15 @@ function renderPlansGrid() {
                     <span class="plan-card-price-sub">/mes</span>
                 </div>
                 <div class="plan-card-resources">
-                    <span class="plan-resource-icon" title="Usuarios">${users}</span>
-                    <span class="plan-resource-icon" title="Filas">${queues}</span>
-                    <span class="plan-resource-icon" title="WhatsApp">${whatsapp}</span>
+                    <span class="plan-resource-icon" title="Usuarios">&#128100; ${users}</span>
+                    <span class="plan-resource-icon" title="Filas">&#128209; ${queues}</span>
+                    <span class="plan-resource-icon" title="Conexoes">&#128241; ${connections}</span>
                 </div>
+                ${planModules.length > 0 ? `
+                <div class="plan-card-modules">
+                    ${planModules.map(m => `<span class="plan-module-tag">&#128230; ${escapeHtml(m)}</span>`).join('')}
+                </div>
+                ` : ''}
                 <div class="plan-card-info">
                     <div class="plan-card-info-row">
                         <span>Taxa de setup (cobrada 1x)</span>
@@ -427,6 +434,16 @@ function renderPlansGrid() {
             </div>
         `;
     }).join('');
+}
+
+function getPlanModules(plan) {
+    const modules = [];
+    modulePrices.forEach(m => {
+        if (plan[m.moduleKey] === true || plan.modules?.[m.moduleKey] === true) {
+            modules.push(m.label);
+        }
+    });
+    return modules;
 }
 
 function renderPlanModuleCheckboxes() {
