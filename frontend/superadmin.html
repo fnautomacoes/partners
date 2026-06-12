@@ -33,19 +33,23 @@
             </a>
             <a href="#" class="nav-item" data-section="commissions">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Comissões
+                Comissoes
             </a>
             <a href="#" class="nav-item" data-section="invoices">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Faturas
             </a>
-            <a href="#" class="nav-item" data-section="tiers">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                Tiers Comissão
+            <a href="#" class="nav-item" data-section="proposals">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Propostas
             </a>
             <a href="#" class="nav-item" data-section="config">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                Configurações
+                Configuracoes
+            </a>
+            <a href="docsadmin.html" class="nav-item">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                Docs
             </a>
         </nav>
         <div class="sidebar-footer">
@@ -76,30 +80,50 @@
         <div class="content">
             <!-- Dashboard Section -->
             <section id="section-dashboard" class="section active">
-                <div class="stats-grid" id="dashboardStats">
-                    <div class="stat-card">
-                        <div class="stat-label">Parceiros Ativos</div>
-                        <div class="stat-value" id="statPartners">-</div>
+                <div class="stats-grid">
+                    <div class="stat-card stat-card-icon">
+                        <div class="stat-info">
+                            <div class="stat-label">Parceiros Ativos</div>
+                            <div class="stat-value" id="statPartners">0</div>
+                        </div>
+                        <div class="stat-icon stat-icon-blue">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Clientes Ativos</div>
-                        <div class="stat-value" id="statClients">-</div>
+                    <div class="stat-card stat-card-icon">
+                        <div class="stat-info">
+                            <div class="stat-label">Clientes Ativos</div>
+                            <div class="stat-value" id="statClients">0</div>
+                        </div>
+                        <div class="stat-icon stat-icon-purple">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Comissões Pendentes</div>
-                        <div class="stat-value" id="statPendingCommissions">-</div>
+                    <div class="stat-card stat-card-icon">
+                        <div class="stat-info">
+                            <div class="stat-label">Comissoes Pendentes</div>
+                            <div class="stat-value" id="statPendingCommissions">R$ 0,00</div>
+                        </div>
+                        <div class="stat-icon stat-icon-yellow">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Receita Mensal</div>
-                        <div class="stat-value" id="statRevenue">-</div>
+                    <div class="stat-card stat-card-icon">
+                        <div class="stat-info">
+                            <div class="stat-label">Receita Mensal</div>
+                            <div class="stat-value" id="statRevenue">R$ 0,00</div>
+                        </div>
+                        <div class="stat-icon stat-icon-green">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
                     </div>
                 </div>
                 <div class="dashboard-grid">
                     <div class="card">
                         <div class="card-header">
-                            <h2 class="card-title">Distribuição por Tier</h2>
+                            <h2 class="card-title">Distribuicao por Tier</h2>
                         </div>
-                        <div class="p-4" id="tierDistributionChart"></div>
+                        <div class="tier-list" id="tierDistribution"></div>
                     </div>
                     <div class="card">
                         <div class="card-header">
@@ -112,7 +136,6 @@
                                         <th>Nome</th>
                                         <th>Tier</th>
                                         <th>Clientes</th>
-                                        <th>Comissões</th>
                                     </tr>
                                 </thead>
                                 <tbody id="topPartnersTable"></tbody>
@@ -124,19 +147,7 @@
                     <div class="card-header">
                         <h2 class="card-title">Atividades Recentes</h2>
                     </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Data</th>
-                                    <th>Parceiro</th>
-                                    <th>Ação</th>
-                                    <th>Descrição</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recentActivitiesTable"></tbody>
-                        </table>
-                    </div>
+                    <div class="activity-list" id="recentActivities"></div>
                 </div>
             </section>
 
@@ -145,10 +156,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">Parceiros</h2>
-                        <button class="btn btn-primary" onclick="showPartnerModal()">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            Novo Parceiro
-                        </button>
+                        <button class="btn btn-primary" onclick="showPartnerModal()">+ Novo Parceiro</button>
                     </div>
                     <div class="table-container">
                         <table>
@@ -161,7 +169,7 @@
                                     <th>Tier</th>
                                     <th>Clientes</th>
                                     <th>Status</th>
-                                    <th>Ações</th>
+                                    <th>Acoes</th>
                                 </tr>
                             </thead>
                             <tbody id="partnersTable"></tbody>
@@ -172,40 +180,17 @@
 
             <!-- Plans Section -->
             <section id="section-plans" class="section hidden">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h2 class="card-title">Planos</h2>
-                        <div class="flex gap-2">
-                            <select class="form-select" id="planTypeFilter" style="max-width:180px">
-                                <option value="">Todos</option>
-                                <option value="global">Globais</option>
-                                <option value="partner">De Parceiros</option>
-                            </select>
-                            <button class="btn btn-primary" onclick="showPlanModal()">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                Novo Plano Global
-                            </button>
-                        </div>
-                    </div>
-                    <div class="plans-grid" id="plansGrid"></div>
-                </div>
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="card-title">Preços de Módulos</h2>
+                        <h2 class="card-title">Planos</h2>
+                        <button class="btn btn-primary" onclick="showPlanModal()">+ Novo Plano</button>
                     </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Módulo</th>
-                                    <th>Preço</th>
-                                    <th>Visível</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="modulePricesTable"></tbody>
-                        </table>
+                    <div class="filter-tabs mb-4">
+                        <button class="filter-tab active" data-filter="all">Todos</button>
+                        <button class="filter-tab" data-filter="global">Globais</button>
+                        <button class="filter-tab" data-filter="partner">De Parceiros</button>
                     </div>
+                    <div class="plans-grid" id="plansGrid"></div>
                 </div>
             </section>
 
@@ -214,31 +199,37 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">Clientes</h2>
+                        <button class="btn btn-primary" onclick="showClientModal()">+ Novo Cliente</button>
                     </div>
-                    <div class="mb-4 flex gap-4">
-                        <select class="form-select" id="clientPartnerFilter" style="max-width:200px">
+                    <div class="filters-row mb-4">
+                        <select class="form-select" id="clientPartnerFilter">
                             <option value="">Todos os parceiros</option>
                         </select>
-                        <select class="form-select" id="clientStatusFilter" style="max-width:150px">
-                            <option value="">Todos status</option>
+                        <select class="form-select" id="clientStatusFilter">
+                            <option value="">Todos os status</option>
                             <option value="ACTIVE">Ativo</option>
                             <option value="INACTIVE">Inativo</option>
                             <option value="SUSPENDED">Suspenso</option>
                         </select>
+                        <select class="form-select" id="clientPlanFilter">
+                            <option value="">Todos os planos</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="loadClients()">Filtrar</button>
+                        <button class="btn btn-secondary" onclick="clearClientFilters()">Limpar</button>
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
                                     <th>Empresa</th>
-                                    <th>Contato/Email</th>
+                                    <th>Contato / Email</th>
                                     <th>Parceiro</th>
                                     <th>Plano</th>
-                                    <th>Recorrência</th>
+                                    <th>Recorrencia</th>
                                     <th>Vencimento</th>
                                     <th>Status</th>
                                     <th>Fatura</th>
-                                    <th>Ações</th>
+                                    <th>Acoes</th>
                                 </tr>
                             </thead>
                             <tbody id="clientsTable"></tbody>
@@ -249,42 +240,44 @@
 
             <!-- Commissions Section -->
             <section id="section-commissions" class="section hidden">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">Total Pendente</div>
-                        <div class="stat-value" id="commPending">-</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Pago Este Mês</div>
-                        <div class="stat-value" id="commPaidMonth">-</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">Pago Total</div>
-                        <div class="stat-value" id="commPaidTotal">-</div>
-                    </div>
-                </div>
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="card-title">Comissões</h2>
+                        <h2 class="card-title">Comissoes</h2>
                         <div class="flex gap-2">
-                            <button class="btn btn-secondary" onclick="exportCommissionsCSV()">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;height:16px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                Exportar CSV
-                            </button>
-                            <button class="btn btn-primary" onclick="calculateCommissions()">
-                                Calcular Comissões
-                            </button>
+                            <button class="btn btn-secondary" onclick="exportCommissionsCSV()">Exportar CSV</button>
+                            <button class="btn btn-success" onclick="calculateCommissions()">Calcular Comissoes</button>
                         </div>
                     </div>
-                    <div class="mb-4 flex gap-4">
-                        <select class="form-select" id="commPartnerFilter" style="max-width:200px">
+                    <div class="filters-row mb-4">
+                        <select class="form-select" id="commMonthFilter">
+                            <option value="">Junho</option>
+                        </select>
+                        <select class="form-select" id="commYearFilter">
+                            <option value="">2026</option>
+                        </select>
+                        <select class="form-select" id="commPartnerFilter">
                             <option value="">Todos os parceiros</option>
                         </select>
-                        <select class="form-select" id="commStatusFilter" style="max-width:150px">
-                            <option value="">Todos status</option>
+                        <select class="form-select" id="commStatusFilter">
+                            <option value="">Todos os status</option>
                             <option value="PENDING">Pendente</option>
                             <option value="PAID">Pago</option>
                         </select>
+                        <button class="btn btn-primary" onclick="loadCommissions()">Filtrar</button>
+                    </div>
+                    <div class="stats-grid stats-grid-3 mb-4">
+                        <div class="stat-card-colored stat-card-yellow">
+                            <div class="stat-label-colored">Pendente</div>
+                            <div class="stat-value-colored" id="commPending">R$ 0,00</div>
+                        </div>
+                        <div class="stat-card-colored stat-card-green">
+                            <div class="stat-label-colored">Pago</div>
+                            <div class="stat-value-colored" id="commPaid">R$ 0,00</div>
+                        </div>
+                        <div class="stat-card-colored stat-card-blue">
+                            <div class="stat-label-colored">Total</div>
+                            <div class="stat-value-colored" id="commTotal">R$ 0,00</div>
+                        </div>
                     </div>
                     <div class="table-container">
                         <table>
@@ -292,13 +285,13 @@
                                 <tr>
                                     <th>Parceiro</th>
                                     <th>Cliente</th>
-                                    <th>Período</th>
+                                    <th>Periodo</th>
                                     <th>Tier</th>
                                     <th>%</th>
                                     <th>Base</th>
-                                    <th>Comissão</th>
+                                    <th>Comissao</th>
                                     <th>Status</th>
-                                    <th>Pago em</th>
+                                    <th>Pago em / Acao</th>
                                 </tr>
                             </thead>
                             <tbody id="commissionsTable"></tbody>
@@ -312,16 +305,14 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">Faturas</h2>
-                        <button class="btn btn-primary" onclick="syncInvoices()">
-                            Sincronizar PacoTicket
-                        </button>
+                        <button class="btn btn-primary" onclick="syncInvoices()">Sincronizar PacoTicket</button>
                     </div>
-                    <div class="mb-4 flex gap-4">
-                        <select class="form-select" id="invoiceMonthFilter" style="max-width:120px">
-                            <option value="">Todos meses</option>
+                    <div class="filters-row mb-4">
+                        <select class="form-select" id="invoiceMonthFilter">
+                            <option value="">Todos os meses</option>
                             <option value="1">Janeiro</option>
                             <option value="2">Fevereiro</option>
-                            <option value="3">Março</option>
+                            <option value="3">Marco</option>
                             <option value="4">Abril</option>
                             <option value="5">Maio</option>
                             <option value="6">Junho</option>
@@ -332,16 +323,17 @@
                             <option value="11">Novembro</option>
                             <option value="12">Dezembro</option>
                         </select>
-                        <select class="form-select" id="invoiceYearFilter" style="max-width:100px">
-                            <option value="">Todos anos</option>
+                        <select class="form-select" id="invoiceYearFilter">
+                            <option value="">Todos os anos</option>
                         </select>
-                        <select class="form-select" id="invoiceStatusFilter" style="max-width:150px">
-                            <option value="">Todos status</option>
+                        <select class="form-select" id="invoiceStatusFilter">
+                            <option value="">Todos os status</option>
                             <option value="PENDING">Pendente</option>
                             <option value="PAID">Pago</option>
                             <option value="OVERDUE">Vencido</option>
                             <option value="CANCELLED">Cancelado</option>
                         </select>
+                        <button class="btn btn-primary" onclick="loadInvoices()">Filtrar</button>
                     </div>
                     <div class="table-container">
                         <table>
@@ -362,30 +354,40 @@
                 </div>
             </section>
 
-            <!-- Commission Tiers Section -->
-            <section id="section-tiers" class="section hidden">
+            <!-- Proposals Section -->
+            <section id="section-proposals" class="section hidden">
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="card-title">Níveis de Comissão</h2>
-                        <button class="btn btn-primary" onclick="showTierModal()">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            Novo Tier
-                        </button>
+                        <h2 class="card-title">Propostas</h2>
+                    </div>
+                    <div class="filters-row mb-4">
+                        <div class="form-group" style="flex:1">
+                            <label class="form-label">Parceiro</label>
+                            <select class="form-select" id="proposalPartnerFilter">
+                                <option value="">Todos os parceiros</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1">
+                            <label class="form-label">Buscar (ID ou cliente)</label>
+                            <input type="text" class="form-input" id="proposalSearch" placeholder="ID da proposta ou nome do cliente...">
+                        </div>
+                        <button class="btn btn-primary" style="align-self:flex-end" onclick="loadProposals()">Filtrar</button>
                     </div>
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Ordem</th>
-                                    <th>Nome</th>
-                                    <th>Mín. Clientes</th>
-                                    <th>Máx. Clientes</th>
-                                    <th>Percentual</th>
-                                    <th>Status</th>
-                                    <th>Ações</th>
+                                    <th>ID da Proposta</th>
+                                    <th>Plano</th>
+                                    <th>Parceiro</th>
+                                    <th>Cliente / Lead</th>
+                                    <th>Setup base</th>
+                                    <th>Setup extra</th>
+                                    <th>Data</th>
+                                    <th>Acoes</th>
                                 </tr>
                             </thead>
-                            <tbody id="tiersTable"></tbody>
+                            <tbody id="proposalsTable"></tbody>
                         </table>
                     </div>
                 </div>
@@ -393,57 +395,143 @@
 
             <!-- Config Section -->
             <section id="section-config" class="section hidden">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Configurações do Sistema</h2>
+                <div class="config-grid">
+                    <!-- Company Settings -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Configuracoes Gerais do Sistema</h2>
+                        </div>
+                        <form id="companyConfigForm">
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label class="form-label">Nome da Empresa</label>
+                                    <input type="text" class="form-input" name="company_name">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">URL do Logo (em branco para padrao)</label>
+                                    <input type="text" class="form-input" name="company_logo" placeholder="https://exemplo.com/logo.png">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">URL da API PacoTicket</label>
+                                <input type="text" class="form-input" name="pacoticket_api_url">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Token Bearer API PacoTicket</label>
+                                <input type="password" class="form-input" name="pacoticket_bearer_token">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Salvar Configuracoes Gerais</button>
+                        </form>
                     </div>
-                    <form id="configForm">
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Nome da Empresa</label>
-                                <input type="text" class="form-input" name="company_name">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Logo URL</label>
-                                <input type="text" class="form-input" name="company_logo">
-                            </div>
+
+                    <!-- Module Prices -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Precos de Modulos</h2>
+                            <button class="btn btn-primary btn-sm" onclick="showModuleModal()">+ Novo Modulo</button>
                         </div>
-                        <h3 class="text-lg font-semibold mt-4 mb-4">Configurações SMTP</h3>
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Host SMTP</label>
-                                <input type="text" class="form-input" name="smtp_host">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Porta</label>
-                                <input type="text" class="form-input" name="smtp_port">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Modo</label>
-                                <select class="form-select" name="smtp_mode">
-                                    <option value="starttls">STARTTLS</option>
-                                    <option value="ssl">SSL</option>
-                                    <option value="none">Nenhum</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Usuário</label>
-                                <input type="text" class="form-input" name="smtp_user">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Senha</label>
-                                <input type="password" class="form-input" name="smtp_pass">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Email Remetente</label>
-                                <input type="email" class="form-input" name="smtp_from">
-                            </div>
+                        <div class="table-container" style="max-height: 400px; overflow-y: auto;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Modulo</th>
+                                        <th>Preco</th>
+                                        <th>Visivel</th>
+                                        <th>Acoes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modulePricesTable"></tbody>
+                            </table>
                         </div>
-                        <div class="flex gap-4 mt-4">
-                            <button type="submit" class="btn btn-primary">Salvar Configurações</button>
-                            <button type="button" class="btn btn-secondary" onclick="testSmtp()">Testar SMTP</button>
+                    </div>
+
+                    <!-- SMTP Settings -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Configuracoes de SMTP</h2>
                         </div>
-                    </form>
+                        <form id="smtpConfigForm">
+                            <div class="grid-2">
+                                <div class="form-group">
+                                    <label class="form-label">Host SMTP</label>
+                                    <input type="text" class="form-input" name="smtp_host">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Porta</label>
+                                    <input type="text" class="form-input" name="smtp_port">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Modo de Seguranca</label>
+                                    <select class="form-select" name="smtp_mode">
+                                        <option value="starttls">STARTTLS</option>
+                                        <option value="ssl">SSL</option>
+                                        <option value="none">Nenhum</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Usuario</label>
+                                    <input type="text" class="form-input" name="smtp_user">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Senha</label>
+                                    <input type="password" class="form-input" name="smtp_pass">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email Remetente</label>
+                                    <input type="email" class="form-input" name="smtp_from">
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button type="submit" class="btn btn-primary">Salvar SMTP</button>
+                                <button type="button" class="btn btn-secondary" onclick="testSmtp()">Testar SMTP</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Resource Prices -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Precos de Infraestrutura</h2>
+                        </div>
+                        <form id="resourcePricesForm">
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Recurso</th>
+                                            <th>Preco / unidade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="resourcePricesTable"></tbody>
+                                </table>
+                            </div>
+                            <button type="submit" class="btn btn-primary mt-4">Salvar Precos de Infraestrutura</button>
+                        </form>
+                    </div>
+
+                    <!-- Commission Tiers -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Tiers de Comissionamento</h2>
+                            <button class="btn btn-primary btn-sm" onclick="showTierModal()">+ Novo Tier</button>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Ordem</th>
+                                        <th>Nome</th>
+                                        <th>Min</th>
+                                        <th>Max</th>
+                                        <th>%</th>
+                                        <th>Status</th>
+                                        <th>Acoes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tiersTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -462,28 +550,42 @@
             <form id="partnerForm">
                 <div class="modal-body">
                     <input type="hidden" name="id" id="partnerFormId">
+                    <div class="form-group">
+                        <label class="form-label">Nome completo *</label>
+                        <input type="text" class="form-input" name="name" required>
+                    </div>
                     <div class="grid-2">
-                        <div class="form-group">
-                            <label class="form-label">Nome Completo *</label>
-                            <input type="text" class="form-input" name="name" required>
-                        </div>
                         <div class="form-group">
                             <label class="form-label">Email *</label>
                             <input type="email" class="form-input" name="email" required>
                         </div>
+                        <div class="form-group" id="partnerPasswordGroup">
+                            <label class="form-label">Senha *</label>
+                            <input type="password" class="form-input" name="password" minlength="8">
+                        </div>
+                    </div>
+                    <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Telefone</label>
+                            <label class="form-label">Telefone *</label>
                             <input type="text" class="form-input" name="phone">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Documento (CPF/CNPJ)</label>
+                            <label class="form-label">CPF/CNPJ</label>
                             <input type="text" class="form-input" name="document">
                         </div>
                     </div>
-                    <div class="form-group" id="partnerPasswordGroup">
-                        <label class="form-label">Senha Inicial *</label>
-                        <input type="password" class="form-input" name="password" minlength="8">
-                        <p class="text-xs text-gray mt-2">Mínimo 8 caracteres</p>
+                    <div class="form-group">
+                        <label class="form-label">Permissoes do Parceiro</label>
+                        <div class="flex gap-4 mt-2">
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="canSetRecurrence">
+                                <span>Pode definir recorrencia</span>
+                            </label>
+                            <label class="form-checkbox">
+                                <input type="checkbox" name="canSetDueDate">
+                                <span>Pode definir vencimento</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -496,22 +598,136 @@
 
     <!-- Plan Modal -->
     <div class="modal-overlay hidden" id="planModal">
-        <div class="modal modal-lg">
+        <div class="modal modal-xl">
             <div class="modal-header">
                 <h3 class="modal-title" id="planModalTitle">Novo Plano</h3>
                 <button class="modal-close" onclick="closeModal('planModal')">&times;</button>
             </div>
             <form id="planForm">
-                <div class="modal-body">
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                     <input type="hidden" name="id" id="planFormId">
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Nome do Plano *</label>
+                            <label class="form-label">Nome *</label>
                             <input type="text" class="form-input" name="name" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Recorrência</label>
-                            <select class="form-select" name="recurrence">
+                            <label class="form-label">Descricao</label>
+                            <input type="text" class="form-input" name="description">
+                        </div>
+                    </div>
+
+                    <h4 class="section-subtitle">PRECIFICACAO</h4>
+                    <div class="grid-4">
+                        <div class="form-group">
+                            <label class="form-label">Preco Base / mes (R$) *</label>
+                            <input type="number" step="0.01" class="form-input" name="basePrice" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Taxa de Setup (R$)</label>
+                            <input type="number" step="0.01" class="form-input" name="setupFee" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Ordem de exibicao</label>
+                            <input type="number" class="form-input" name="sortOrder" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ID na PacoTicket</label>
+                            <input type="number" class="form-input" name="pacoticketPlanId" placeholder="Opcional">
+                        </div>
+                    </div>
+
+                    <h4 class="section-subtitle">INFRAESTRUTURA</h4>
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label class="form-label">Usuarios *</label>
+                            <input type="number" class="form-input" name="users" value="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Filas *</label>
+                            <input type="number" class="form-input" name="queues" value="1" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">WhatsApp Nao Oficial</label>
+                            <input type="number" class="form-input" name="connectionsWhatsappUnofficial" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">WhatsApp Oficial / WABA</label>
+                            <input type="number" class="form-input" name="connectionsWhatsappOfficial" value="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Instagram</label>
+                            <input type="number" class="form-input" name="connectionsInstagram" value="0" min="0">
+                        </div>
+                    </div>
+
+                    <h4 class="section-subtitle">ID DO PLANO NA PACOTICKET</h4>
+                    <p class="text-sm text-gray mb-2">Opcional</p>
+
+                    <h4 class="section-subtitle">MODULOS ADICIONAIS</h4>
+                    <p class="text-sm text-gray mb-2">Opcional</p>
+                    <div class="modules-grid" id="planModulesCheckboxes"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('planModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Plano</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Client Modal -->
+    <div class="modal-overlay hidden" id="clientModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="clientModalTitle">Novo Cliente</h3>
+                <button class="modal-close" onclick="closeModal('clientModal')">&times;</button>
+            </div>
+            <form id="clientForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="clientFormId">
+                    <div class="form-group">
+                        <label class="form-label">Nome da Empresa *</label>
+                        <input type="text" class="form-input" name="companyName" required>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nome do Contato *</label>
+                            <input type="text" class="form-input" name="contactName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-input" name="email" required>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Telefone *</label>
+                            <input type="text" class="form-input" name="phone" placeholder="5511999999999" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Senha (PacoTicket) *</label>
+                            <input type="password" class="form-input" name="password" required>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Parceiro *</label>
+                            <select class="form-select" name="partnerId" id="clientPartnerSelect" required>
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Plano *</label>
+                            <select class="form-select" name="planId" id="clientPlanSelect" required>
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Recorrencia *</label>
+                            <select class="form-select" name="recurrence" required>
                                 <option value="MONTHLY">Mensal</option>
                                 <option value="QUARTERLY">Trimestral</option>
                                 <option value="SEMIANNUAL">Semestral</option>
@@ -519,32 +735,14 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Preço Base *</label>
-                            <input type="number" step="0.01" class="form-input" name="basePrice" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Taxa de Setup</label>
-                            <input type="number" step="0.01" class="form-input" name="setupFee" value="0">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Usuários Inclusos</label>
-                            <input type="number" class="form-input" name="usersIncluded" value="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Filas Inclusas</label>
-                            <input type="number" class="form-input" name="queuesIncluded" value="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">WhatsApp Inclusos</label>
-                            <input type="number" class="form-input" name="whatsappIncluded" value="1">
+                            <label class="form-label">Vencimento *</label>
+                            <input type="date" class="form-input" name="dueDate" required>
                         </div>
                     </div>
-                    <h4 class="font-semibold mt-4 mb-2">Módulos</h4>
-                    <div class="grid-3" id="planModulesCheckboxes"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('planModal')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('clientModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Cliente</button>
                 </div>
             </form>
         </div>
@@ -566,11 +764,11 @@
                     </div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Mín. Clientes *</label>
-                            <input type="number" class="form-input" name="minClients" required min="1">
+                            <label class="form-label">Min. Clientes *</label>
+                            <input type="number" class="form-input" name="minClients" required min="0">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Máx. Clientes</label>
+                            <label class="form-label">Max. Clientes</label>
                             <input type="number" class="form-input" name="maxClients">
                             <p class="text-xs text-gray mt-1">Deixe vazio para ilimitado</p>
                         </div>

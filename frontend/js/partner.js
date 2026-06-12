@@ -1,11 +1,15 @@
 let currentUser = null;
+let partnerData = null;
 let plans = [];
+let globalPlans = [];
 let myPlans = [];
-let clients = [];
+let modulePrices = [];
+let resourcePrices = [];
 let stages = [];
 let leads = [];
-let resourcePrices = [];
-let modulePrices = [];
+let currentLead = null;
+let selectedPlan = null;
+let tiersData = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     currentUser = await checkAuth('PARTNER');
@@ -16,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     setupNavigation();
     setupForms();
+    setCommissionFilters();
     loadDashboard();
 });
 
@@ -23,37 +28,40 @@ function setupNavigation() {
     document.querySelectorAll('.nav-item[data-section]').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
-            showSection(item.dataset.section);
+            const section = item.dataset.section;
+            showSection(section);
         });
     });
 }
 
 function showSection(section) {
     document.querySelectorAll('.nav-item[data-section]').forEach(i => i.classList.remove('active'));
-    document.querySelector(`.nav-item[data-section="${section}"]`).classList.add('active');
+    const navItem = document.querySelector(`.nav-item[data-section="${section}"]`);
+    if (navItem) navItem.classList.add('active');
 
     document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(`section-${section}`).classList.remove('hidden');
+    const sectionEl = document.getElementById(`section-${section}`);
+    if (sectionEl) sectionEl.classList.remove('hidden');
 
     const titles = {
         dashboard: 'Dashboard',
-        clients: 'Meus Clientes',
         funnel: 'Funil de Vendas',
-        plans: 'Meus Planos',
-        commissions: 'Comissões',
-        proposals: 'Propostas PDF',
-        simulator: 'Simulador'
+        clients: 'Meus Clientes',
+        commissions: 'Comissoes',
+        pricing: 'Tabela de Precos',
+        proposals: 'Propostas',
+        profile: 'Meu Perfil'
     };
     document.getElementById('pageTitle').textContent = titles[section] || section;
 
     const loaders = {
         dashboard: loadDashboard,
-        clients: loadClients,
         funnel: loadFunnel,
-        plans: loadPlans,
+        clients: loadClients,
         commissions: loadCommissions,
+        pricing: loadPricing,
         proposals: loadProposals,
-        simulator: loadSimulator
+        profile: loadProfile
     };
     if (loaders[section]) loaders[section]();
 }
@@ -62,173 +70,54 @@ function setupForms() {
     document.getElementById('clientForm').addEventListener('submit', saveClient);
     document.getElementById('leadForm').addEventListener('submit', saveLead);
     document.getElementById('partnerPlanForm').addEventListener('submit', savePartnerPlan);
-    document.getElementById('proposalForm').addEventListener('submit', generateProposal);
     document.getElementById('passwordForm').addEventListener('submit', changePassword);
+
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) profileForm.addEventListener('submit', saveProfile);
+}
+
+function setCommissionFilters() {
+    const now = new Date();
+    const monthFilter = document.getElementById('commMonthFilter');
+    const yearFilter = document.getElementById('commYearFilter');
+    if (monthFilter) monthFilter.value = now.getMonth() + 1;
+    if (yearFilter) yearFilter.value = now.getFullYear();
 }
 
 // Dashboard
 async function loadDashboard() {
     try {
-        const [dashRes, leadsRes] = await Promise.all([
-            apiRequest('/api/partners/me/dashboard'),
-            apiRequest('/api/funnel/leads')
-        ]);
-
-        if (dashRes.success) {
-            const d = dashRes.data;
-            document.getElementById('statClients').textContent = d.activeClients || 0;
-            document.getElementById('statTier').textContent = d.tier || 'Sem tier';
-            document.getElementById('statPending').textContent = formatCurrency(d.pendingCommission || 0);
-
-            clients = d.recentClients || [];
-            renderRecentClients();
-        }
-
-        if (leadsRes.success) {
-            leads = leadsRes.data;
-            document.getElementById('statLeads').textContent = leads.length;
-            renderRecentLeads();
+        const res = await apiRequest('/api/partners/me/dashboard');
+        if (res.success) {
+            partnerData = res.data;
+            renderDashboard(res.data);
         }
     } catch (e) {
         showToast('Erro ao carregar dashboard', 'error');
     }
 }
 
-function renderRecentClients() {
-    const tbody = document.getElementById('recentClientsTable');
-    const recent = clients.slice(0, 5);
-    tbody.innerHTML = recent.map(c => `
-        <tr>
-            <td>${escapeHtml(c.companyName)}</td>
-            <td>${escapeHtml(c.planName || '-')}</td>
-            <td><span class="badge ${getStatusBadge(c.status)}">${getStatusLabel(c.status)}</span></td>
-        </tr>
-    `).join('') || '<tr><td colspan="3" class="text-center text-gray">Nenhum cliente</td></tr>';
-}
+function renderDashboard(data) {
+    const userName = data.name || currentUser.email.split('@')[0];
+    document.getElementById('dashboardUserName').textContent = userName;
 
-function renderRecentLeads() {
-    const tbody = document.getElementById('recentLeadsTable');
-    const recent = leads.slice(0, 5);
-    tbody.innerHTML = recent.map(l => `
-        <tr>
-            <td>${escapeHtml(l.name)}</td>
-            <td><span class="badge badge-primary">${escapeHtml(l.stageName || '-')}</span></td>
-            <td>${formatDate(l.createdAt)}</td>
-        </tr>
-    `).join('') || '<tr><td colspan="3" class="text-center text-gray">Nenhum lead</td></tr>';
-}
+    document.getElementById('dashTierName').textContent = data.tier?.name || 'Indicador';
+    document.getElementById('dashTierPercentage').textContent = (data.tier?.percentage || 15) + '%';
 
-// Clients
-async function loadClients() {
-    try {
-        const [clientsRes, plansRes] = await Promise.all([
-            apiRequest('/api/clients'),
-            apiRequest('/api/plans')
-        ]);
+    const activeClients = data.activeClients || 0;
+    const nextTierMin = data.nextTier?.minClients || 3;
+    const progress = Math.min((activeClients / nextTierMin) * 100, 100);
+    document.getElementById('dashTierProgress').style.width = progress + '%';
 
-        if (clientsRes.success) {
-            clients = clientsRes.data;
-            renderClients();
-        }
+    const remaining = Math.max(0, nextTierMin - activeClients);
+    const tierText = `${activeClients} clientes ativos - Faltam <span>${remaining}</span> clientes para o proximo nivel`;
+    document.getElementById('dashTierText').innerHTML = tierText;
 
-        if (plansRes.success) {
-            plans = plansRes.data;
-            populatePlanSelects();
-        }
-    } catch (e) {
-        showToast('Erro ao carregar clientes', 'error');
-    }
-}
-
-function renderClients() {
-    const tbody = document.getElementById('clientsTable');
-    tbody.innerHTML = clients.map(c => `
-        <tr>
-            <td>
-                <div>${escapeHtml(c.companyName)}</div>
-                <div class="text-xs text-gray">${escapeHtml(c.cnpj || '')}</div>
-            </td>
-            <td>
-                <div>${escapeHtml(c.contactName || '-')}</div>
-                <div class="text-xs text-gray">${escapeHtml(c.contactEmail || '')}</div>
-            </td>
-            <td>${escapeHtml(c.planName || '-')}</td>
-            <td>${formatCurrency(c.monthlyPrice)}</td>
-            <td><span class="badge ${getStatusBadge(c.status)}">${getStatusLabel(c.status)}</span></td>
-            <td>
-                <button class="btn btn-sm btn-secondary" onclick="editClient('${c.id}')">Editar</button>
-            </td>
-        </tr>
-    `).join('') || '<tr><td colspan="6" class="text-center text-gray">Nenhum cliente</td></tr>';
-}
-
-function populatePlanSelects() {
-    const options = plans.map(p => `<option value="${p.id}">${escapeHtml(p.name)} - ${formatCurrency(p.basePrice)}</option>`).join('');
-    document.getElementById('clientPlanSelect').innerHTML = '<option value="">Selecione</option>' + options;
-    document.getElementById('simPlan').innerHTML = '<option value="">Selecione um plano</option>' + options;
-    document.getElementById('proposalPlanSelect').innerHTML = '<option value="">Selecione</option>' + options;
-
-    const globalPlans = plans.filter(p => !p.ownerId);
-    document.getElementById('basePlanSelect').innerHTML = globalPlans.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-}
-
-function showClientModal(client = null) {
-    const form = document.getElementById('clientForm');
-    form.reset();
-    document.getElementById('clientFormId').value = client?.id || '';
-    document.getElementById('clientModalTitle').textContent = client ? 'Editar Cliente' : 'Novo Cliente';
-
-    if (client) {
-        form.companyName.value = client.companyName;
-        form.cnpj.value = client.cnpj || '';
-        form.contactName.value = client.contactName || '';
-        form.contactEmail.value = client.contactEmail || '';
-        form.contactPhone.value = client.contactPhone || '';
-        form.planId.value = client.planId || '';
-        form.extraUsers.value = client.extraUsers || 0;
-        form.extraQueues.value = client.extraQueues || 0;
-        form.extraWhatsapp.value = client.extraWhatsapp || 0;
-        form.extraInstagram.value = client.extraInstagram || 0;
-    }
-
-    document.getElementById('clientModal').classList.remove('hidden');
-}
-
-function editClient(id) {
-    const client = clients.find(c => c.id === id);
-    if (client) showClientModal(client);
-}
-
-async function saveClient(e) {
-    e.preventDefault();
-    const form = e.target;
-    const id = document.getElementById('clientFormId').value;
-
-    const data = {
-        companyName: form.companyName.value,
-        contactName: form.contactName.value,
-        email: form.contactEmail.value,
-        phone: form.contactPhone.value || null,
-        planId: form.planId.value,
-        recurrence: 'MONTHLY',
-        dueDate: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0]
-    };
-
-    try {
-        const url = id ? `/api/clients/${id}` : '/api/clients';
-        const method = id ? 'PUT' : 'POST';
-        const res = await apiRequest(url, { method, body: JSON.stringify(data) });
-
-        if (res.success) {
-            showToast(id ? 'Cliente atualizado!' : 'Cliente criado!', 'success');
-            closeModal('clientModal');
-            loadClients();
-        } else {
-            showToast(res.message || 'Erro ao salvar', 'error');
-        }
-    } catch (e) {
-        showToast('Erro ao salvar cliente', 'error');
-    }
+    document.getElementById('statClients').textContent = activeClients;
+    document.getElementById('statCommission').textContent = formatCurrency(data.pendingCommission || 0);
+    document.getElementById('statCommissionStatus').textContent = data.pendingCommission > 0 ? 'Pendente' : 'Nenhuma';
+    document.getElementById('statInvoicesPaid').textContent = data.paidInvoicesCount || 0;
+    document.getElementById('statNextDue').textContent = data.nextDueDate ? formatDate(data.nextDueDate) : 'Nenhum';
 }
 
 // Funnel
@@ -241,63 +130,80 @@ async function loadFunnel() {
 
         if (stagesRes.success) {
             stages = stagesRes.data;
-            populateStageSelect();
+            populateStageSelects();
         }
 
         if (leadsRes.success) {
             leads = leadsRes.data;
+            document.getElementById('funnelLeadsCount').textContent = `${leads.length} leads ativos`;
+            renderKanban();
         }
-
-        renderFunnel();
     } catch (e) {
         showToast('Erro ao carregar funil', 'error');
     }
 }
 
-function populateStageSelect() {
+function populateStageSelects() {
     const options = stages.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
     document.getElementById('leadStageSelect').innerHTML = options;
 }
 
-function renderFunnel() {
+function renderKanban() {
     const board = document.getElementById('funnelBoard');
-    board.innerHTML = stages.map(stage => {
+    const stageColors = ['#3b82f6', '#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444'];
+
+    board.innerHTML = stages.map((stage, i) => {
         const stageLeads = leads.filter(l => l.stageId === stage.id);
         return `
             <div class="kanban-column" data-stage="${stage.id}">
                 <div class="kanban-column-header">
+                    <span class="kanban-stage-dot" style="background: ${stageColors[i % stageColors.length]}"></span>
                     <span class="kanban-column-title">${escapeHtml(stage.name)}</span>
                     <span class="kanban-column-count">${stageLeads.length}</span>
                 </div>
                 <div class="kanban-cards">
-                    ${stageLeads.map(lead => `
-                        <div class="kanban-card" onclick="showLeadModal(${JSON.stringify(lead).replace(/"/g, '&quot;')})">
-                            <div class="kanban-card-title">${escapeHtml(lead.name)}</div>
-                            <div class="kanban-card-meta">
-                                ${lead.value ? formatCurrency(lead.value) : ''}
-                                ${lead.phone ? `<br>${escapeHtml(lead.phone)}` : ''}
-                            </div>
-                        </div>
-                    `).join('')}
+                    ${stageLeads.length === 0
+                        ? '<div class="text-center text-gray text-sm py-4">Nenhum lead</div>'
+                        : stageLeads.map(lead => renderKanbanCard(lead)).join('')}
+                </div>
+                <div class="kanban-add-btn" onclick="showLeadModal(null, '${stage.id}')">
+                    + Adicionar lead
                 </div>
             </div>
         `;
     }).join('');
 }
 
-function showLeadModal(lead = null) {
+function renderKanbanCard(lead) {
+    return `
+        <div class="kanban-card" onclick="openLeadDetail('${lead.id}')">
+            <div class="kanban-card-title">${escapeHtml(lead.name)}</div>
+            ${lead.companyName ? `<div class="kanban-card-company">${escapeHtml(lead.companyName)}</div>` : ''}
+            ${lead.planName ? `<div class="kanban-card-plan">${escapeHtml(lead.planName)}</div>` : ''}
+            <div class="kanban-card-footer">
+                <span>${lead.activitiesCount || 0} atividades</span>
+                <span>${formatDate(lead.createdAt)}</span>
+            </div>
+        </div>
+    `;
+}
+
+function showLeadModal(lead = null, stageId = null) {
     const form = document.getElementById('leadForm');
     form.reset();
     document.getElementById('leadFormId').value = lead?.id || '';
     document.getElementById('leadModalTitle').textContent = lead ? 'Editar Lead' : 'Novo Lead';
 
     if (lead) {
-        form.name.value = lead.name;
+        form.name.value = lead.name || '';
+        form.companyName.value = lead.companyName || '';
         form.email.value = lead.email || '';
         form.phone.value = lead.phone || '';
-        form.stageId.value = lead.stageId;
-        form.estimatedValue.value = lead.value || '';
+        form.stageId.value = lead.stageId || '';
+        form.estimatedValue.value = lead.estimatedValue || '';
         form.notes.value = lead.notes || '';
+    } else if (stageId) {
+        form.stageId.value = stageId;
     }
 
     document.getElementById('leadModal').classList.remove('hidden');
@@ -310,10 +216,11 @@ async function saveLead(e) {
 
     const data = {
         name: form.name.value,
+        companyName: form.companyName.value || null,
         email: form.email.value || null,
         phone: form.phone.value || null,
         stageId: form.stageId.value,
-        value: form.estimatedValue.value ? parseFloat(form.estimatedValue.value) : null,
+        estimatedValue: form.estimatedValue.value ? parseFloat(form.estimatedValue.value) : null,
         notes: form.notes.value || null
     };
 
@@ -334,59 +241,503 @@ async function saveLead(e) {
     }
 }
 
-// Plans
-async function loadPlans() {
+async function openLeadDetail(id) {
     try {
-        const res = await apiRequest('/api/plans');
-        if (res.success) {
-            plans = res.data;
-            const globalPlans = plans.filter(p => !p.ownerId);
-            myPlans = plans.filter(p => p.ownerId);
-            renderGlobalPlans(globalPlans);
-            renderMyPlans(myPlans);
-            populatePlanSelects();
+        const [leadRes, activitiesRes] = await Promise.all([
+            apiRequest(`/api/funnel/leads/${id}`),
+            apiRequest(`/api/funnel/leads/${id}/activities`)
+        ]);
+
+        if (leadRes.success) {
+            currentLead = leadRes.data;
+            renderLeadDetail(currentLead, activitiesRes.success ? activitiesRes.data : []);
+            document.getElementById('leadDetailModal').classList.remove('hidden');
         }
     } catch (e) {
-        showToast('Erro ao carregar planos', 'error');
+        showToast('Erro ao carregar lead', 'error');
     }
 }
 
-function renderGlobalPlans(globalPlans) {
-    const grid = document.getElementById('globalPlansGrid');
-    grid.innerHTML = globalPlans.map(p => `
-        <div class="card">
-            <h3 class="font-semibold mb-2">${escapeHtml(p.name)}</h3>
-            <div class="text-2xl font-bold text-primary mb-2">${formatCurrency(p.basePrice)}<span class="text-sm text-gray font-normal">/mês</span></div>
-            <ul class="text-sm text-gray mb-4">
-                <li>${p.usersIncluded} usuário(s)</li>
-                <li>${p.queuesIncluded} fila(s)</li>
-                <li>${p.whatsappIncluded} WhatsApp</li>
-                ${p.setupFee > 0 ? `<li>Setup: ${formatCurrency(p.setupFee)}</li>` : ''}
-            </ul>
-        </div>
-    `).join('') || '<p class="text-gray">Nenhum plano global disponível</p>';
+function renderLeadDetail(lead, activities) {
+    document.getElementById('leadDetailName').textContent = lead.name;
+    document.getElementById('leadDetailCompany').textContent = lead.companyName || '';
+    document.getElementById('leadDetailPhone').textContent = lead.phone || '-';
+
+    const emailEl = document.getElementById('leadDetailEmail');
+    emailEl.textContent = lead.email || '-';
+    emailEl.href = lead.email ? `mailto:${lead.email}` : '#';
+
+    const currentStage = stages.find(s => s.id === lead.stageId);
+    document.getElementById('leadDetailStage').textContent = currentStage?.name || '-';
+
+    const buttonsHtml = stages.map(s => `
+        <button class="lead-stage-btn ${s.id === lead.stageId ? 'active' : ''}"
+                onclick="moveLeadToStage('${s.id}')">
+            ${escapeHtml(s.name)}
+        </button>
+    `).join('');
+    document.getElementById('leadStageButtons').innerHTML = buttonsHtml;
+
+    const activitiesHtml = activities.length === 0
+        ? '<div class="text-center text-gray py-4">Nenhuma atividade</div>'
+        : activities.map(a => `
+            <div class="lead-activity-item">
+                <span class="lead-activity-dot"></span>
+                <span class="lead-activity-text">${escapeHtml(a.description)}</span>
+                <span class="lead-activity-date">${formatDate(a.createdAt)}</span>
+            </div>
+        `).join('');
+    document.getElementById('leadActivities').innerHTML = activitiesHtml;
 }
 
-function renderMyPlans(myPlans) {
-    const grid = document.getElementById('myPlansGrid');
-    grid.innerHTML = myPlans.map(p => `
-        <div class="card">
-            <h3 class="font-semibold mb-2">${escapeHtml(p.name)}</h3>
-            <div class="text-2xl font-bold text-primary mb-2">${formatCurrency(p.basePrice)}<span class="text-sm text-gray font-normal">/mês</span></div>
-            <p class="text-xs text-gray mb-2">Base: ${escapeHtml(p.basePlanName || '-')}</p>
-            <button class="btn btn-sm btn-danger" onclick="deleteMyPlan('${p.id}')">Excluir</button>
-        </div>
-    `).join('') || '<p class="text-gray">Você ainda não criou planos personalizados</p>';
+async function moveLeadToStage(stageId) {
+    if (!currentLead || currentLead.stageId === stageId) return;
+
+    try {
+        const res = await apiRequest(`/api/funnel/leads/${currentLead.id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ stageId })
+        });
+
+        if (res.success) {
+            showToast('Lead movido!', 'success');
+            currentLead.stageId = stageId;
+            renderLeadDetail(currentLead, []);
+            loadFunnel();
+        }
+    } catch (e) {
+        showToast('Erro ao mover lead', 'error');
+    }
 }
 
-function showPartnerPlanModal() {
-    document.getElementById('partnerPlanForm').reset();
+async function markLeadWon() {
+    if (!currentLead) return;
+    if (!confirm('Converter este lead em cliente?')) return;
+
+    try {
+        const res = await apiRequest(`/api/funnel/leads/${currentLead.id}/promote`, { method: 'POST' });
+        if (res.success) {
+            showToast('Lead convertido em cliente!', 'success');
+            closeModal('leadDetailModal');
+            loadFunnel();
+        } else {
+            showToast(res.message || 'Erro', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao converter lead', 'error');
+    }
+}
+
+async function markLeadLost() {
+    if (!currentLead) return;
+    if (!confirm('Marcar lead como perdido?')) return;
+
+    const lostStage = stages.find(s => s.name.toLowerCase().includes('perdido'));
+    if (lostStage) {
+        await moveLeadToStage(lostStage.id);
+    } else {
+        showToast('Estagio "Perdido" nao encontrado', 'error');
+    }
+}
+
+function editCurrentLead() {
+    if (!currentLead) return;
+    closeModal('leadDetailModal');
+    showLeadModal(currentLead);
+}
+
+async function deleteCurrentLead() {
+    if (!currentLead) return;
+    if (!confirm('Excluir este lead?')) return;
+
+    try {
+        const res = await apiRequest(`/api/funnel/leads/${currentLead.id}`, { method: 'DELETE' });
+        if (res.success) {
+            showToast('Lead excluido!', 'success');
+            closeModal('leadDetailModal');
+            loadFunnel();
+        }
+    } catch (e) {
+        showToast('Erro ao excluir lead', 'error');
+    }
+}
+
+async function addLeadNote() {
+    if (!currentLead) return;
+    const input = document.getElementById('leadNoteInput');
+    const note = input.value.trim();
+    if (!note) return;
+
+    try {
+        const res = await apiRequest(`/api/funnel/leads/${currentLead.id}/activities`, {
+            method: 'POST',
+            body: JSON.stringify({ type: 'NOTE', description: note })
+        });
+
+        if (res.success) {
+            input.value = '';
+            openLeadDetail(currentLead.id);
+        }
+    } catch (e) {
+        showToast('Erro ao adicionar nota', 'error');
+    }
+}
+
+// Clients
+async function loadClients() {
+    try {
+        const res = await apiRequest('/api/clients');
+        if (res.success) {
+            renderClients(res.data);
+        }
+    } catch (e) {
+        showToast('Erro ao carregar clientes', 'error');
+    }
+}
+
+function renderClients(clients) {
+    const tbody = document.getElementById('clientsTable');
+
+    if (clients.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-gray">Nenhum cliente encontrado</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = clients.map(c => `
+        <tr>
+            <td>
+                <div class="font-medium">${escapeHtml(c.companyName)}</div>
+                <div class="text-xs text-gray">${escapeHtml(c.contactName || '')}</div>
+            </td>
+            <td>
+                <div>${escapeHtml(c.planName || '-')}</div>
+                ${c.pacoticketId ? `<div class="text-xs text-primary">PT#${c.pacoticketId}</div>` : ''}
+            </td>
+            <td>
+                ${c.modules && c.modules.length > 0
+                    ? c.modules.slice(0, 2).map(m => `<span class="mr-2" title="${escapeHtml(m)}">&#x1F4E6;</span>`).join('')
+                    : '-'}
+            </td>
+            <td>${formatCurrency(c.monthlyValue || c.planPrice || 0)}</td>
+            <td>${getRecurrenceLabel(c.recurrence)}</td>
+            <td class="${isOverdue(c.dueDate) ? 'text-danger' : ''}">${c.dueDate ? formatDate(c.dueDate) : '-'}</td>
+            <td><span class="badge ${getStatusBadge(c.status)}">${getStatusLabel(c.status)}</span></td>
+            <td>${c.lastInvoiceStatus ? `<span class="badge ${getInvoiceStatusBadge(c.lastInvoiceStatus)}">${getInvoiceStatusLabel(c.lastInvoiceStatus)}</span>` : '<span class="badge badge-secondary">Sem fatura</span>'}</td>
+            <td>
+                <button class="btn-link" onclick="editClient('${c.id}')">Editar</button>
+                <button class="btn-link btn-link-danger" onclick="deleteClient('${c.id}')">Excluir</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function isOverdue(dateStr) {
+    if (!dateStr) return false;
+    return new Date(dateStr) < new Date();
+}
+
+function showClientModal(client = null) {
+    const form = document.getElementById('clientForm');
+    form.reset();
+    document.getElementById('clientFormId').value = client?.id || '';
+    document.getElementById('clientModalTitle').textContent = client ? 'Editar Cliente' : 'Novo Cliente';
+
+    loadPlanOptions();
+
+    if (client) {
+        form.companyName.value = client.companyName || '';
+        form.cnpj.value = client.cnpj || '';
+        form.contactName.value = client.contactName || '';
+        form.email.value = client.email || '';
+        form.phone.value = client.phone || '';
+        form.planId.value = client.planId || '';
+        form.recurrence.value = client.recurrence || 'MONTHLY';
+        form.dueDate.value = client.dueDate ? client.dueDate.split('T')[0] : '';
+    }
+
+    document.getElementById('clientModal').classList.remove('hidden');
+}
+
+async function loadPlanOptions() {
+    if (plans.length === 0) {
+        try {
+            const res = await apiRequest('/api/plans');
+            if (res.success) plans = res.data;
+        } catch (e) { }
+    }
+
+    const select = document.getElementById('clientPlanSelect');
+    select.innerHTML = '<option value="">Selecione um plano</option>' +
+        plans.filter(p => p.isActive).map(p => `<option value="${p.id}">${escapeHtml(p.name)} - ${formatCurrency(p.basePrice)}</option>`).join('');
+}
+
+function editClient(id) {
+    apiRequest(`/api/clients/${id}`).then(res => {
+        if (res.success) showClientModal(res.data);
+    });
+}
+
+async function saveClient(e) {
+    e.preventDefault();
+    const form = e.target;
+    const id = document.getElementById('clientFormId').value;
+
+    const data = {
+        companyName: form.companyName.value,
+        cnpj: form.cnpj.value || null,
+        contactName: form.contactName.value,
+        email: form.email.value,
+        phone: form.phone.value || null,
+        planId: form.planId.value,
+        recurrence: form.recurrence.value,
+        dueDate: form.dueDate.value || null,
+        password: form.password.value || null
+    };
+
+    try {
+        const url = id ? `/api/clients/${id}` : '/api/clients';
+        const method = id ? 'PUT' : 'POST';
+        const res = await apiRequest(url, { method, body: JSON.stringify(data) });
+
+        if (res.success) {
+            showToast(id ? 'Cliente atualizado!' : 'Cliente criado!', 'success');
+            closeModal('clientModal');
+            loadClients();
+        } else {
+            showToast(res.message || 'Erro ao salvar', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao salvar cliente', 'error');
+    }
+}
+
+async function deleteClient(id) {
+    if (!confirm('Excluir este cliente?')) return;
+
+    try {
+        const res = await apiRequest(`/api/clients/${id}`, { method: 'DELETE' });
+        if (res.success) {
+            showToast('Cliente excluido!', 'success');
+            loadClients();
+        }
+    } catch (e) {
+        showToast('Erro ao excluir cliente', 'error');
+    }
+}
+
+// Commissions
+async function loadCommissions() {
+    const month = document.getElementById('commMonthFilter').value;
+    const year = document.getElementById('commYearFilter').value;
+
+    try {
+        const [listRes, summaryRes] = await Promise.all([
+            apiRequest(`/api/commissions?month=${month}&year=${year}`),
+            apiRequest(`/api/commissions/summary?month=${month}&year=${year}`)
+        ]);
+
+        if (summaryRes.success) {
+            document.getElementById('commPendingMonthly').textContent = formatCurrency(summaryRes.data.pending || 0);
+            document.getElementById('commPaid').textContent = formatCurrency(summaryRes.data.paid || 0);
+            document.getElementById('commTotal').textContent = formatCurrency(summaryRes.data.total || 0);
+        }
+
+        if (listRes.success) {
+            renderCommissions(listRes.data);
+        }
+    } catch (e) {
+        showToast('Erro ao carregar comissoes', 'error');
+    }
+}
+
+function renderCommissions(commissions) {
+    const tbody = document.getElementById('commissionsTable');
+
+    if (commissions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray">Nenhuma comissao encontrada para este periodo</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = commissions.map(c => `
+        <tr>
+            <td>${c.periodMonth}/${c.periodYear}</td>
+            <td>${escapeHtml(c.clientName || '-')}</td>
+            <td><span class="badge badge-secondary">${escapeHtml(c.tierName || '-')}</span></td>
+            <td>${formatCurrency(c.monthlyCommission || 0)}</td>
+            <td>${formatCurrency(c.setupCommission || 0)}</td>
+            <td class="font-semibold">${formatCurrency(c.totalCommission)}</td>
+            <td><span class="badge ${c.status === 'PAID' ? 'badge-success' : 'badge-warning'}">${c.status === 'PAID' ? 'Pago' : 'Pendente'}</span></td>
+            <td>${c.paidAt ? formatDate(c.paidAt) : '-'}</td>
+        </tr>
+    `).join('');
+}
+
+// Pricing
+async function loadPricing() {
+    try {
+        const [plansRes, modulesRes, tiersRes, resourcesRes] = await Promise.all([
+            apiRequest('/api/plans'),
+            apiRequest('/api/plans/modules/prices'),
+            apiRequest('/api/commission-tiers'),
+            apiRequest('/api/resource-prices')
+        ]);
+
+        if (plansRes.success) {
+            plans = plansRes.data;
+            globalPlans = plans.filter(p => !p.ownerId && p.isActive);
+            myPlans = plans.filter(p => p.ownerId && p.isActive);
+            renderGlobalPlans();
+            renderMyPlans();
+            populateBasePlanSelect();
+        }
+
+        if (modulesRes.success) {
+            modulePrices = modulesRes.data.filter(m => m.isVisible);
+            renderModulesGrid();
+        }
+
+        if (tiersRes.success) {
+            tiersData = tiersRes.data;
+            renderTiersDisplay();
+        }
+
+        if (resourcesRes.success) {
+            resourcePrices = resourcesRes.data;
+            renderResourcePrices();
+        }
+    } catch (e) {
+        showToast('Erro ao carregar precos', 'error');
+    }
+}
+
+function renderGlobalPlans() {
+    const container = document.getElementById('globalPlansGrid');
+    container.innerHTML = globalPlans.map(p => renderPricingCard(p, false)).join('');
+}
+
+function renderMyPlans() {
+    const container = document.getElementById('myPlansGrid');
+    if (myPlans.length === 0) {
+        container.innerHTML = '<div class="text-center text-gray py-4 col-span-3">Nenhum plano personalizado criado</div>';
+        return;
+    }
+    container.innerHTML = myPlans.map(p => renderPricingCard(p, true)).join('');
+}
+
+function renderPricingCard(plan, isOwn) {
+    const users = plan.usersIncluded || plan.resources?.users || 1;
+    const queues = plan.queuesIncluded || plan.resources?.queues || 1;
+    const connections = plan.connectionsIncluded || plan.resources?.connections || 1;
+    const commission = partnerData?.tier?.percentage || 15;
+
+    return `
+        <div class="pricing-card">
+            <div class="pricing-card-header">
+                <div class="pricing-card-name">${escapeHtml(plan.name)}</div>
+                <div class="pricing-card-price">${formatCurrency(plan.basePrice)}<span class="pricing-card-price-sub">/mes</span></div>
+            </div>
+            <div class="pricing-card-resources">
+                <span class="pricing-card-resource">${users} usuarios</span>
+                <span class="pricing-card-resource">${queues} filas</span>
+                <span class="pricing-card-resource">${connections} conexoes</span>
+            </div>
+            <div class="pricing-card-info">
+                <div class="pricing-card-row">
+                    <span>Taxa de ativacao (1x)</span>
+                    <span>${formatCurrency(plan.setupFee || 0)}</span>
+                </div>
+                <div class="pricing-card-row">
+                    <span>Taxa para pagamento unico</span>
+                    <span>${formatCurrency((plan.setupFee || 0) + (plan.basePrice || 0) * 12 * 0.85)}</span>
+                </div>
+                <div class="pricing-card-row">
+                    <span>Comissao por venda (${commission}%)</span>
+                    <span class="pricing-card-commission">${formatCurrency((plan.basePrice || 0) * commission / 100)}</span>
+                </div>
+            </div>
+            ${isOwn ? `
+                <div class="plan-card-actions">
+                    <button class="btn-link" onclick="editPartnerPlan('${plan.id}')">Editar</button>
+                    <button class="btn-link btn-link-danger" onclick="deletePartnerPlan('${plan.id}')">Excluir</button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+function renderModulesGrid() {
+    const container = document.getElementById('modulesGrid');
+    container.innerHTML = modulePrices.map(m => `
+        <div class="module-card">
+            <div class="module-card-icon">&#x1F4E6;</div>
+            <div class="module-card-name">${escapeHtml(m.label)}</div>
+            <div class="module-card-price">+ ${formatCurrency(m.price)}</div>
+        </div>
+    `).join('');
+}
+
+function renderTiersDisplay() {
+    const container = document.getElementById('tiersDisplay');
+    const currentTier = partnerData?.tier?.id;
+
+    container.innerHTML = tiersData.filter(t => t.isActive).map(t => `
+        <div class="tier-display-card ${t.id === currentTier ? 'active' : ''}">
+            <div class="tier-display-name">${escapeHtml(t.name)}</div>
+            <div class="tier-display-percentage">${t.percentage}%</div>
+            <div class="tier-display-range">${t.minClients}${t.maxClients ? '-' + t.maxClients : '+'} clientes</div>
+        </div>
+    `).join('');
+}
+
+function renderResourcePrices() {
+    const tbody = document.getElementById('resourcePricesTable');
+    const labels = {
+        whatsappUnofficial: 'WhatsApp Nao Oficial (por conexao)',
+        whatsappOfficial: 'WhatsApp Oficial / WABA (por conexao)',
+        instagram: 'Instagram (por conexao)',
+        user: 'Usuario adicional (por usuario)',
+        queue: 'Fila adicional (por fila)'
+    };
+
+    tbody.innerHTML = resourcePrices.map(r => `
+        <tr>
+            <td>${labels[r.key] || r.key}</td>
+            <td class="text-right">${formatCurrency(r.price)}</td>
+        </tr>
+    `).join('');
+}
+
+function populateBasePlanSelect() {
+    const select = document.getElementById('basePlanSelect');
+    select.innerHTML = '<option value="">Selecione um plano base</option>' +
+        globalPlans.map(p => `<option value="${p.id}">${escapeHtml(p.name)} - ${formatCurrency(p.basePrice)}</option>`).join('');
+}
+
+function showPartnerPlanModal(plan = null) {
+    const form = document.getElementById('partnerPlanForm');
+    form.reset();
+    document.getElementById('partnerPlanFormId').value = plan?.id || '';
+    document.getElementById('partnerPlanModalTitle').textContent = plan ? 'Editar Plano' : 'Criar Plano Personalizado';
+
+    if (plan) {
+        form.basePlanId.value = plan.basePlanId || '';
+        form.name.value = plan.name || '';
+        form.priceAddition.value = plan.priceAddition || 0;
+        form.setupAddition.value = plan.setupAddition || 0;
+    }
+
     document.getElementById('partnerPlanModal').classList.remove('hidden');
+}
+
+function editPartnerPlan(id) {
+    const plan = myPlans.find(p => p.id === id);
+    if (plan) showPartnerPlanModal(plan);
 }
 
 async function savePartnerPlan(e) {
     e.preventDefault();
     const form = e.target;
+    const id = document.getElementById('partnerPlanFormId').value;
 
     const data = {
         basePlanId: form.basePlanId.value,
@@ -396,134 +747,266 @@ async function savePartnerPlan(e) {
     };
 
     try {
+        const url = id ? `/api/plans/partner/${id}` : '/api/plans/partner';
+        const method = id ? 'PUT' : 'POST';
+        const res = await apiRequest(url, { method, body: JSON.stringify(data) });
+
+        if (res.success) {
+            showToast(id ? 'Plano atualizado!' : 'Plano criado!', 'success');
+            closeModal('partnerPlanModal');
+            loadPricing();
+        } else {
+            showToast(res.message || 'Erro ao salvar', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao salvar plano', 'error');
+    }
+}
+
+async function deletePartnerPlan(id) {
+    if (!confirm('Excluir este plano?')) return;
+
+    try {
+        const res = await apiRequest(`/api/plans/partner/${id}`, { method: 'DELETE' });
+        if (res.success) {
+            showToast('Plano excluido!', 'success');
+            loadPricing();
+        }
+    } catch (e) {
+        showToast('Erro ao excluir plano', 'error');
+    }
+}
+
+// Proposals
+async function loadProposals() {
+    try {
+        const [proposalsRes, plansRes, leadsRes] = await Promise.all([
+            apiRequest('/api/pdf/proposals'),
+            apiRequest('/api/plans'),
+            apiRequest('/api/funnel/leads')
+        ]);
+
+        if (proposalsRes.success) {
+            renderProposalsTable(proposalsRes.data);
+        }
+
+        if (plansRes.success) {
+            plans = plansRes.data;
+            globalPlans = plans.filter(p => !p.ownerId && p.isActive);
+            renderProposalPlansGrid();
+        }
+
+        if (leadsRes.success) {
+            leads = leadsRes.data;
+            populateLeadSelect();
+        }
+
+        renderProposalModulesGrid();
+    } catch (e) {
+        showToast('Erro ao carregar propostas', 'error');
+    }
+}
+
+function renderProposalsTable(proposals) {
+    const tbody = document.getElementById('proposalsTable');
+
+    if (proposals.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray">Nenhuma proposta gerada</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = proposals.map(p => `
+        <tr>
+            <td class="font-mono text-primary">${escapeHtml(p.proposalCode || p.id?.substring(0, 8))}</td>
+            <td>${escapeHtml(p.planName || '-')}</td>
+            <td>${escapeHtml(p.leadName || '-')}</td>
+            <td>${formatDate(p.createdAt)}</td>
+            <td>
+                <button class="btn-link" onclick="downloadProposal('${p.id}')">Baixar</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function renderProposalPlansGrid() {
+    const container = document.getElementById('proposalPlansGrid');
+    container.innerHTML = globalPlans.map(p => `
+        <div class="pricing-card ${selectedPlan?.id === p.id ? 'selected' : ''}" onclick="selectPlanForProposal('${p.id}')">
+            <div class="pricing-card-header">
+                <div class="pricing-card-name">${escapeHtml(p.name)}</div>
+                <div class="pricing-card-price">${formatCurrency(p.basePrice)}<span class="pricing-card-price-sub">/mes</span></div>
+            </div>
+            <div class="pricing-card-info">
+                <div class="pricing-card-row">
+                    <span>Taxa de setup</span>
+                    <span>${formatCurrency(p.setupFee || 0)}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function selectPlanForProposal(planId) {
+    selectedPlan = globalPlans.find(p => p.id === planId);
+    renderProposalPlansGrid();
+    updateProposalSummary();
+}
+
+function renderProposalModulesGrid() {
+    const container = document.getElementById('proposalModulesGrid');
+    if (modulePrices.length === 0) {
+        container.innerHTML = '<div class="text-gray">Carregando modulos...</div>';
+        return;
+    }
+
+    container.innerHTML = modulePrices.map(m => `
+        <label class="module-checkbox" onclick="toggleModule(this)">
+            <input type="checkbox" name="module_${m.moduleKey}" value="${m.price}">
+            <span class="module-checkbox-icon">&#x1F4E6;</span>
+            <span class="module-checkbox-info">
+                <span class="module-checkbox-name">${escapeHtml(m.label)}</span>
+                <span class="module-checkbox-price">+ ${formatCurrency(m.price)}/mes</span>
+            </span>
+        </label>
+    `).join('');
+}
+
+function toggleModule(el) {
+    el.classList.toggle('checked');
+    updateProposalSummary();
+}
+
+function populateLeadSelect() {
+    const select = document.getElementById('propLeadSelect');
+    select.innerHTML = '<option value="">- Nenhum lead -</option>' +
+        leads.map(l => `<option value="${l.id}">${escapeHtml(l.name)}</option>`).join('');
+}
+
+function changeResource(type, delta) {
+    const input = document.getElementById('prop' + type.charAt(0).toUpperCase() + type.slice(1));
+    let val = parseInt(input.value) || 0;
+    val = Math.max(0, val + delta);
+    input.value = val;
+    updateProposalSummary();
+}
+
+function updateProposalSummary() {
+    if (!selectedPlan) {
+        document.getElementById('summaryPlanPrice').textContent = 'R$ 0,00/mes';
+        document.getElementById('summaryMonthlyTotal').textContent = 'R$ 0,00';
+        document.getElementById('summarySetupFee').textContent = 'R$ 0,00';
+        document.getElementById('summaryCommission').textContent = 'R$ 0,00/mes';
+        document.getElementById('summaryTotalSetup').textContent = 'R$ 0,00';
+        return;
+    }
+
+    let monthlyTotal = selectedPlan.basePrice || 0;
+    let setupFee = selectedPlan.setupFee || 0;
+
+    document.querySelectorAll('.module-checkbox.checked input').forEach(cb => {
+        monthlyTotal += parseFloat(cb.value) || 0;
+    });
+
+    const resourceIds = ['whatsappUnofficial', 'whatsappOfficial', 'instagram', 'user', 'queue'];
+    resourceIds.forEach(rid => {
+        const qty = parseInt(document.getElementById('prop' + rid.charAt(0).toUpperCase() + rid.slice(1))?.value) || 0;
+        const price = resourcePrices.find(r => r.key === rid)?.price || 0;
+        const total = qty * price;
+        monthlyTotal += total;
+        const totalEl = document.getElementById('total' + rid.charAt(0).toUpperCase() + rid.slice(1));
+        if (totalEl) totalEl.textContent = formatCurrency(total);
+    });
+
+    const setupExtra = parseFloat(document.getElementById('propSetupExtra')?.value) || 0;
+    const totalSetup = setupFee + setupExtra;
+
+    const commission = partnerData?.tier?.percentage || 15;
+    const monthlyCommission = monthlyTotal * commission / 100;
+
+    document.getElementById('summaryPlanPrice').textContent = formatCurrency(selectedPlan.basePrice) + '/mes';
+    document.getElementById('summaryMonthlyTotal').textContent = formatCurrency(monthlyTotal);
+    document.getElementById('summarySetupFee').textContent = formatCurrency(setupFee);
+    document.getElementById('summaryCommission').textContent = formatCurrency(monthlyCommission) + '/mes';
+    document.getElementById('summaryTotalSetup').textContent = formatCurrency(totalSetup);
+}
+
+async function generateProposalPDF() {
+    if (!selectedPlan) {
+        showToast('Selecione um plano primeiro', 'warning');
+        return;
+    }
+
+    const modules = [];
+    document.querySelectorAll('.module-checkbox.checked input').forEach(cb => {
+        modules.push(cb.name.replace('module_', ''));
+    });
+
+    const data = {
+        planId: selectedPlan.id,
+        modules,
+        extraWhatsappUnofficial: parseInt(document.getElementById('propWhatsappUnofficial')?.value) || 0,
+        extraWhatsappOfficial: parseInt(document.getElementById('propWhatsappOfficial')?.value) || 0,
+        extraInstagram: parseInt(document.getElementById('propInstagram')?.value) || 0,
+        extraUsers: parseInt(document.getElementById('propUser')?.value) || 0,
+        extraQueues: parseInt(document.getElementById('propQueue')?.value) || 0,
+        setupFeeExtra: parseFloat(document.getElementById('propSetupExtra')?.value) || 0,
+        customPlanName: document.getElementById('propCustomPlanName')?.value || null,
+        leadId: document.getElementById('propLeadSelect')?.value || null,
+        savePlan: !document.getElementById('propSavePlan')?.checked
+    };
+
+    try {
+        const res = await apiRequest('/api/pdf/plan', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+
+        if (res.success) {
+            showToast('Proposta gerada!', 'success');
+            if (res.data.downloadUrl) {
+                window.open(res.data.downloadUrl, '_blank');
+            }
+            loadProposals();
+        } else {
+            showToast(res.message || 'Erro ao gerar proposta', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao gerar proposta', 'error');
+    }
+}
+
+async function savePlanOnly() {
+    if (!selectedPlan) {
+        showToast('Selecione um plano primeiro', 'warning');
+        return;
+    }
+
+    const customName = document.getElementById('propCustomPlanName')?.value;
+    if (!customName) {
+        showToast('Informe o nome do plano personalizado', 'warning');
+        return;
+    }
+
+    const data = {
+        basePlanId: selectedPlan.id,
+        name: customName,
+        priceAddition: 0,
+        setupAddition: parseFloat(document.getElementById('propSetupExtra')?.value) || 0
+    };
+
+    try {
         const res = await apiRequest('/api/plans/partner', {
             method: 'POST',
             body: JSON.stringify(data)
         });
 
         if (res.success) {
-            showToast('Plano criado!', 'success');
-            closeModal('partnerPlanModal');
-            loadPlans();
+            showToast('Plano salvo!', 'success');
         } else {
-            showToast(res.message || 'Erro ao criar', 'error');
+            showToast(res.message || 'Erro ao salvar plano', 'error');
         }
     } catch (e) {
-        showToast('Erro ao criar plano', 'error');
-    }
-}
-
-async function deleteMyPlan(id) {
-    if (!confirm('Excluir este plano?')) return;
-
-    try {
-        const res = await apiRequest(`/api/plans/partner/${id}`, { method: 'DELETE' });
-        if (res.success) {
-            showToast('Plano excluído!', 'success');
-            loadPlans();
-        } else {
-            showToast(res.message || 'Erro', 'error');
-        }
-    } catch (e) {
-        showToast('Erro ao excluir', 'error');
-    }
-}
-
-// Commissions
-async function loadCommissions() {
-    try {
-        const [listRes, summaryRes] = await Promise.all([
-            apiRequest('/api/commissions'),
-            apiRequest('/api/commissions/summary')
-        ]);
-
-        if (listRes.success) renderCommissions(listRes.data);
-
-        if (summaryRes.success) {
-            document.getElementById('commPending').textContent = formatCurrency(summaryRes.data.pending || 0);
-            document.getElementById('commPaidMonth').textContent = formatCurrency(summaryRes.data.paid || 0);
-            document.getElementById('commPaidTotal').textContent = formatCurrency(summaryRes.data.total || 0);
-        }
-    } catch (e) {
-        showToast('Erro ao carregar comissões', 'error');
-    }
-}
-
-function renderCommissions(commissions) {
-    const tbody = document.getElementById('commissionsTable');
-    tbody.innerHTML = commissions.map(c => `
-        <tr>
-            <td>${escapeHtml(c.clientName || '-')}</td>
-            <td>${c.periodMonth}/${c.periodYear}</td>
-            <td>${formatCurrency(c.commissionAmount)}</td>
-            <td>${formatCurrency(c.setupCommission)}</td>
-            <td class="font-semibold">${formatCurrency(c.totalCommission)}</td>
-            <td><span class="badge ${c.status === 'PAID' ? 'badge-success' : 'badge-warning'}">${c.status === 'PAID' ? 'Pago' : 'Pendente'}</span></td>
-        </tr>
-    `).join('') || '<tr><td colspan="6" class="text-center text-gray">Nenhuma comissão</td></tr>';
-}
-
-// Proposals
-async function loadProposals() {
-    try {
-        const [proposalsRes, plansRes] = await Promise.all([
-            apiRequest('/api/pdf/proposals'),
-            apiRequest('/api/plans')
-        ]);
-
-        if (proposalsRes.success) renderProposals(proposalsRes.data);
-
-        if (plansRes.success) {
-            plans = plansRes.data;
-            populatePlanSelects();
-        }
-    } catch (e) {
-        showToast('Erro ao carregar propostas', 'error');
-    }
-}
-
-function renderProposals(proposals) {
-    const tbody = document.getElementById('proposalsTable');
-    tbody.innerHTML = proposals.map(p => `
-        <tr>
-            <td>${escapeHtml(p.planName || '-')}</td>
-            <td>${escapeHtml(p.clientName || '-')}</td>
-            <td>${formatDate(p.createdAt)}</td>
-            <td>
-                <button class="btn btn-sm btn-primary mr-2" onclick="downloadProposal('${p.id}')">Download</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteProposal('${p.id}')">Excluir</button>
-            </td>
-        </tr>
-    `).join('') || '<tr><td colspan="4" class="text-center text-gray">Nenhuma proposta</td></tr>';
-}
-
-function showProposalModal() {
-    document.getElementById('proposalForm').reset();
-    document.getElementById('proposalModal').classList.remove('hidden');
-}
-
-async function generateProposal(e) {
-    e.preventDefault();
-    const form = e.target;
-
-    try {
-        const res = await apiRequest('/api/pdf/plan', {
-            method: 'POST',
-            body: JSON.stringify({
-                planId: form.planId.value,
-                clientName: form.clientName.value || null
-            })
-        });
-
-        if (res.success) {
-            showToast('Proposta gerada!', 'success');
-            closeModal('proposalModal');
-            loadProposals();
-        } else {
-            showToast(res.message || 'Erro ao gerar', 'error');
-        }
-    } catch (e) {
-        showToast('Erro ao gerar proposta', 'error');
+        showToast('Erro ao salvar plano', 'error');
     }
 }
 
@@ -531,133 +1014,51 @@ function downloadProposal(id) {
     window.open(`/api/pdf/proposals/${id}/download`, '_blank');
 }
 
-async function deleteProposal(id) {
-    if (!confirm('Excluir esta proposta?')) return;
+// Profile
+async function loadProfile() {
+    try {
+        const res = await apiRequest('/api/auth/me');
+        if (res.success) {
+            const user = res.data;
+            document.getElementById('profileName').textContent = user.name || user.email;
+            document.getElementById('profileEmail').textContent = user.email || '-';
+            document.getElementById('profilePhone').textContent = user.phone || '-';
+            document.getElementById('profileTier').textContent = partnerData?.tier?.name || 'Indicador';
+        }
+    } catch (e) {
+        showToast('Erro ao carregar perfil', 'error');
+    }
+}
+
+function editProfile() {
+    document.getElementById('profileFormName').value = document.getElementById('profileName').textContent;
+    document.getElementById('profileFormPhone').value = document.getElementById('profilePhone').textContent === '-' ? '' : document.getElementById('profilePhone').textContent;
+    document.getElementById('profileModal').classList.remove('hidden');
+}
+
+async function saveProfile(e) {
+    e.preventDefault();
+    const form = e.target;
 
     try {
-        const res = await apiRequest(`/api/pdf/proposals/${id}`, { method: 'DELETE' });
+        const res = await apiRequest('/api/partners/me', {
+            method: 'PUT',
+            body: JSON.stringify({
+                name: form.name.value,
+                phone: form.phone.value || null
+            })
+        });
+
         if (res.success) {
-            showToast('Proposta excluída!', 'success');
-            loadProposals();
+            showToast('Perfil atualizado!', 'success');
+            closeModal('profileModal');
+            loadProfile();
         } else {
             showToast(res.message || 'Erro', 'error');
         }
     } catch (e) {
-        showToast('Erro ao excluir', 'error');
+        showToast('Erro ao salvar perfil', 'error');
     }
-}
-
-// Simulator
-async function loadSimulator() {
-    try {
-        const [plansRes, resourcesRes, modulesRes] = await Promise.all([
-            apiRequest('/api/plans'),
-            apiRequest('/api/resource-prices'),
-            apiRequest('/api/plans/modules/prices')
-        ]);
-
-        if (plansRes.success) {
-            plans = plansRes.data;
-            populatePlanSelects();
-        }
-
-        if (resourcesRes.success) {
-            resourcePrices = resourcesRes.data;
-        }
-
-        if (modulesRes.success) {
-            modulePrices = modulesRes.data;
-            renderSimulatorModules();
-        }
-    } catch (e) {
-        showToast('Erro ao carregar simulador', 'error');
-    }
-}
-
-function renderSimulatorModules() {
-    const container = document.getElementById('simModules');
-    container.innerHTML = modulePrices.filter(m => m.price > 0).map(m => `
-        <label class="form-checkbox">
-            <input type="checkbox" id="sim_${m.moduleKey}" onchange="updateSimulator()">
-            <span>${escapeHtml(m.label)} (+${formatCurrency(m.price)})</span>
-        </label>
-    `).join('');
-}
-
-function updateSimulator() {
-    const planId = document.getElementById('simPlan').value;
-    const plan = plans.find(p => p.id === planId);
-
-    if (!plan) {
-        document.getElementById('simulatorResult').innerHTML = '<p class="text-gray text-center">Selecione um plano para simular</p>';
-        return;
-    }
-
-    const extraUsers = parseInt(document.getElementById('simUsers').value) || 0;
-    const extraQueues = parseInt(document.getElementById('simQueues').value) || 0;
-    const extraWhatsapp = parseInt(document.getElementById('simWhatsapp').value) || 0;
-    const extraInstagram = parseInt(document.getElementById('simInstagram').value) || 0;
-
-    const userPrice = resourcePrices.find(r => r.key === 'user')?.price || 0;
-    const queuePrice = resourcePrices.find(r => r.key === 'queue')?.price || 0;
-    const whatsappPrice = resourcePrices.find(r => r.key === 'whatsappUnofficial')?.price || 0;
-    const instagramPrice = resourcePrices.find(r => r.key === 'instagram')?.price || 0;
-
-    let basePrice = parseFloat(plan.basePrice);
-    let extrasPrice = 0;
-    extrasPrice += extraUsers * userPrice;
-    extrasPrice += extraQueues * queuePrice;
-    extrasPrice += extraWhatsapp * whatsappPrice;
-    extrasPrice += extraInstagram * instagramPrice;
-
-    let modulesPrice = 0;
-    modulePrices.forEach(m => {
-        const cb = document.getElementById(`sim_${m.moduleKey}`);
-        if (cb?.checked && m.price > 0) {
-            modulesPrice += parseFloat(m.price);
-        }
-    });
-
-    const total = basePrice + extrasPrice + modulesPrice;
-
-    document.getElementById('simulatorResult').innerHTML = `
-        <div class="space-y-3">
-            <div class="flex justify-between">
-                <span>Plano Base (${escapeHtml(plan.name)})</span>
-                <span>${formatCurrency(basePrice)}</span>
-            </div>
-            ${extrasPrice > 0 ? `
-            <div class="flex justify-between">
-                <span>Recursos Extras</span>
-                <span>${formatCurrency(extrasPrice)}</span>
-            </div>
-            ` : ''}
-            ${modulesPrice > 0 ? `
-            <div class="flex justify-between">
-                <span>Módulos Adicionais</span>
-                <span>${formatCurrency(modulesPrice)}</span>
-            </div>
-            ` : ''}
-            <hr class="my-2">
-            <div class="flex justify-between font-bold text-lg">
-                <span>Total Mensal</span>
-                <span class="text-primary">${formatCurrency(total)}</span>
-            </div>
-            ${plan.setupFee > 0 ? `
-            <div class="flex justify-between text-sm text-gray">
-                <span>Taxa de Setup (única)</span>
-                <span>${formatCurrency(plan.setupFee)}</span>
-            </div>
-            ` : ''}
-        </div>
-    `;
-}
-
-// Password
-function showChangePassword() {
-    document.getElementById('passwordForm').reset();
-    document.getElementById('passwordModal').classList.remove('hidden');
-    closeUserMenu();
 }
 
 async function changePassword(e) {
@@ -665,7 +1066,7 @@ async function changePassword(e) {
     const form = e.target;
 
     if (form.newPassword.value !== form.confirmPassword.value) {
-        showToast('Senhas não conferem', 'error');
+        showToast('Senhas nao conferem', 'error');
         return;
     }
 
@@ -679,7 +1080,7 @@ async function changePassword(e) {
         });
 
         if (res.success) {
-            showToast('Senha alterada! Faça login novamente.', 'success');
+            showToast('Senha alterada! Faca login novamente.', 'success');
             setTimeout(() => logout(), 2000);
         } else {
             showToast(res.message || 'Erro', 'error');
@@ -698,12 +1099,10 @@ function toggleUserMenu() {
     document.getElementById('userDropdown').classList.toggle('hidden');
 }
 
-function closeUserMenu() {
-    document.getElementById('userDropdown').classList.add('hidden');
-}
-
 document.addEventListener('click', (e) => {
-    if (!e.target.closest('.user-menu')) closeUserMenu();
+    if (!e.target.closest('.user-menu')) {
+        document.getElementById('userDropdown')?.classList.add('hidden');
+    }
 });
 
 function showToast(message, type = 'success') {
@@ -720,6 +1119,7 @@ function formatCurrency(value) {
 }
 
 function formatDate(date) {
+    if (!date) return '-';
     return new Date(date).toLocaleDateString('pt-BR');
 }
 
@@ -735,5 +1135,20 @@ function getStatusBadge(status) {
 
 function getStatusLabel(status) {
     const map = { ACTIVE: 'Ativo', INACTIVE: 'Inativo', SUSPENDED: 'Suspenso', PENDING: 'Pendente' };
+    return map[status] || status;
+}
+
+function getRecurrenceLabel(recurrence) {
+    const map = { MONTHLY: 'Mensal', QUARTERLY: 'Trimestral', SEMIANNUAL: 'Semestral', ANNUAL: 'Anual' };
+    return map[recurrence] || recurrence || '-';
+}
+
+function getInvoiceStatusBadge(status) {
+    const map = { PAID: 'badge-success', PENDING: 'badge-warning', OVERDUE: 'badge-danger', CANCELLED: 'badge-secondary' };
+    return map[status] || 'badge-secondary';
+}
+
+function getInvoiceStatusLabel(status) {
+    const map = { PAID: 'Pago', PENDING: 'Pendente', OVERDUE: 'Vencido', CANCELLED: 'Cancelado' };
     return map[status] || status;
 }

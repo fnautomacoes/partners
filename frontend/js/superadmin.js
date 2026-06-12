@@ -4,6 +4,7 @@ let plans = [];
 let allPlans = [];
 let modulePrices = [];
 let commissionsData = [];
+let tiersData = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     currentUser = await checkAuth('SUPERADMIN');
@@ -14,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     setupNavigation();
     setupForms();
-    populateYearFilter();
+    setupFilters();
     loadDashboard();
 });
 
@@ -30,20 +31,22 @@ function setupNavigation() {
 
 function showSection(section) {
     document.querySelectorAll('.nav-item[data-section]').forEach(i => i.classList.remove('active'));
-    document.querySelector(`.nav-item[data-section="${section}"]`).classList.add('active');
+    const navItem = document.querySelector(`.nav-item[data-section="${section}"]`);
+    if (navItem) navItem.classList.add('active');
 
     document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-    document.getElementById(`section-${section}`).classList.remove('hidden');
+    const sectionEl = document.getElementById(`section-${section}`);
+    if (sectionEl) sectionEl.classList.remove('hidden');
 
     const titles = {
         dashboard: 'Dashboard',
         partners: 'Parceiros',
         plans: 'Planos',
         clients: 'Clientes',
-        commissions: 'Comissões',
+        commissions: 'Comissoes',
         invoices: 'Faturas',
-        tiers: 'Tiers de Comissão',
-        config: 'Configurações'
+        proposals: 'Propostas',
+        config: 'Configuracoes'
     };
     document.getElementById('pageTitle').textContent = titles[section] || section;
 
@@ -54,7 +57,7 @@ function showSection(section) {
         clients: loadClients,
         commissions: loadCommissions,
         invoices: loadInvoices,
-        tiers: loadTiers,
+        proposals: loadProposals,
         config: loadConfig
     };
     if (loaders[section]) loaders[section]();
@@ -63,25 +66,56 @@ function showSection(section) {
 function setupForms() {
     document.getElementById('partnerForm').addEventListener('submit', savePartner);
     document.getElementById('planForm').addEventListener('submit', savePlan);
+    document.getElementById('clientForm').addEventListener('submit', saveClient);
     document.getElementById('tierForm').addEventListener('submit', saveTier);
-    document.getElementById('configForm').addEventListener('submit', saveConfig);
     document.getElementById('passwordForm').addEventListener('submit', changePassword);
 
-    document.getElementById('clientPartnerFilter').addEventListener('change', loadClients);
-    document.getElementById('clientStatusFilter').addEventListener('change', loadClients);
-    document.getElementById('commPartnerFilter').addEventListener('change', loadCommissions);
-    document.getElementById('commStatusFilter').addEventListener('change', loadCommissions);
-    document.getElementById('planTypeFilter').addEventListener('change', filterPlans);
-    document.getElementById('invoiceMonthFilter').addEventListener('change', loadInvoices);
-    document.getElementById('invoiceYearFilter').addEventListener('change', loadInvoices);
-    document.getElementById('invoiceStatusFilter').addEventListener('change', loadInvoices);
+    const companyForm = document.getElementById('companyConfigForm');
+    if (companyForm) companyForm.addEventListener('submit', saveCompanyConfig);
+
+    const smtpForm = document.getElementById('smtpConfigForm');
+    if (smtpForm) smtpForm.addEventListener('submit', saveSmtpConfig);
+
+    const resourceForm = document.getElementById('resourcePricesForm');
+    if (resourceForm) resourceForm.addEventListener('submit', saveResourcePrices);
 }
 
-function populateYearFilter() {
-    const yearSelect = document.getElementById('invoiceYearFilter');
+function setupFilters() {
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            filterPlans(tab.dataset.filter);
+        });
+    });
+
+    populateYearFilters();
+    populateMonthFilters();
+}
+
+function populateYearFilters() {
     const currentYear = new Date().getFullYear();
-    for (let y = currentYear; y >= currentYear - 3; y--) {
-        yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+    const yearSelects = document.querySelectorAll('#invoiceYearFilter, #commYearFilter');
+    yearSelects.forEach(select => {
+        if (!select) return;
+        for (let y = currentYear; y >= currentYear - 3; y--) {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            if (y === currentYear) opt.selected = true;
+            select.appendChild(opt);
+        }
+    });
+}
+
+function populateMonthFilters() {
+    const months = ['Janeiro','Fevereiro','Marco','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const currentMonth = new Date().getMonth();
+    const monthSelect = document.getElementById('commMonthFilter');
+    if (monthSelect) {
+        monthSelect.innerHTML = months.map((m, i) =>
+            `<option value="${i+1}" ${i === currentMonth ? 'selected' : ''}>${m}</option>`
+        ).join('');
     }
 }
 
@@ -95,14 +129,14 @@ async function loadDashboard() {
 
         if (dashRes.success) {
             const d = dashRes.data;
-            document.getElementById('statPartners').textContent = d.activePartners;
-            document.getElementById('statClients').textContent = d.activeClients;
-            document.getElementById('statPendingCommissions').textContent = formatCurrency(d.pendingCommissions);
-            document.getElementById('statRevenue').textContent = formatCurrency(d.monthlyRevenue);
+            document.getElementById('statPartners').textContent = d.activePartners || 0;
+            document.getElementById('statClients').textContent = d.activeClients || 0;
+            document.getElementById('statPendingCommissions').textContent = formatCurrency(d.pendingCommissions || 0);
+            document.getElementById('statRevenue').textContent = formatCurrency(d.monthlyRevenue || 0);
 
-            renderTierDistribution(d.tierDistribution);
-            renderTopPartners(d.topPartners);
-            renderRecentActivities(d.recentActivities);
+            renderTierDistribution(d.tierDistribution || []);
+            renderTopPartners(d.topPartners || []);
+            renderRecentActivities(d.recentActivities || []);
         }
 
         if (partnersRes.success) {
@@ -110,75 +144,71 @@ async function loadDashboard() {
             populatePartnerFilters();
         }
     } catch (e) {
+        console.error('Dashboard error:', e);
         showToast('Erro ao carregar dashboard', 'error');
     }
 }
 
 function renderTierDistribution(tiers) {
-    const container = document.getElementById('tierDistributionChart');
+    const container = document.getElementById('tierDistribution');
     if (!tiers || tiers.length === 0) {
         container.innerHTML = '<div class="text-gray text-center py-4">Nenhum tier configurado</div>';
         return;
     }
 
-    const total = tiers.reduce((sum, t) => sum + t.count, 0);
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
-
-    container.innerHTML = `
-        <div class="tier-bars">
-            ${tiers.map((t, i) => `
-                <div class="tier-bar-item mb-3">
-                    <div class="flex justify-between mb-1">
-                        <span class="text-sm font-medium">${escapeHtml(t.name)}</span>
-                        <span class="text-sm text-gray">${t.count} parceiros</span>
-                    </div>
-                    <div class="tier-bar-bg" style="background: var(--card-bg); border-radius: 4px; height: 24px; overflow: hidden;">
-                        <div class="tier-bar-fill" style="width: ${total > 0 ? (t.count / total * 100) : 0}%; background: ${colors[i % colors.length]}; height: 100%; border-radius: 4px; transition: width 0.5s;"></div>
-                    </div>
-                </div>
-            `).join('')}
+    const colors = ['tier-item-yellow', 'tier-item-green', 'tier-item-blue'];
+    container.innerHTML = tiers.map((t, i) => `
+        <div class="tier-item ${colors[i % colors.length]}">
+            <div class="tier-item-info">
+                <div class="tier-item-name">${escapeHtml(t.name)} - ${t.percentage || 0}%</div>
+                <div class="tier-item-range">${t.minClients || 0}${t.maxClients ? '-' + t.maxClients : '+'} clientes</div>
+            </div>
+            <div class="tier-item-count">${t.count || 0}</div>
         </div>
-    `;
+    `).join('');
 }
 
 function renderTopPartners(topPartners) {
     const tbody = document.getElementById('topPartnersTable');
     if (!topPartners || topPartners.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray">Nenhum parceiro</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-gray">Nenhum parceiro</td></tr>';
         return;
     }
 
     tbody.innerHTML = topPartners.map(p => `
         <tr>
             <td>${escapeHtml(p.name)}</td>
-            <td><span class="badge badge-primary">${escapeHtml(p.tier)}</span></td>
-            <td>${p.activeClients}</td>
-            <td>${formatCurrency(p.totalCommissions)}</td>
+            <td><span class="badge badge-primary">${escapeHtml(p.tier || '-')}</span></td>
+            <td>${p.activeClients || 0}</td>
         </tr>
     `).join('');
 }
 
 function renderRecentActivities(activities) {
-    const tbody = document.getElementById('recentActivitiesTable');
+    const container = document.getElementById('recentActivities');
     if (!activities || activities.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray">Nenhuma atividade recente</td></tr>';
+        container.innerHTML = '<div class="text-gray text-center py-4">Nenhuma atividade recente</div>';
         return;
     }
 
-    tbody.innerHTML = activities.map(a => `
-        <tr>
-            <td class="text-sm">${formatDateTime(a.createdAt)}</td>
-            <td>${escapeHtml(a.partnerName || '-')}</td>
-            <td><span class="badge badge-secondary">${escapeHtml(a.action)}</span></td>
-            <td class="text-sm">${escapeHtml(a.description || '-')}</td>
-        </tr>
+    container.innerHTML = activities.map(a => `
+        <div class="activity-item">
+            <span class="activity-badge">${escapeHtml(a.action)}</span>
+            <span class="activity-text">${escapeHtml(a.description || '')}</span>
+            <span class="activity-date">${formatDate(a.createdAt)}</span>
+        </div>
     `).join('');
 }
 
 function populatePartnerFilters() {
     const options = partners.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-    document.getElementById('clientPartnerFilter').innerHTML = '<option value="">Todos os parceiros</option>' + options;
-    document.getElementById('commPartnerFilter').innerHTML = '<option value="">Todos os parceiros</option>' + options;
+    ['clientPartnerFilter', 'commPartnerFilter', 'proposalPartnerFilter', 'clientPartnerSelect'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            const firstOpt = el.querySelector('option');
+            el.innerHTML = (firstOpt ? firstOpt.outerHTML : '<option value="">Todos</option>') + options;
+        }
+    });
 }
 
 // Partners
@@ -207,8 +237,9 @@ function renderPartners() {
             <td>${p.activeClients || 0}</td>
             <td><span class="badge ${p.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}">${p.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}</span></td>
             <td>
-                <button class="btn btn-sm btn-secondary mr-2" onclick="editPartner('${p.id}')">Editar</button>
-                <button class="btn btn-sm ${p.status === 'ACTIVE' ? 'btn-danger' : 'btn-success'}" onclick="togglePartner('${p.id}', '${p.status}')">${p.status === 'ACTIVE' ? 'Desativar' : 'Ativar'}</button>
+                <button class="btn-link" onclick="editPartner('${p.id}')">Editar</button>
+                <button class="btn-link" onclick="viewPartnerClients('${p.id}')">Ver Clientes</button>
+                <button class="btn-link btn-link-danger" onclick="togglePartner('${p.id}', '${p.status}')">${p.status === 'ACTIVE' ? 'Desativar' : 'Ativar'}</button>
             </td>
         </tr>
     `).join('') || '<tr><td colspan="8" class="text-center text-gray">Nenhum parceiro</td></tr>';
@@ -226,6 +257,8 @@ function showPartnerModal(partner = null) {
         form.email.value = partner.email;
         form.phone.value = partner.phone || '';
         form.document.value = partner.document || '';
+        form.canSetRecurrence.checked = partner.canSetRecurrence || false;
+        form.canSetDueDate.checked = partner.canSetDueDate || false;
     }
 
     document.getElementById('partnerModal').classList.remove('hidden');
@@ -234,6 +267,11 @@ function showPartnerModal(partner = null) {
 function editPartner(id) {
     const partner = partners.find(p => p.id === id);
     if (partner) showPartnerModal(partner);
+}
+
+function viewPartnerClients(id) {
+    document.getElementById('clientPartnerFilter').value = id;
+    showSection('clients');
 }
 
 async function savePartner(e) {
@@ -245,13 +283,15 @@ async function savePartner(e) {
         name: form.name.value,
         email: form.email.value,
         phone: form.phone.value || null,
-        document: form.document.value || null
+        document: form.document.value || null,
+        canSetRecurrence: form.canSetRecurrence.checked,
+        canSetDueDate: form.canSetDueDate.checked
     };
 
     if (!id) {
         data.password = form.password.value;
         if (!data.password || data.password.length < 8) {
-            showToast('Senha deve ter no mínimo 8 caracteres', 'error');
+            showToast('Senha deve ter no minimo 8 caracteres', 'error');
             return;
         }
     }
@@ -303,12 +343,12 @@ async function loadPlans() {
 
         if (plansRes.success) {
             allPlans = plansRes.data;
-            filterPlans();
+            filterPlans('all');
+            populatePlanFilters();
         }
 
         if (modulesRes.success) {
             modulePrices = modulesRes.data;
-            renderModulePrices();
             renderPlanModuleCheckboxes();
         }
     } catch (e) {
@@ -316,8 +356,7 @@ async function loadPlans() {
     }
 }
 
-function filterPlans() {
-    const filter = document.getElementById('planTypeFilter').value;
+function filterPlans(filter = 'all') {
     let filtered = allPlans;
 
     if (filter === 'global') {
@@ -330,58 +369,66 @@ function filterPlans() {
     renderPlansGrid();
 }
 
+function populatePlanFilters() {
+    const select = document.getElementById('clientPlanFilter');
+    if (select) {
+        select.innerHTML = '<option value="">Todos os planos</option>' +
+            allPlans.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+    }
+
+    const clientSelect = document.getElementById('clientPlanSelect');
+    if (clientSelect) {
+        clientSelect.innerHTML = '<option value="">Selecione...</option>' +
+            allPlans.filter(p => p.isActive).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+    }
+}
+
 function renderPlansGrid() {
     const container = document.getElementById('plansGrid');
 
     if (plans.length === 0) {
-        container.innerHTML = '<div class="p-8 text-center text-gray">Nenhum plano encontrado</div>';
+        container.innerHTML = '<div class="text-center text-gray py-4">Nenhum plano encontrado</div>';
         return;
     }
 
     container.innerHTML = plans.map(p => {
         const isGlobal = !p.ownerId;
-        const basePlanName = p.basePlan?.name || null;
+        const users = p.usersIncluded || p.resources?.users || 0;
+        const queues = p.queuesIncluded || p.resources?.queues || 0;
+        const whatsapp = p.whatsappIncluded || p.resources?.connections || 0;
 
         return `
             <div class="plan-card">
                 <div class="plan-card-header">
-                    <h3 class="plan-card-title">${escapeHtml(p.name)}</h3>
+                    <div>
+                        <h3 class="plan-card-title">${escapeHtml(p.name)}</h3>
+                        ${!isGlobal ? `<div class="plan-card-subtitle">${escapeHtml(p.ownerName || 'Parceiro')}</div>` : ''}
+                    </div>
                     <span class="badge ${isGlobal ? 'badge-primary' : 'badge-secondary'}">${isGlobal ? 'Global' : 'Parceiro'}</span>
                 </div>
-                ${!isGlobal && p.ownerName ? `<div class="text-xs text-gray mb-2">Parceiro: ${escapeHtml(p.ownerName)}</div>` : ''}
-                ${basePlanName ? `<div class="text-xs text-gray mb-2">Baseado em: ${escapeHtml(basePlanName)}</div>` : ''}
                 <div class="plan-card-price">
-                    <span class="plan-price-value">${formatCurrency(p.basePrice)}</span>
-                    <span class="plan-price-period">/mês</span>
+                    ${formatCurrency(p.basePrice)}
+                    <span class="plan-card-price-sub">/mes</span>
                 </div>
-                <div class="plan-card-details">
-                    <div class="plan-detail-row">
-                        <span>Conexões/Filas</span>
-                        <span>${p.whatsappIncluded || 0} / ${p.queuesIncluded || 0}</span>
+                <div class="plan-card-resources">
+                    <span class="plan-resource-icon" title="Usuarios">${users}</span>
+                    <span class="plan-resource-icon" title="Filas">${queues}</span>
+                    <span class="plan-resource-icon" title="WhatsApp">${whatsapp}</span>
+                </div>
+                <div class="plan-card-info">
+                    <div class="plan-card-info-row">
+                        <span>Taxa de setup (cobrada 1x)</span>
+                        <span>${formatCurrency(p.setupFee || 0)}</span>
                     </div>
-                    <div class="plan-detail-row">
-                        <span>Setup Base</span>
-                        <span>${formatCurrency(p.basePlan?.setupFee || p.setupFee || 0)}</span>
-                    </div>
-                    ${!isGlobal ? `
-                    <div class="plan-detail-row">
-                        <span>Acréscimo Setup</span>
-                        <span>${formatCurrency((p.setupFee || 0) - (p.basePlan?.setupFee || 0))}</span>
-                    </div>
-                    ` : ''}
-                    <div class="plan-detail-row">
-                        <span>Setup Total</span>
-                        <span class="font-semibold">${formatCurrency(p.setupFee || 0)}</span>
-                    </div>
-                    <div class="plan-detail-row">
-                        <span>Clientes</span>
+                    <div class="plan-card-info-row">
+                        <span>Clientes no plano</span>
                         <span>${p.clientCount || 0}</span>
                     </div>
                 </div>
                 ${isGlobal ? `
                 <div class="plan-card-actions">
-                    <button class="btn btn-sm btn-secondary" onclick="editPlan('${p.id}')">Editar</button>
-                    <button class="btn btn-sm btn-danger" onclick="deletePlan('${p.id}')">Excluir</button>
+                    <button class="btn-link" onclick="editPlan('${p.id}')">Editar</button>
+                    <button class="btn-link btn-link-danger" onclick="deletePlan('${p.id}')">Desativar</button>
                 </div>
                 ` : ''}
             </div>
@@ -389,26 +436,14 @@ function renderPlansGrid() {
     }).join('');
 }
 
-function renderModulePrices() {
-    const tbody = document.getElementById('modulePricesTable');
-    tbody.innerHTML = modulePrices.map(m => `
-        <tr>
-            <td>${escapeHtml(m.label)}</td>
-            <td>${formatCurrency(m.price)}</td>
-            <td><span class="badge ${m.isVisible ? 'badge-success' : 'badge-secondary'}">${m.isVisible ? 'Sim' : 'Não'}</span></td>
-            <td>
-                <button class="btn btn-sm btn-secondary" onclick="editModulePrice('${m.moduleKey}', ${m.price})">Editar</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
 function renderPlanModuleCheckboxes() {
     const container = document.getElementById('planModulesCheckboxes');
-    container.innerHTML = modulePrices.map(m => `
+    if (!container) return;
+
+    container.innerHTML = modulePrices.filter(m => m.isVisible).map(m => `
         <label class="form-checkbox">
             <input type="checkbox" name="${m.moduleKey}">
-            <span>${escapeHtml(m.label)}</span>
+            <span>${escapeHtml(m.label)} (+${formatCurrency(m.price)})</span>
         </label>
     `).join('');
 }
@@ -420,17 +455,21 @@ function showPlanModal(plan = null) {
     document.getElementById('planModalTitle').textContent = plan ? 'Editar Plano' : 'Novo Plano';
 
     if (plan) {
-        form.name.value = plan.name;
-        form.recurrence.value = plan.recurrence;
-        form.basePrice.value = plan.basePrice;
-        form.setupFee.value = plan.setupFee;
-        form.usersIncluded.value = plan.usersIncluded;
-        form.queuesIncluded.value = plan.queuesIncluded;
-        form.whatsappIncluded.value = plan.whatsappIncluded;
+        form.name.value = plan.name || '';
+        form.description.value = plan.description || '';
+        form.basePrice.value = plan.basePrice || 0;
+        form.setupFee.value = plan.setupFee || 0;
+        form.sortOrder.value = plan.sortOrder || 0;
+        form.pacoticketPlanId.value = plan.pacoticketPlanId || '';
+        form.users.value = plan.usersIncluded || plan.resources?.users || 1;
+        form.queues.value = plan.queuesIncluded || plan.resources?.queues || 1;
+        form.connectionsWhatsappUnofficial.value = plan.resources?.connectionsWhatsappUnofficial || 0;
+        form.connectionsWhatsappOfficial.value = plan.resources?.connectionsWhatsappOfficial || 0;
+        form.connectionsInstagram.value = plan.resources?.connectionsInstagram || 0;
 
         modulePrices.forEach(m => {
             const cb = form.querySelector(`[name="${m.moduleKey}"]`);
-            if (cb) cb.checked = plan[m.moduleKey] || false;
+            if (cb) cb.checked = plan.modules?.[m.moduleKey] || plan[m.moduleKey] || false;
         });
     }
 
@@ -449,12 +488,17 @@ async function savePlan(e) {
 
     const data = {
         name: form.name.value,
-        recurrence: form.recurrence.value,
-        basePrice: parseFloat(form.basePrice.value),
+        description: form.description.value || null,
+        basePrice: parseFloat(form.basePrice.value) || 0,
         setupFee: parseFloat(form.setupFee.value) || 0,
-        users: parseInt(form.usersIncluded.value) || 1,
-        queues: parseInt(form.queuesIncluded.value) || 1,
-        connections: parseInt(form.whatsappIncluded.value) || 1
+        sortOrder: parseInt(form.sortOrder.value) || 0,
+        pacoticketPlanId: form.pacoticketPlanId.value ? parseInt(form.pacoticketPlanId.value) : null,
+        users: parseInt(form.users.value) || 1,
+        queues: parseInt(form.queues.value) || 1,
+        connections: parseInt(form.connectionsWhatsappUnofficial.value) + parseInt(form.connectionsWhatsappOfficial.value) || 1,
+        connectionsWhatsappUnofficial: parseInt(form.connectionsWhatsappUnofficial.value) || 0,
+        connectionsWhatsappOfficial: parseInt(form.connectionsWhatsappOfficial.value) || 0,
+        connectionsInstagram: parseInt(form.connectionsInstagram.value) || 0
     };
 
     modulePrices.forEach(m => {
@@ -480,39 +524,18 @@ async function savePlan(e) {
 }
 
 async function deletePlan(id) {
-    if (!confirm('Excluir este plano?')) return;
+    if (!confirm('Desativar este plano?')) return;
 
     try {
         const res = await apiRequest(`/api/plans/${id}`, { method: 'DELETE' });
         if (res.success) {
-            showToast('Plano excluído!', 'success');
+            showToast('Plano desativado!', 'success');
             loadPlans();
         } else {
             showToast(res.message || 'Erro', 'error');
         }
     } catch (e) {
-        showToast('Erro ao excluir plano', 'error');
-    }
-}
-
-async function editModulePrice(moduleKey, currentPrice) {
-    const newPrice = prompt('Novo preço:', currentPrice);
-    if (newPrice === null) return;
-
-    try {
-        const res = await apiRequest('/api/plans/modules/prices', {
-            method: 'PUT',
-            body: JSON.stringify({ modules: [{ moduleKey, price: parseFloat(newPrice) }] })
-        });
-
-        if (res.success) {
-            showToast('Preço atualizado!', 'success');
-            loadPlans();
-        } else {
-            showToast(res.message || 'Erro', 'error');
-        }
-    } catch (e) {
-        showToast('Erro ao atualizar preço', 'error');
+        showToast('Erro ao desativar plano', 'error');
     }
 }
 
@@ -520,10 +543,12 @@ async function editModulePrice(moduleKey, currentPrice) {
 async function loadClients() {
     const partnerId = document.getElementById('clientPartnerFilter').value;
     const status = document.getElementById('clientStatusFilter').value;
+    const planId = document.getElementById('clientPlanFilter').value;
 
     let url = '/api/clients?';
     if (partnerId) url += `partnerId=${partnerId}&`;
     if (status) url += `status=${status}&`;
+    if (planId) url += `planId=${planId}&`;
 
     try {
         const res = await apiRequest(url);
@@ -535,6 +560,13 @@ async function loadClients() {
     }
 }
 
+function clearClientFilters() {
+    document.getElementById('clientPartnerFilter').value = '';
+    document.getElementById('clientStatusFilter').value = '';
+    document.getElementById('clientPlanFilter').value = '';
+    loadClients();
+}
+
 function renderClients(clients) {
     const tbody = document.getElementById('clientsTable');
     tbody.innerHTML = clients.map(c => `
@@ -542,38 +574,123 @@ function renderClients(clients) {
             <td>${escapeHtml(c.companyName)}</td>
             <td>
                 <div>${escapeHtml(c.contactName || '-')}</div>
-                <div class="text-xs text-gray">${escapeHtml(c.contactEmail || c.email || '-')}</div>
+                <div class="text-xs text-gray">${escapeHtml(c.email || '')}</div>
             </td>
             <td>${escapeHtml(c.partnerName || '-')}</td>
-            <td>${escapeHtml(c.planName || '-')}</td>
-            <td>${getRecurrenceLabel(c.recurrence)}</td>
-            <td>${c.dueDay ? `Dia ${c.dueDay}` : '-'}</td>
-            <td><span class="badge ${getStatusBadge(c.status)}">${getStatusLabel(c.status)}</span></td>
-            <td>${c.lastInvoiceStatus ? `<span class="badge ${getInvoiceStatusBadge(c.lastInvoiceStatus)}">${getInvoiceStatusLabel(c.lastInvoiceStatus)}</span>` : '-'}</td>
             <td>
-                <button class="btn btn-sm btn-secondary" onclick="viewClient('${c.id}')">Ver</button>
+                <div>${escapeHtml(c.planName || '-')}</div>
+                ${c.pacoticketId ? `<div class="text-xs text-gray">PT#${c.pacoticketId}</div>` : ''}
+            </td>
+            <td>${getRecurrenceLabel(c.recurrence)}</td>
+            <td class="${isOverdue(c.dueDate) ? 'text-danger' : ''}">${c.dueDate ? formatDate(c.dueDate) : '-'}</td>
+            <td><span class="badge ${getStatusBadge(c.status)}">${getStatusLabel(c.status)}</span></td>
+            <td>${c.lastInvoiceStatus ? `<span class="badge ${getInvoiceStatusBadge(c.lastInvoiceStatus)}">${getInvoiceStatusLabel(c.lastInvoiceStatus)}</span>` : '<span class="text-gray">Sem fatura</span>'}</td>
+            <td>
+                <button class="btn-link" onclick="editClient('${c.id}')">Editar</button>
+                <button class="btn-link btn-link-danger" onclick="deactivateClient('${c.id}')">Desativar</button>
             </td>
         </tr>
     `).join('') || '<tr><td colspan="9" class="text-center text-gray">Nenhum cliente</td></tr>';
 }
 
-function viewClient(id) {
-    showToast('Visualização de cliente em desenvolvimento', 'warning');
+function isOverdue(dateStr) {
+    if (!dateStr) return false;
+    return new Date(dateStr) < new Date();
+}
+
+function showClientModal(client = null) {
+    const form = document.getElementById('clientForm');
+    form.reset();
+    document.getElementById('clientFormId').value = client?.id || '';
+    document.getElementById('clientModalTitle').textContent = client ? 'Editar Cliente' : 'Novo Cliente';
+
+    if (client) {
+        form.companyName.value = client.companyName || '';
+        form.contactName.value = client.contactName || '';
+        form.email.value = client.email || '';
+        form.phone.value = client.phone || '';
+        form.partnerId.value = client.partnerId || '';
+        form.planId.value = client.planId || '';
+        form.recurrence.value = client.recurrence || 'MONTHLY';
+        form.dueDate.value = client.dueDate ? client.dueDate.split('T')[0] : '';
+    }
+
+    document.getElementById('clientModal').classList.remove('hidden');
+}
+
+function editClient(id) {
+    apiRequest(`/api/clients/${id}`).then(res => {
+        if (res.success) showClientModal(res.data);
+    });
+}
+
+async function saveClient(e) {
+    e.preventDefault();
+    const form = e.target;
+    const id = document.getElementById('clientFormId').value;
+
+    const data = {
+        companyName: form.companyName.value,
+        contactName: form.contactName.value,
+        email: form.email.value,
+        phone: form.phone.value,
+        partnerId: form.partnerId.value,
+        planId: form.planId.value,
+        recurrence: form.recurrence.value,
+        dueDate: form.dueDate.value,
+        password: form.password.value
+    };
+
+    try {
+        const url = id ? `/api/clients/${id}` : '/api/clients';
+        const method = id ? 'PUT' : 'POST';
+        const res = await apiRequest(url, { method, body: JSON.stringify(data) });
+
+        if (res.success) {
+            showToast(id ? 'Cliente atualizado!' : 'Cliente criado!', 'success');
+            closeModal('clientModal');
+            loadClients();
+        } else {
+            showToast(res.message || 'Erro ao salvar', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao salvar cliente', 'error');
+    }
+}
+
+async function deactivateClient(id) {
+    if (!confirm('Desativar este cliente?')) return;
+
+    try {
+        const res = await apiRequest(`/api/clients/${id}`, { method: 'DELETE' });
+        if (res.success) {
+            showToast('Cliente desativado!', 'success');
+            loadClients();
+        } else {
+            showToast(res.message || 'Erro', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao desativar cliente', 'error');
+    }
 }
 
 // Commissions
 async function loadCommissions() {
-    const partnerId = document.getElementById('commPartnerFilter').value;
-    const status = document.getElementById('commStatusFilter').value;
+    const month = document.getElementById('commMonthFilter')?.value || '';
+    const year = document.getElementById('commYearFilter')?.value || '';
+    const partnerId = document.getElementById('commPartnerFilter')?.value || '';
+    const status = document.getElementById('commStatusFilter')?.value || '';
 
     let url = '/api/commissions?';
+    if (month) url += `month=${month}&`;
+    if (year) url += `year=${year}&`;
     if (partnerId) url += `partnerId=${partnerId}&`;
     if (status) url += `status=${status}&`;
 
     try {
         const [listRes, summaryRes] = await Promise.all([
             apiRequest(url),
-            apiRequest('/api/commissions/summary')
+            apiRequest('/api/commissions/summary' + (month || year ? `?month=${month}&year=${year}` : ''))
         ]);
 
         if (listRes.success) {
@@ -583,16 +700,21 @@ async function loadCommissions() {
 
         if (summaryRes.success) {
             document.getElementById('commPending').textContent = formatCurrency(summaryRes.data.pending || 0);
-            document.getElementById('commPaidMonth').textContent = formatCurrency(summaryRes.data.paid || 0);
-            document.getElementById('commPaidTotal').textContent = formatCurrency(summaryRes.data.total || 0);
+            document.getElementById('commPaid').textContent = formatCurrency(summaryRes.data.paid || 0);
+            document.getElementById('commTotal').textContent = formatCurrency(summaryRes.data.total || 0);
         }
     } catch (e) {
-        showToast('Erro ao carregar comissões', 'error');
+        showToast('Erro ao carregar comissoes', 'error');
     }
 }
 
 function renderCommissions(commissions) {
     const tbody = document.getElementById('commissionsTable');
+    if (!commissions.length) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center text-gray">Nenhuma comissao encontrada.</td></tr>';
+        return;
+    }
+
     tbody.innerHTML = commissions.map(c => `
         <tr>
             <td>${escapeHtml(c.partnerName || '-')}</td>
@@ -604,19 +726,19 @@ function renderCommissions(commissions) {
             <td class="font-semibold">${formatCurrency(c.totalCommission)}</td>
             <td><span class="badge ${c.status === 'PAID' ? 'badge-success' : 'badge-warning'}">${c.status === 'PAID' ? 'Pago' : 'Pendente'}</span></td>
             <td>
-                ${c.status === 'PAID' ? formatDate(c.paidAt) : `<button class="btn btn-sm btn-success" onclick="payCommission('${c.id}')">Pagar</button>`}
+                ${c.status === 'PAID' ? formatDate(c.paidAt) : `<button class="btn btn-sm btn-success" onclick="payCommission('${c.id}')">Marcar Pago</button>`}
             </td>
         </tr>
-    `).join('') || '<tr><td colspan="9" class="text-center text-gray">Nenhuma comissão</td></tr>';
+    `).join('');
 }
 
 function exportCommissionsCSV() {
-    if (!commissionsData || commissionsData.length === 0) {
+    if (!commissionsData.length) {
         showToast('Nenhum dado para exportar', 'warning');
         return;
     }
 
-    const headers = ['Parceiro', 'Cliente', 'Período', 'Tier', '%', 'Base', 'Comissão', 'Status', 'Pago em'];
+    const headers = ['Parceiro', 'Cliente', 'Periodo', 'Tier', '%', 'Base', 'Comissao', 'Status', 'Pago em'];
     const rows = commissionsData.map(c => [
         c.partnerName || '',
         c.clientName || '',
@@ -643,49 +765,49 @@ function exportCommissionsCSV() {
 }
 
 async function calculateCommissions() {
-    const month = new Date().getMonth() + 1;
-    const year = new Date().getFullYear();
+    const month = document.getElementById('commMonthFilter')?.value || new Date().getMonth() + 1;
+    const year = document.getElementById('commYearFilter')?.value || new Date().getFullYear();
 
-    if (!confirm(`Calcular comissões para ${month}/${year}?`)) return;
+    if (!confirm(`Calcular comissoes para ${month}/${year}?`)) return;
 
     try {
         const res = await apiRequest('/api/commissions/calculate', {
             method: 'POST',
-            body: JSON.stringify({ month, year })
+            body: JSON.stringify({ month: parseInt(month), year: parseInt(year) })
         });
 
         if (res.success) {
-            showToast(`${res.data.created || 0} comissões calculadas!`, 'success');
+            showToast(`${res.data.created || 0} comissoes calculadas!`, 'success');
             loadCommissions();
         } else {
             showToast(res.message || 'Erro', 'error');
         }
     } catch (e) {
-        showToast('Erro ao calcular comissões', 'error');
+        showToast('Erro ao calcular comissoes', 'error');
     }
 }
 
 async function payCommission(id) {
-    if (!confirm('Marcar esta comissão como paga?')) return;
+    if (!confirm('Marcar esta comissao como paga?')) return;
 
     try {
         const res = await apiRequest(`/api/commissions/${id}/pay`, { method: 'PUT' });
         if (res.success) {
-            showToast('Comissão marcada como paga!', 'success');
+            showToast('Comissao marcada como paga!', 'success');
             loadCommissions();
         } else {
             showToast(res.message || 'Erro', 'error');
         }
     } catch (e) {
-        showToast('Erro ao pagar comissão', 'error');
+        showToast('Erro ao pagar comissao', 'error');
     }
 }
 
 // Invoices
 async function loadInvoices() {
-    const month = document.getElementById('invoiceMonthFilter').value;
-    const year = document.getElementById('invoiceYearFilter').value;
-    const status = document.getElementById('invoiceStatusFilter').value;
+    const month = document.getElementById('invoiceMonthFilter')?.value || '';
+    const year = document.getElementById('invoiceYearFilter')?.value || '';
+    const status = document.getElementById('invoiceStatusFilter')?.value || '';
 
     let url = '/api/invoices?';
     if (month) url += `month=${month}&`;
@@ -702,6 +824,11 @@ async function loadInvoices() {
 
 function renderInvoices(invoices) {
     const tbody = document.getElementById('invoicesTable');
+    if (!invoices.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-gray">Nenhuma fatura encontrada.</td></tr>';
+        return;
+    }
+
     tbody.innerHTML = invoices.map(i => `
         <tr>
             <td>${escapeHtml(i.clientName || '-')}</td>
@@ -712,7 +839,7 @@ function renderInvoices(invoices) {
             <td><span class="badge ${getInvoiceStatusBadge(i.status)}">${getInvoiceStatusLabel(i.status)}</span></td>
             <td>${i.paidAt ? formatDate(i.paidAt) : '-'}</td>
         </tr>
-    `).join('') || '<tr><td colspan="7" class="text-center text-gray">Nenhuma fatura</td></tr>';
+    `).join('');
 }
 
 async function syncInvoices() {
@@ -731,24 +858,164 @@ async function syncInvoices() {
     }
 }
 
-// Tiers
-let tiersData = [];
+// Proposals
+async function loadProposals() {
+    const partnerId = document.getElementById('proposalPartnerFilter')?.value || '';
+    const search = document.getElementById('proposalSearch')?.value || '';
 
-async function loadTiers() {
+    let url = '/api/pdf/proposals/all?';
+    if (partnerId) url += `partnerId=${partnerId}&`;
+
     try {
-        const res = await apiRequest('/api/commission-tiers');
+        const res = await apiRequest(url);
         if (res.success) {
-            tiersData = res.data;
-            renderTiers(tiersData);
+            let data = res.data;
+            if (search) {
+                const s = search.toLowerCase();
+                data = data.filter(p =>
+                    (p.proposalCode || '').toLowerCase().includes(s) ||
+                    (p.leadName || '').toLowerCase().includes(s)
+                );
+            }
+            renderProposals(data);
         }
     } catch (e) {
-        showToast('Erro ao carregar tiers', 'error');
+        showToast('Erro ao carregar propostas', 'error');
     }
 }
 
-function renderTiers(tiers) {
+function renderProposals(proposals) {
+    const tbody = document.getElementById('proposalsTable');
+    if (!proposals.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray">Nenhuma proposta encontrada.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = proposals.map(p => `
+        <tr>
+            <td class="font-mono text-primary">${escapeHtml(p.proposalCode || p.id?.substring(0,8))}</td>
+            <td>${escapeHtml(p.planName || '-')}</td>
+            <td>${escapeHtml(p.partnerName || '-')}</td>
+            <td>
+                ${p.leadName ? `<div>${escapeHtml(p.leadName)}</div>` : '-'}
+            </td>
+            <td>${formatCurrency(p.setupFeeBase || 0)}</td>
+            <td>${formatCurrency(p.setupFeeExtra || 0)}</td>
+            <td>${formatDate(p.createdAt)}</td>
+            <td>
+                <button class="btn-link" onclick="downloadProposal('${p.id}')">Baixar</button>
+                <button class="btn-link btn-link-danger" onclick="deleteProposal('${p.id}')">Excluir</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function downloadProposal(id) {
+    window.open(`/api/pdf/proposals/${id}/download`, '_blank');
+}
+
+async function deleteProposal(id) {
+    if (!confirm('Excluir esta proposta?')) return;
+
+    try {
+        const res = await apiRequest(`/api/pdf/proposals/${id}`, { method: 'DELETE' });
+        if (res.success) {
+            showToast('Proposta excluida!', 'success');
+            loadProposals();
+        } else {
+            showToast(res.message || 'Erro', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao excluir proposta', 'error');
+    }
+}
+
+// Config
+async function loadConfig() {
+    try {
+        const [configRes, modulesRes, tiersRes, resourcesRes] = await Promise.all([
+            apiRequest('/api/system-config/admin'),
+            apiRequest('/api/plans/modules/prices'),
+            apiRequest('/api/commission-tiers'),
+            apiRequest('/api/resource-prices')
+        ]);
+
+        if (configRes.success) {
+            const data = configRes.data;
+            populateConfigForm('companyConfigForm', data);
+            populateConfigForm('smtpConfigForm', data);
+        }
+
+        if (modulesRes.success) {
+            modulePrices = modulesRes.data;
+            renderModulePricesTable();
+        }
+
+        if (tiersRes.success) {
+            tiersData = tiersRes.data;
+            renderTiersTable();
+        }
+
+        if (resourcesRes.success) {
+            renderResourcePricesTable(resourcesRes.data);
+        }
+    } catch (e) {
+        showToast('Erro ao carregar configuracoes', 'error');
+    }
+}
+
+function populateConfigForm(formId, data) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+
+    Object.entries(data).forEach(([key, value]) => {
+        const input = form.querySelector(`[name="${key}"]`);
+        if (input) input.value = value || '';
+    });
+}
+
+function renderModulePricesTable() {
+    const tbody = document.getElementById('modulePricesTable');
+    if (!tbody) return;
+
+    tbody.innerHTML = modulePrices.map(m => `
+        <tr>
+            <td>${escapeHtml(m.label)}</td>
+            <td>${formatCurrency(m.price)}</td>
+            <td><span class="badge ${m.isVisible ? 'badge-success' : 'badge-secondary'}">${m.isVisible ? 'Sim' : 'Nao'}</span></td>
+            <td>
+                <button class="btn-link" onclick="editModulePrice('${m.moduleKey}', ${m.price}, ${m.isVisible})">Editar</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function editModulePrice(moduleKey, currentPrice, isVisible) {
+    const newPrice = prompt('Novo preco:', currentPrice);
+    if (newPrice === null) return;
+
+    try {
+        const res = await apiRequest('/api/plans/modules/prices', {
+            method: 'PUT',
+            body: JSON.stringify({ modules: [{ moduleKey, price: parseFloat(newPrice), isVisible }] })
+        });
+
+        if (res.success) {
+            showToast('Preco atualizado!', 'success');
+            loadConfig();
+        } else {
+            showToast(res.message || 'Erro', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao atualizar preco', 'error');
+    }
+}
+
+function renderTiersTable() {
     const tbody = document.getElementById('tiersTable');
-    tbody.innerHTML = tiers.map(t => `
+    if (!tbody) return;
+
+    tbody.innerHTML = tiersData.map(t => `
         <tr>
             <td>${t.order}</td>
             <td>${escapeHtml(t.name)}</td>
@@ -757,11 +1024,33 @@ function renderTiers(tiers) {
             <td>${t.percentage}%</td>
             <td><span class="badge ${t.isActive ? 'badge-success' : 'badge-danger'}">${t.isActive ? 'Ativo' : 'Inativo'}</span></td>
             <td>
-                <button class="btn btn-sm btn-secondary mr-2" onclick="editTier('${t.id}')">Editar</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteTier('${t.id}')">Excluir</button>
+                <button class="btn-link" onclick="editTier('${t.id}')">Editar</button>
+                <button class="btn-link btn-link-danger" onclick="deleteTier('${t.id}')">Excluir</button>
             </td>
         </tr>
     `).join('') || '<tr><td colspan="7" class="text-center text-gray">Nenhum tier</td></tr>';
+}
+
+function renderResourcePricesTable(resources) {
+    const tbody = document.getElementById('resourcePricesTable');
+    if (!tbody) return;
+
+    const labels = {
+        user: 'Usuario adicional (por usuario)',
+        queue: 'Fila adicional (por fila)',
+        whatsappUnofficial: 'WhatsApp Nao Oficial (por conexao)',
+        whatsappOfficial: 'WhatsApp Oficial / WABA (por conexao)',
+        instagram: 'Instagram (por conexao)'
+    };
+
+    tbody.innerHTML = resources.map(r => `
+        <tr>
+            <td>${labels[r.key] || r.key}</td>
+            <td>
+                <input type="number" step="0.01" class="form-input" name="resource_${r.key}" value="${r.price}" style="max-width: 120px">
+            </td>
+        </tr>
+    `).join('');
 }
 
 function showTierModal(tier = null) {
@@ -807,7 +1096,7 @@ async function saveTier(e) {
         if (res.success) {
             showToast(id ? 'Tier atualizado!' : 'Tier criado!', 'success');
             closeModal('tierModal');
-            loadTiers();
+            loadConfig();
         } else {
             showToast(res.message || 'Erro ao salvar', 'error');
         }
@@ -822,8 +1111,8 @@ async function deleteTier(id) {
     try {
         const res = await apiRequest(`/api/commission-tiers/${id}`, { method: 'DELETE' });
         if (res.success) {
-            showToast('Tier excluído!', 'success');
-            loadTiers();
+            showToast('Tier excluido!', 'success');
+            loadConfig();
         } else {
             showToast(res.message || 'Erro', 'error');
         }
@@ -832,23 +1121,7 @@ async function deleteTier(id) {
     }
 }
 
-// Config
-async function loadConfig() {
-    try {
-        const res = await apiRequest('/api/system-config/admin');
-        if (res.success) {
-            const form = document.getElementById('configForm');
-            Object.entries(res.data).forEach(([key, value]) => {
-                const input = form.querySelector(`[name="${key}"]`);
-                if (input) input.value = value || '';
-            });
-        }
-    } catch (e) {
-        showToast('Erro ao carregar configurações', 'error');
-    }
-}
-
-async function saveConfig(e) {
+async function saveCompanyConfig(e) {
     e.preventDefault();
     const form = e.target;
     const formData = new FormData(form);
@@ -861,12 +1134,34 @@ async function saveConfig(e) {
         });
 
         if (res.success) {
-            showToast('Configurações salvas!', 'success');
+            showToast('Configuracoes salvas!', 'success');
         } else {
             showToast(res.message || 'Erro', 'error');
         }
     } catch (e) {
-        showToast('Erro ao salvar configurações', 'error');
+        showToast('Erro ao salvar configuracoes', 'error');
+    }
+}
+
+async function saveSmtpConfig(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+
+    try {
+        const res = await apiRequest('/api/system-config', {
+            method: 'PUT',
+            body: JSON.stringify(data)
+        });
+
+        if (res.success) {
+            showToast('SMTP salvo!', 'success');
+        } else {
+            showToast(res.message || 'Erro', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao salvar SMTP', 'error');
     }
 }
 
@@ -890,6 +1185,37 @@ async function testSmtp() {
     }
 }
 
+async function saveResourcePrices(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const resources = [];
+
+    formData.forEach((value, key) => {
+        if (key.startsWith('resource_')) {
+            resources.push({
+                key: key.replace('resource_', ''),
+                price: parseFloat(value) || 0
+            });
+        }
+    });
+
+    try {
+        const res = await apiRequest('/api/resource-prices', {
+            method: 'PUT',
+            body: JSON.stringify({ resources })
+        });
+
+        if (res.success) {
+            showToast('Precos de infraestrutura salvos!', 'success');
+        } else {
+            showToast(res.message || 'Erro', 'error');
+        }
+    } catch (e) {
+        showToast('Erro ao salvar precos', 'error');
+    }
+}
+
 // Password
 function showChangePassword() {
     document.getElementById('passwordForm').reset();
@@ -902,7 +1228,7 @@ async function changePassword(e) {
     const form = e.target;
 
     if (form.newPassword.value !== form.confirmPassword.value) {
-        showToast('Senhas não conferem', 'error');
+        showToast('Senhas nao conferem', 'error');
         return;
     }
 
@@ -916,7 +1242,7 @@ async function changePassword(e) {
         });
 
         if (res.success) {
-            showToast('Senha alterada! Faça login novamente.', 'success');
+            showToast('Senha alterada! Faca login novamente.', 'success');
             setTimeout(() => logout(), 2000);
         } else {
             showToast(res.message || 'Erro', 'error');
@@ -957,10 +1283,12 @@ function formatCurrency(value) {
 }
 
 function formatDate(date) {
+    if (!date) return '-';
     return new Date(date).toLocaleDateString('pt-BR');
 }
 
 function formatDateTime(date) {
+    if (!date) return '-';
     return new Date(date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 }
 
