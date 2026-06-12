@@ -750,6 +750,12 @@ tr:hover { background: var(--gray-50); }
     color: var(--gray-600);
 }
 
+.plan-module-tag svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
 .plan-card-actions {
     display: flex;
     gap: 0.5rem;
@@ -1579,6 +1585,12 @@ tr:hover { background: var(--gray-50); }
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--primary);
+}
+
+.module-card-icon svg {
+    width: 20px;
+    height: 20px;
 }
 
 .module-card-name {
