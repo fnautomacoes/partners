@@ -327,4 +327,145 @@ class PartnerController
             'recentClients' => $recentClients,
         ]);
     }
+
+    public function adminDashboard(Request $request, Response $response): void
+    {
+        $pdo = Database::getInstance();
+
+        $stmtPartners = $pdo->query('SELECT COUNT(*) FROM "Partner" WHERE status = \'ACTIVE\'');
+        $activePartners = (int) $stmtPartners->fetchColumn();
+
+        $stmtClients = $pdo->query('SELECT COUNT(*) FROM "Client" WHERE status = \'ACTIVE\'');
+        $activeClients = (int) $stmtClients->fetchColumn();
+
+        $stmtPending = $pdo->query('
+            SELECT COALESCE(SUM("commissionAmount" + "setupCommission"), 0)
+            FROM "Commission" WHERE status = \'PENDING\'
+        ');
+        $pendingCommissions = (float) $stmtPending->fetchColumn();
+
+        $stmtRevenue = $pdo->query('
+            SELECT COALESCE(SUM(p."basePrice"), 0)
+            FROM "Client" c
+            JOIN "Plan" p ON p.id = c."planId"
+            WHERE c.status = \'ACTIVE\'
+        ');
+        $monthlyRevenue = (float) $stmtRevenue->fetchColumn();
+
+        $stmtTiers = $pdo->query('
+            SELECT id, name FROM "CommissionTier"
+            WHERE "isActive" = true ORDER BY "order" ASC
+        ');
+        $tiers = $stmtTiers->fetchAll();
+
+        $tierDistribution = [];
+        foreach ($tiers as $tier) {
+            $stmtCount = $pdo->prepare('
+                SELECT COUNT(*) FROM "Partner" pa WHERE pa.status = \'ACTIVE\'
+                AND (
+                    SELECT COUNT(*) FROM "Client" c
+                    WHERE c."partnerId" = pa.id AND c.status = \'ACTIVE\'
+                ) BETWEEN :min AND COALESCE(
+                    (SELECT "maxClients" FROM "CommissionTier" WHERE id = :tierId),
+                    999999
+                )
+                AND (
+                    SELECT COUNT(*) FROM "Client" c
+                    WHERE c."partnerId" = pa.id AND c.status = \'ACTIVE\'
+                ) >= (SELECT "minClients" FROM "CommissionTier" WHERE id = :tierId2)
+            ');
+            $stmtCount->execute([
+                ':min' => 0,
+                ':tierId' => $tier['id'],
+                ':tierId2' => $tier['id']
+            ]);
+        }
+
+        $tierDistribution = [];
+        $stmtAllTiers = $pdo->query('
+            SELECT ct.id, ct.name, ct."minClients", ct."maxClients"
+            FROM "CommissionTier" ct
+            WHERE ct."isActive" = true
+            ORDER BY ct."order" ASC
+        ');
+        $allTiers = $stmtAllTiers->fetchAll();
+
+        $stmtActivePartners = $pdo->query('SELECT id FROM "Partner" WHERE status = \'ACTIVE\'');
+        $activePartnerIds = $stmtActivePartners->fetchAll(\PDO::FETCH_COLUMN);
+
+        foreach ($allTiers as $tier) {
+            $count = 0;
+            foreach ($activePartnerIds as $pid) {
+                $stmtClientCount = $pdo->prepare('
+                    SELECT COUNT(*) FROM "Client" WHERE "partnerId" = :pid AND status = \'ACTIVE\'
+                ');
+                $stmtClientCount->execute([':pid' => $pid]);
+                $clientCount = (int) $stmtClientCount->fetchColumn();
+
+                $minClients = (int) $tier['minClients'];
+                $maxClients = $tier['maxClients'] !== null ? (int) $tier['maxClients'] : PHP_INT_MAX;
+
+                if ($clientCount >= $minClients && $clientCount <= $maxClients) {
+                    $count++;
+                }
+            }
+            $tierDistribution[] = [
+                'name' => $tier['name'],
+                'count' => $count,
+            ];
+        }
+
+        $stmtTopPartners = $pdo->prepare('
+            SELECT p.id, p.name,
+                (SELECT COUNT(*) FROM "Client" c WHERE c."partnerId" = p.id AND c.status = \'ACTIVE\') as "activeClients",
+                COALESCE(
+                    (SELECT SUM("commissionAmount" + "setupCommission") FROM "Commission" com WHERE com."partnerId" = p.id),
+                    0
+                ) as "totalCommissions"
+            FROM "Partner" p
+            WHERE p.status = \'ACTIVE\'
+            ORDER BY "activeClients" DESC
+            LIMIT 5
+        ');
+        $stmtTopPartners->execute();
+        $topPartners = $stmtTopPartners->fetchAll();
+
+        $topPartnersResult = [];
+        foreach ($topPartners as $tp) {
+            $tier = $this->commissionService->calculateTier($tp['id']);
+            $topPartnersResult[] = [
+                'id' => $tp['id'],
+                'name' => $tp['name'],
+                'activeClients' => (int) $tp['activeClients'],
+                'totalCommissions' => (float) $tp['totalCommissions'],
+                'tier' => $tier['name'],
+            ];
+        }
+
+        $stmtActivities = $pdo->prepare('
+            SELECT a.id, a.action, a.description, a."createdAt", p.name as "partnerName"
+            FROM "ActivityLog" a
+            LEFT JOIN "Partner" p ON p.id = a."partnerId"
+            ORDER BY a."createdAt" DESC
+            LIMIT 10
+        ');
+        $stmtActivities->execute();
+        $recentActivities = $stmtActivities->fetchAll();
+
+        $response->success([
+            'activePartners' => $activePartners,
+            'activeClients' => $activeClients,
+            'pendingCommissions' => $pendingCommissions,
+            'monthlyRevenue' => $monthlyRevenue,
+            'tierDistribution' => $tierDistribution,
+            'topPartners' => $topPartnersResult,
+            'recentActivities' => array_map(fn($a) => [
+                'id' => $a['id'],
+                'action' => $a['action'],
+                'description' => $a['description'],
+                'partnerName' => $a['partnerName'],
+                'createdAt' => $a['createdAt'],
+            ], $recentActivities),
+        ]);
+    }
 }

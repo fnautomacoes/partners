@@ -31,14 +31,27 @@ class PlanController
         $partnerId = $request->user['partnerId'] ?? null;
 
         if ($role === 'SUPERADMIN') {
-            $stmt = $pdo->prepare('SELECT * FROM "Plan" ORDER BY "sortOrder" ASC, "createdAt" DESC');
+            $stmt = $pdo->prepare('
+                SELECT p.*, pa.name as "ownerName",
+                       bp.name as "basePlanName", bp."setupFee" as "basePlanSetupFee",
+                       (SELECT COUNT(*) FROM "Client" c WHERE c."planId" = p.id) as "clientCount"
+                FROM "Plan" p
+                LEFT JOIN "Partner" pa ON pa.id = p."ownerId"
+                LEFT JOIN "Plan" bp ON bp.id = p."basePlanId"
+                ORDER BY p."sortOrder" ASC, p."createdAt" DESC
+            ');
             $stmt->execute();
         } else {
             $stmt = $pdo->prepare('
-                SELECT * FROM "Plan"
-                WHERE ("ownerId" IS NULL AND "isActive" = true)
-                   OR ("ownerId" = :partnerId AND "isActive" = true)
-                ORDER BY "sortOrder" ASC, "createdAt" DESC
+                SELECT p.*, pa.name as "ownerName",
+                       bp.name as "basePlanName", bp."setupFee" as "basePlanSetupFee",
+                       (SELECT COUNT(*) FROM "Client" c WHERE c."planId" = p.id) as "clientCount"
+                FROM "Plan" p
+                LEFT JOIN "Partner" pa ON pa.id = p."ownerId"
+                LEFT JOIN "Plan" bp ON bp.id = p."basePlanId"
+                WHERE (p."ownerId" IS NULL AND p."isActive" = true)
+                   OR (p."ownerId" = :partnerId AND p."isActive" = true)
+                ORDER BY p."sortOrder" ASC, p."createdAt" DESC
             ');
             $stmt->execute([':partnerId' => $partnerId]);
         }
@@ -444,6 +457,15 @@ class PlanController
             $resources[$field] = (int) ($plan[$field] ?? 0);
         }
 
+        $basePlan = null;
+        if (!empty($plan['basePlanId'])) {
+            $basePlan = [
+                'id' => $plan['basePlanId'],
+                'name' => $plan['basePlanName'] ?? null,
+                'setupFee' => isset($plan['basePlanSetupFee']) ? (float) $plan['basePlanSetupFee'] : null,
+            ];
+        }
+
         return [
             'id' => $plan['id'],
             'name' => $plan['name'],
@@ -453,7 +475,9 @@ class PlanController
             'setupFee' => (float) $plan['setupFee'],
             'sortOrder' => (int) $plan['sortOrder'],
             'ownerId' => $plan['ownerId'],
+            'ownerName' => $plan['ownerName'] ?? null,
             'basePlanId' => $plan['basePlanId'],
+            'basePlan' => $basePlan,
             'pacoticketPlanId' => $plan['pacoticketPlanId'] ? (int) $plan['pacoticketPlanId'] : null,
             'isActive' => (bool) $plan['isActive'],
             'createdAt' => $plan['createdAt'],
@@ -463,6 +487,7 @@ class PlanController
             'usersIncluded' => (int) ($plan['users'] ?? 1),
             'queuesIncluded' => (int) ($plan['queues'] ?? 1),
             'whatsappIncluded' => (int) ($plan['connections'] ?? 1),
+            'clientCount' => isset($plan['clientCount']) ? (int) $plan['clientCount'] : 0,
         ];
     }
 

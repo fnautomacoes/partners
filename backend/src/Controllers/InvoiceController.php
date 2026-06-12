@@ -55,9 +55,12 @@ class InvoiceController
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
         $sql = '
-            SELECT i.*, c."companyName" as "clientName", c."partnerId"
+            SELECT i.*, c."companyName" as "clientName", c."partnerId",
+                   p.name as "partnerName", pl.name as "planName"
             FROM "Invoice" i
             JOIN "Client" c ON c.id = i."clientId"
+            LEFT JOIN "Partner" p ON p.id = c."partnerId"
+            LEFT JOIN "Plan" pl ON pl.id = c."planId"
             ' . $whereClause . '
             ORDER BY i."dueDate" DESC, i."createdAt" DESC
         ';
@@ -71,6 +74,8 @@ class InvoiceController
             'clientId' => $inv['clientId'],
             'clientName' => $inv['clientName'],
             'partnerId' => $inv['partnerId'],
+            'partnerName' => $inv['partnerName'],
+            'planName' => $inv['planName'],
             'amount' => (float) $inv['amount'],
             'status' => $inv['status'],
             'dueDate' => $inv['dueDate'],

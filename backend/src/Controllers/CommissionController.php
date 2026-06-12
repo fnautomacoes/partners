@@ -99,10 +99,12 @@ class CommissionController
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
         $sql = '
-            SELECT c.*, cl."companyName" as "clientName", p.name as "partnerName"
+            SELECT c.*, cl."companyName" as "clientName", p.name as "partnerName",
+                   ct.name as "tierName"
             FROM "Commission" c
             LEFT JOIN "Client" cl ON cl.id = c."clientId"
             LEFT JOIN "Partner" p ON p.id = c."partnerId"
+            LEFT JOIN "CommissionTier" ct ON ct.id = c."tierConfigId"
             ' . $whereClause . '
             ORDER BY c."periodYear" DESC, c."periodMonth" DESC, c."createdAt" DESC
         ';
@@ -121,6 +123,7 @@ class CommissionController
             'periodMonth' => (int) $c['periodMonth'],
             'periodYear' => (int) $c['periodYear'],
             'tier' => (int) $c['tier'],
+            'tierName' => $c['tierName'] ?? 'N/A',
             'percentage' => (float) $c['percentage'],
             'baseAmount' => (float) $c['baseAmount'],
             'commissionAmount' => (float) $c['commissionAmount'],

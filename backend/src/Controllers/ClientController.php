@@ -53,7 +53,8 @@ class ClientController
         $whereClause = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
 
         $sql = '
-            SELECT c.*, p.name as "planName", p."totalPrice" as "planPrice", pt.name as "partnerName"
+            SELECT c.*, p.name as "planName", p."totalPrice" as "planPrice", pt.name as "partnerName",
+                   (SELECT i.status FROM "Invoice" i WHERE i."clientId" = c.id ORDER BY i."dueDate" DESC LIMIT 1) as "lastInvoiceStatus"
             FROM "Client" c
             LEFT JOIN "Plan" p ON p.id = c."planId"
             LEFT JOIN "Partner" pt ON pt.id = c."partnerId"
@@ -592,6 +593,13 @@ class ClientController
     private function formatClient(array $client): array
     {
         $price = isset($client['planPrice']) ? (float) $client['planPrice'] : null;
+
+        $dueDay = null;
+        if (!empty($client['dueDate'])) {
+            $date = new \DateTime($client['dueDate']);
+            $dueDay = (int) $date->format('d');
+        }
+
         return [
             'id' => $client['id'],
             'partnerId' => $client['partnerId'],
@@ -604,6 +612,7 @@ class ClientController
             'contactPhone' => $client['phone'],
             'recurrence' => $client['recurrence'],
             'dueDate' => $client['dueDate'],
+            'dueDay' => $dueDay,
             'status' => $client['status'],
             'pacoticketId' => $client['pacoticketId'],
             'createdAt' => $client['createdAt'],
@@ -613,6 +622,7 @@ class ClientController
             'planPrice' => $price,
             'monthlyPrice' => $price,
             'partnerName' => $client['partnerName'] ?? null,
+            'lastInvoiceStatus' => $client['lastInvoiceStatus'] ?? null,
         ];
     }
 }

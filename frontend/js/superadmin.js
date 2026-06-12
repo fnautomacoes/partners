@@ -1,7 +1,9 @@
 let currentUser = null;
 let partners = [];
 let plans = [];
+let allPlans = [];
 let modulePrices = [];
+let commissionsData = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     currentUser = await checkAuth('SUPERADMIN');
@@ -12,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     setupNavigation();
     setupForms();
+    populateYearFilter();
     loadDashboard();
 });
 
@@ -68,53 +71,108 @@ function setupForms() {
     document.getElementById('clientStatusFilter').addEventListener('change', loadClients);
     document.getElementById('commPartnerFilter').addEventListener('change', loadCommissions);
     document.getElementById('commStatusFilter').addEventListener('change', loadCommissions);
+    document.getElementById('planTypeFilter').addEventListener('change', filterPlans);
+    document.getElementById('invoiceMonthFilter').addEventListener('change', loadInvoices);
+    document.getElementById('invoiceYearFilter').addEventListener('change', loadInvoices);
+    document.getElementById('invoiceStatusFilter').addEventListener('change', loadInvoices);
+}
+
+function populateYearFilter() {
+    const yearSelect = document.getElementById('invoiceYearFilter');
+    const currentYear = new Date().getFullYear();
+    for (let y = currentYear; y >= currentYear - 3; y--) {
+        yearSelect.innerHTML += `<option value="${y}">${y}</option>`;
+    }
 }
 
 // Dashboard
 async function loadDashboard() {
     try {
-        const [partnersRes, clientsRes, commRes] = await Promise.all([
-            apiRequest('/api/partners'),
-            apiRequest('/api/clients'),
-            apiRequest('/api/commissions/summary')
+        const [dashRes, partnersRes] = await Promise.all([
+            apiRequest('/api/admin/dashboard'),
+            apiRequest('/api/partners')
         ]);
+
+        if (dashRes.success) {
+            const d = dashRes.data;
+            document.getElementById('statPartners').textContent = d.activePartners;
+            document.getElementById('statClients').textContent = d.activeClients;
+            document.getElementById('statPendingCommissions').textContent = formatCurrency(d.pendingCommissions);
+            document.getElementById('statRevenue').textContent = formatCurrency(d.monthlyRevenue);
+
+            renderTierDistribution(d.tierDistribution);
+            renderTopPartners(d.topPartners);
+            renderRecentActivities(d.recentActivities);
+        }
 
         if (partnersRes.success) {
             partners = partnersRes.data;
-            document.getElementById('statPartners').textContent = partners.length;
             populatePartnerFilters();
-            renderRecentPartners();
-        }
-
-        if (clientsRes.success) {
-            const activeClients = clientsRes.data.filter(c => c.status === 'ACTIVE');
-            document.getElementById('statClients').textContent = activeClients.length;
-
-            const revenue = activeClients.reduce((sum, c) => sum + parseFloat(c.monthlyPrice || 0), 0);
-            document.getElementById('statRevenue').textContent = formatCurrency(revenue);
-        }
-
-        if (commRes.success) {
-            document.getElementById('statPendingCommissions').textContent = formatCurrency(commRes.data.pending || 0);
         }
     } catch (e) {
         showToast('Erro ao carregar dashboard', 'error');
     }
 }
 
-function renderRecentPartners() {
-    const tbody = document.getElementById('recentPartnersTable');
-    const recent = partners.slice(0, 5);
+function renderTierDistribution(tiers) {
+    const container = document.getElementById('tierDistributionChart');
+    if (!tiers || tiers.length === 0) {
+        container.innerHTML = '<div class="text-gray text-center py-4">Nenhum tier configurado</div>';
+        return;
+    }
 
-    tbody.innerHTML = recent.map(p => `
+    const total = tiers.reduce((sum, t) => sum + t.count, 0);
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+    container.innerHTML = `
+        <div class="tier-bars">
+            ${tiers.map((t, i) => `
+                <div class="tier-bar-item mb-3">
+                    <div class="flex justify-between mb-1">
+                        <span class="text-sm font-medium">${escapeHtml(t.name)}</span>
+                        <span class="text-sm text-gray">${t.count} parceiros</span>
+                    </div>
+                    <div class="tier-bar-bg" style="background: var(--card-bg); border-radius: 4px; height: 24px; overflow: hidden;">
+                        <div class="tier-bar-fill" style="width: ${total > 0 ? (t.count / total * 100) : 0}%; background: ${colors[i % colors.length]}; height: 100%; border-radius: 4px; transition: width 0.5s;"></div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderTopPartners(topPartners) {
+    const tbody = document.getElementById('topPartnersTable');
+    if (!topPartners || topPartners.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray">Nenhum parceiro</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = topPartners.map(p => `
         <tr>
             <td>${escapeHtml(p.name)}</td>
-            <td>${escapeHtml(p.email)}</td>
-            <td>${p.activeClients || 0}</td>
-            <td><span class="badge badge-primary">${escapeHtml(p.tier || 'Sem tier')}</span></td>
-            <td><span class="badge ${p.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}">${p.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}</span></td>
+            <td><span class="badge badge-primary">${escapeHtml(p.tier)}</span></td>
+            <td>${p.activeClients}</td>
+            <td>${formatCurrency(p.totalCommissions)}</td>
         </tr>
-    `).join('') || '<tr><td colspan="5" class="text-center text-gray">Nenhum parceiro</td></tr>';
+    `).join('');
+}
+
+function renderRecentActivities(activities) {
+    const tbody = document.getElementById('recentActivitiesTable');
+    if (!activities || activities.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-gray">Nenhuma atividade recente</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = activities.map(a => `
+        <tr>
+            <td class="text-sm">${formatDateTime(a.createdAt)}</td>
+            <td>${escapeHtml(a.partnerName || '-')}</td>
+            <td><span class="badge badge-secondary">${escapeHtml(a.action)}</span></td>
+            <td class="text-sm">${escapeHtml(a.description || '-')}</td>
+        </tr>
+    `).join('');
 }
 
 function populatePartnerFilters() {
@@ -144,15 +202,16 @@ function renderPartners() {
             <td>${escapeHtml(p.name)}</td>
             <td>${escapeHtml(p.email)}</td>
             <td>${escapeHtml(p.phone || '-')}</td>
-            <td>${p.activeClients || 0}</td>
+            <td>${escapeHtml(p.document || '-')}</td>
             <td><span class="badge badge-primary">${escapeHtml(p.tier || '-')}</span></td>
+            <td>${p.activeClients || 0}</td>
             <td><span class="badge ${p.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}">${p.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}</span></td>
             <td>
                 <button class="btn btn-sm btn-secondary mr-2" onclick="editPartner('${p.id}')">Editar</button>
                 <button class="btn btn-sm ${p.status === 'ACTIVE' ? 'btn-danger' : 'btn-success'}" onclick="togglePartner('${p.id}', '${p.status}')">${p.status === 'ACTIVE' ? 'Desativar' : 'Ativar'}</button>
             </td>
         </tr>
-    `).join('') || '<tr><td colspan="7" class="text-center text-gray">Nenhum parceiro</td></tr>';
+    `).join('') || '<tr><td colspan="8" class="text-center text-gray">Nenhum parceiro</td></tr>';
 }
 
 function showPartnerModal(partner = null) {
@@ -243,8 +302,8 @@ async function loadPlans() {
         ]);
 
         if (plansRes.success) {
-            plans = plansRes.data.filter(p => !p.ownerId);
-            renderPlans();
+            allPlans = plansRes.data;
+            filterPlans();
         }
 
         if (modulesRes.success) {
@@ -257,23 +316,77 @@ async function loadPlans() {
     }
 }
 
-function renderPlans() {
-    const tbody = document.getElementById('plansTable');
-    tbody.innerHTML = plans.map(p => `
-        <tr>
-            <td>${escapeHtml(p.name)}</td>
-            <td>${formatCurrency(p.basePrice)}</td>
-            <td>${formatCurrency(p.setupFee)}</td>
-            <td>${p.usersIncluded}</td>
-            <td>${p.queuesIncluded}</td>
-            <td>${p.whatsappIncluded}</td>
-            <td><span class="badge ${p.isActive ? 'badge-success' : 'badge-danger'}">${p.isActive ? 'Ativo' : 'Inativo'}</span></td>
-            <td>
-                <button class="btn btn-sm btn-secondary mr-2" onclick="editPlan('${p.id}')">Editar</button>
-                <button class="btn btn-sm btn-danger" onclick="deletePlan('${p.id}')">Excluir</button>
-            </td>
-        </tr>
-    `).join('') || '<tr><td colspan="8" class="text-center text-gray">Nenhum plano</td></tr>';
+function filterPlans() {
+    const filter = document.getElementById('planTypeFilter').value;
+    let filtered = allPlans;
+
+    if (filter === 'global') {
+        filtered = allPlans.filter(p => !p.ownerId);
+    } else if (filter === 'partner') {
+        filtered = allPlans.filter(p => p.ownerId);
+    }
+
+    plans = filtered;
+    renderPlansGrid();
+}
+
+function renderPlansGrid() {
+    const container = document.getElementById('plansGrid');
+
+    if (plans.length === 0) {
+        container.innerHTML = '<div class="p-8 text-center text-gray">Nenhum plano encontrado</div>';
+        return;
+    }
+
+    container.innerHTML = plans.map(p => {
+        const isGlobal = !p.ownerId;
+        const basePlanName = p.basePlan?.name || null;
+
+        return `
+            <div class="plan-card">
+                <div class="plan-card-header">
+                    <h3 class="plan-card-title">${escapeHtml(p.name)}</h3>
+                    <span class="badge ${isGlobal ? 'badge-primary' : 'badge-secondary'}">${isGlobal ? 'Global' : 'Parceiro'}</span>
+                </div>
+                ${!isGlobal && p.ownerName ? `<div class="text-xs text-gray mb-2">Parceiro: ${escapeHtml(p.ownerName)}</div>` : ''}
+                ${basePlanName ? `<div class="text-xs text-gray mb-2">Baseado em: ${escapeHtml(basePlanName)}</div>` : ''}
+                <div class="plan-card-price">
+                    <span class="plan-price-value">${formatCurrency(p.basePrice)}</span>
+                    <span class="plan-price-period">/mês</span>
+                </div>
+                <div class="plan-card-details">
+                    <div class="plan-detail-row">
+                        <span>Conexões/Filas</span>
+                        <span>${p.whatsappIncluded || 0} / ${p.queuesIncluded || 0}</span>
+                    </div>
+                    <div class="plan-detail-row">
+                        <span>Setup Base</span>
+                        <span>${formatCurrency(p.basePlan?.setupFee || p.setupFee || 0)}</span>
+                    </div>
+                    ${!isGlobal ? `
+                    <div class="plan-detail-row">
+                        <span>Acréscimo Setup</span>
+                        <span>${formatCurrency((p.setupFee || 0) - (p.basePlan?.setupFee || 0))}</span>
+                    </div>
+                    ` : ''}
+                    <div class="plan-detail-row">
+                        <span>Setup Total</span>
+                        <span class="font-semibold">${formatCurrency(p.setupFee || 0)}</span>
+                    </div>
+                    <div class="plan-detail-row">
+                        <span>Clientes</span>
+                        <span>${p.clientCount || 0}</span>
+                    </div>
+                </div>
+                ${isGlobal ? `
+                <div class="plan-card-actions">
+                    <button class="btn btn-sm btn-secondary" onclick="editPlan('${p.id}')">Editar</button>
+                    <button class="btn btn-sm btn-danger" onclick="deletePlan('${p.id}')">Excluir</button>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
 }
 
 function renderModulePrices() {
@@ -325,7 +438,7 @@ function showPlanModal(plan = null) {
 }
 
 function editPlan(id) {
-    const plan = plans.find(p => p.id === id);
+    const plan = allPlans.find(p => p.id === id);
     if (plan) showPlanModal(plan);
 }
 
@@ -426,20 +539,22 @@ function renderClients(clients) {
     const tbody = document.getElementById('clientsTable');
     tbody.innerHTML = clients.map(c => `
         <tr>
+            <td>${escapeHtml(c.companyName)}</td>
             <td>
-                <div>${escapeHtml(c.companyName)}</div>
-                <div class="text-xs text-gray">${escapeHtml(c.contactName || '')}</div>
+                <div>${escapeHtml(c.contactName || '-')}</div>
+                <div class="text-xs text-gray">${escapeHtml(c.contactEmail || c.email || '-')}</div>
             </td>
             <td>${escapeHtml(c.partnerName || '-')}</td>
             <td>${escapeHtml(c.planName || '-')}</td>
-            <td>${formatCurrency(c.monthlyPrice)}</td>
-            <td>${c.activationDate ? formatDate(c.activationDate) : '-'}</td>
+            <td>${getRecurrenceLabel(c.recurrence)}</td>
+            <td>${c.dueDay ? `Dia ${c.dueDay}` : '-'}</td>
             <td><span class="badge ${getStatusBadge(c.status)}">${getStatusLabel(c.status)}</span></td>
+            <td>${c.lastInvoiceStatus ? `<span class="badge ${getInvoiceStatusBadge(c.lastInvoiceStatus)}">${getInvoiceStatusLabel(c.lastInvoiceStatus)}</span>` : '-'}</td>
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="viewClient('${c.id}')">Ver</button>
             </td>
         </tr>
-    `).join('') || '<tr><td colspan="7" class="text-center text-gray">Nenhum cliente</td></tr>';
+    `).join('') || '<tr><td colspan="9" class="text-center text-gray">Nenhum cliente</td></tr>';
 }
 
 function viewClient(id) {
@@ -461,7 +576,10 @@ async function loadCommissions() {
             apiRequest('/api/commissions/summary')
         ]);
 
-        if (listRes.success) renderCommissions(listRes.data);
+        if (listRes.success) {
+            commissionsData = listRes.data;
+            renderCommissions(commissionsData);
+        }
 
         if (summaryRes.success) {
             document.getElementById('commPending').textContent = formatCurrency(summaryRes.data.pending || 0);
@@ -480,15 +598,48 @@ function renderCommissions(commissions) {
             <td>${escapeHtml(c.partnerName || '-')}</td>
             <td>${escapeHtml(c.clientName || '-')}</td>
             <td>${c.periodMonth}/${c.periodYear}</td>
-            <td>${formatCurrency(c.commissionAmount)}</td>
-            <td>${formatCurrency(c.setupCommission)}</td>
+            <td><span class="badge badge-secondary">${escapeHtml(c.tierName || '-')}</span></td>
+            <td>${c.percentage}%</td>
+            <td>${formatCurrency(c.baseAmount)}</td>
             <td class="font-semibold">${formatCurrency(c.totalCommission)}</td>
             <td><span class="badge ${c.status === 'PAID' ? 'badge-success' : 'badge-warning'}">${c.status === 'PAID' ? 'Pago' : 'Pendente'}</span></td>
             <td>
-                ${c.status === 'PENDING' ? `<button class="btn btn-sm btn-success" onclick="payCommission('${c.id}')">Marcar Pago</button>` : '-'}
+                ${c.status === 'PAID' ? formatDate(c.paidAt) : `<button class="btn btn-sm btn-success" onclick="payCommission('${c.id}')">Pagar</button>`}
             </td>
         </tr>
-    `).join('') || '<tr><td colspan="8" class="text-center text-gray">Nenhuma comissão</td></tr>';
+    `).join('') || '<tr><td colspan="9" class="text-center text-gray">Nenhuma comissão</td></tr>';
+}
+
+function exportCommissionsCSV() {
+    if (!commissionsData || commissionsData.length === 0) {
+        showToast('Nenhum dado para exportar', 'warning');
+        return;
+    }
+
+    const headers = ['Parceiro', 'Cliente', 'Período', 'Tier', '%', 'Base', 'Comissão', 'Status', 'Pago em'];
+    const rows = commissionsData.map(c => [
+        c.partnerName || '',
+        c.clientName || '',
+        `${c.periodMonth}/${c.periodYear}`,
+        c.tierName || '',
+        c.percentage,
+        c.baseAmount,
+        c.totalCommission,
+        c.status === 'PAID' ? 'Pago' : 'Pendente',
+        c.paidAt ? formatDate(c.paidAt) : ''
+    ]);
+
+    const csvContent = [headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+    const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `comissoes_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+
+    showToast('CSV exportado!', 'success');
 }
 
 async function calculateCommissions() {
@@ -532,8 +683,17 @@ async function payCommission(id) {
 
 // Invoices
 async function loadInvoices() {
+    const month = document.getElementById('invoiceMonthFilter').value;
+    const year = document.getElementById('invoiceYearFilter').value;
+    const status = document.getElementById('invoiceStatusFilter').value;
+
+    let url = '/api/invoices?';
+    if (month) url += `month=${month}&`;
+    if (year) url += `year=${year}&`;
+    if (status) url += `status=${status}&`;
+
     try {
-        const res = await apiRequest('/api/invoices');
+        const res = await apiRequest(url);
         if (res.success) renderInvoices(res.data);
     } catch (e) {
         showToast('Erro ao carregar faturas', 'error');
@@ -544,14 +704,15 @@ function renderInvoices(invoices) {
     const tbody = document.getElementById('invoicesTable');
     tbody.innerHTML = invoices.map(i => `
         <tr>
-            <td class="font-mono">${escapeHtml(i.pacoticketRef || '-')}</td>
             <td>${escapeHtml(i.clientName || '-')}</td>
+            <td>${escapeHtml(i.partnerName || '-')}</td>
+            <td>${escapeHtml(i.planName || '-')}</td>
             <td>${formatCurrency(i.amount)}</td>
             <td>${i.dueDate ? formatDate(i.dueDate) : '-'}</td>
-            <td>${i.paidAt ? formatDate(i.paidAt) : '-'}</td>
             <td><span class="badge ${getInvoiceStatusBadge(i.status)}">${getInvoiceStatusLabel(i.status)}</span></td>
+            <td>${i.paidAt ? formatDate(i.paidAt) : '-'}</td>
         </tr>
-    `).join('') || '<tr><td colspan="6" class="text-center text-gray">Nenhuma fatura</td></tr>';
+    `).join('') || '<tr><td colspan="7" class="text-center text-gray">Nenhuma fatura</td></tr>';
 }
 
 async function syncInvoices() {
@@ -571,10 +732,15 @@ async function syncInvoices() {
 }
 
 // Tiers
+let tiersData = [];
+
 async function loadTiers() {
     try {
         const res = await apiRequest('/api/commission-tiers');
-        if (res.success) renderTiers(res.data);
+        if (res.success) {
+            tiersData = res.data;
+            renderTiers(tiersData);
+        }
     } catch (e) {
         showToast('Erro ao carregar tiers', 'error');
     }
@@ -596,20 +762,6 @@ function renderTiers(tiers) {
             </td>
         </tr>
     `).join('') || '<tr><td colspan="7" class="text-center text-gray">Nenhum tier</td></tr>';
-}
-
-let tiersData = [];
-
-async function loadTiers() {
-    try {
-        const res = await apiRequest('/api/commission-tiers');
-        if (res.success) {
-            tiersData = res.data;
-            renderTiers(tiersData);
-        }
-    } catch (e) {
-        showToast('Erro ao carregar tiers', 'error');
-    }
 }
 
 function showTierModal(tier = null) {
@@ -808,6 +960,10 @@ function formatDate(date) {
     return new Date(date).toLocaleDateString('pt-BR');
 }
 
+function formatDateTime(date) {
+    return new Date(date).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+}
+
 function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -821,6 +977,11 @@ function getStatusBadge(status) {
 function getStatusLabel(status) {
     const map = { ACTIVE: 'Ativo', INACTIVE: 'Inativo', SUSPENDED: 'Suspenso', PENDING: 'Pendente' };
     return map[status] || status;
+}
+
+function getRecurrenceLabel(recurrence) {
+    const map = { MONTHLY: 'Mensal', QUARTERLY: 'Trimestral', SEMIANNUAL: 'Semestral', ANNUAL: 'Anual' };
+    return map[recurrence] || recurrence || '-';
 }
 
 function getInvoiceStatusBadge(status) {

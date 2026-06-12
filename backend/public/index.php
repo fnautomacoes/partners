@@ -40,6 +40,7 @@ $router->post('/api/auth/reset-password',  [AuthController::class, 'resetPasswor
 $router->get('/api/partners',              [PartnerController::class, 'index'],    ['superadmin']);
 $router->post('/api/partners',             [PartnerController::class, 'store'],    ['superadmin']);
 $router->get('/api/partners/me/dashboard', [PartnerController::class, 'dashboard'], ['auth']);
+$router->get('/api/admin/dashboard',       [PartnerController::class, 'adminDashboard'], ['superadmin']);
 $router->get('/api/partners/:id',          [PartnerController::class, 'show'],     ['superadmin']);
 $router->put('/api/partners/:id',          [PartnerController::class, 'update'],   ['superadmin']);
 $router->delete('/api/partners/:id',       [PartnerController::class, 'destroy'],  ['superadmin']);
