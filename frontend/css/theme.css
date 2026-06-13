@@ -525,49 +525,58 @@ tr:hover { background: var(--gray-50); }
     margin-bottom: 0.5rem;
 }
 
-.tier-item-yellow { background: #fef9c3; }
-.tier-item-green { background: #dcfce7; }
-.tier-item-blue { background: #dbeafe; }
+.tier-item-blue { background: #eff6ff; }
+.tier-item-yellow { background: #fffbeb; }
+.tier-item-green { background: #f0fdf4; }
 
 .tier-item-info {
     display: flex;
     flex-direction: column;
+    gap: 0.125rem;
 }
 
 .tier-item-name {
-    font-weight: 600;
-    color: var(--gray-800);
-    font-size: 1rem;
-}
-
-.tier-item-percentage {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--primary);
-    margin: 0.125rem 0;
+    font-weight: 700;
+    font-size: 0.9375rem;
 }
 
 .tier-item-range {
-    font-size: 0.75rem;
-    color: var(--gray-500);
-}
-
-.tier-item-stats {
-    text-align: center;
+    font-size: 0.8125rem;
 }
 
 .tier-item-count {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    color: var(--primary);
     line-height: 1;
 }
 
-.tier-item-count-label {
-    font-size: 0.625rem;
-    color: var(--gray-500);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+/* Cor do texto/contagem por tier (combina com a faixa) */
+.tier-item-blue .tier-item-name,
+.tier-item-blue .tier-item-count { color: #2563eb; }
+.tier-item-blue .tier-item-range { color: #3b82f6; }
+.tier-item-yellow .tier-item-name,
+.tier-item-yellow .tier-item-count { color: #b45309; }
+.tier-item-yellow .tier-item-range { color: #d97706; }
+.tier-item-green .tier-item-name,
+.tier-item-green .tier-item-count { color: #15803d; }
+.tier-item-green .tier-item-range { color: #16a34a; }
+
+/* Dashboard stat emoji */
+.stat-emoji { font-size: 1.25rem; line-height: 1; }
+
+/* Top parceiros */
+.top-partners-table th.text-right,
+.top-partners-table td.text-right { text-align: right; }
+.top-partner-name { font-weight: 600; color: var(--gray-800); }
+.top-partner-clients { font-weight: 700; color: var(--gray-800); }
+.tier-badge {
+    display: inline-block;
+    padding: 0.1875rem 0.625rem;
+    background: var(--primary-light);
+    color: #1e40af;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
 }
 
 /* Activity list */
@@ -588,13 +597,14 @@ tr:hover { background: var(--gray-50); }
 .activity-badge {
     display: inline-flex;
     padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.625rem;
+    border-radius: 0.375rem;
+    font-size: 0.6875rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background: var(--gray-100);
-    color: var(--gray-600);
+    letter-spacing: 0.03em;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    background: var(--primary-light);
+    color: #1e40af;
+    white-space: nowrap;
 }
 
 .activity-text {
@@ -604,7 +614,7 @@ tr:hover { background: var(--gray-50); }
 }
 
 .activity-date {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     color: var(--gray-400);
 }
 

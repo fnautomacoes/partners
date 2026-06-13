@@ -86,43 +86,35 @@
                             <div class="stat-label">Parceiros Ativos</div>
                             <div class="stat-value" id="statPartners">0</div>
                         </div>
-                        <div class="stat-icon stat-icon-blue">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        </div>
+                        <div class="stat-icon stat-icon-blue"><span class="stat-emoji">👥</span></div>
                     </div>
                     <div class="stat-card stat-card-icon">
                         <div class="stat-info">
                             <div class="stat-label">Clientes Ativos</div>
                             <div class="stat-value" id="statClients">0</div>
                         </div>
-                        <div class="stat-icon stat-icon-purple">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4"/></svg>
-                        </div>
+                        <div class="stat-icon stat-icon-green"><span class="stat-emoji">🏢</span></div>
                     </div>
                     <div class="stat-card stat-card-icon">
                         <div class="stat-info">
-                            <div class="stat-label">Comissoes Pendentes</div>
+                            <div class="stat-label">Comissões Pendentes</div>
                             <div class="stat-value" id="statPendingCommissions">R$ 0,00</div>
                         </div>
-                        <div class="stat-icon stat-icon-yellow">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                        </div>
+                        <div class="stat-icon stat-icon-yellow"><span class="stat-emoji">⏳</span></div>
                     </div>
                     <div class="stat-card stat-card-icon">
                         <div class="stat-info">
                             <div class="stat-label">Receita Mensal</div>
                             <div class="stat-value" id="statRevenue">R$ 0,00</div>
                         </div>
-                        <div class="stat-icon stat-icon-green">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                        </div>
+                        <div class="stat-icon stat-icon-purple"><span class="stat-emoji">💰</span></div>
                     </div>
                 </div>
 
                 <div class="dashboard-grid">
                     <div class="card">
                         <div class="card-header">
-                            <h2 class="card-title">Distribuicao por Tier</h2>
+                            <h2 class="card-title">Distribuição por Tier</h2>
                         </div>
                         <div class="tier-list" id="tierDistribution"></div>
                     </div>
@@ -131,12 +123,12 @@
                             <h2 class="card-title">Top Parceiros</h2>
                         </div>
                         <div class="table-container">
-                            <table>
+                            <table class="top-partners-table">
                                 <thead>
                                     <tr>
                                         <th>Nome</th>
                                         <th>Tier</th>
-                                        <th>Clientes</th>
+                                        <th class="text-right">Clientes</th>
                                     </tr>
                                 </thead>
                                 <tbody id="topPartnersTable"></tbody>
