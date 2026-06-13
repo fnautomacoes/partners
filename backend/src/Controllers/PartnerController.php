@@ -352,69 +352,57 @@ class PartnerController
         ');
         $monthlyRevenue = (float) $stmtRevenue->fetchColumn();
 
-        $stmtTiers = $pdo->query('
-            SELECT id, name FROM "CommissionTier"
-            WHERE "isActive" = true ORDER BY "order" ASC
-        ');
-        $tiers = $stmtTiers->fetchAll();
-
-        $tierDistribution = [];
-        foreach ($tiers as $tier) {
-            $stmtCount = $pdo->prepare('
-                SELECT COUNT(*) FROM "Partner" pa WHERE pa.status = \'ACTIVE\'
-                AND (
-                    SELECT COUNT(*) FROM "Client" c
-                    WHERE c."partnerId" = pa.id AND c.status = \'ACTIVE\'
-                ) BETWEEN :min AND COALESCE(
-                    (SELECT "maxClients" FROM "CommissionTier" WHERE id = :tierId),
-                    999999
-                )
-                AND (
-                    SELECT COUNT(*) FROM "Client" c
-                    WHERE c."partnerId" = pa.id AND c.status = \'ACTIVE\'
-                ) >= (SELECT "minClients" FROM "CommissionTier" WHERE id = :tierId2)
-            ');
-            $stmtCount->execute([
-                ':min' => 0,
-                ':tierId' => $tier['id'],
-                ':tierId2' => $tier['id']
-            ]);
-        }
-
-        $tierDistribution = [];
         $stmtAllTiers = $pdo->query('
-            SELECT ct.id, ct.name, ct."minClients", ct."maxClients", ct.percentage
+            SELECT ct.id, ct.name, ct."minClients", ct."maxClients", ct.percentage, ct."order"
             FROM "CommissionTier" ct
             WHERE ct."isActive" = true
             ORDER BY ct."order" ASC
         ');
         $allTiers = $stmtAllTiers->fetchAll();
 
-        $stmtActivePartners = $pdo->query('SELECT id FROM "Partner" WHERE status = \'ACTIVE\'');
-        $activePartnerIds = $stmtActivePartners->fetchAll(\PDO::FETCH_COLUMN);
+        // Contagem de clientes ativos por parceiro ativo
+        $stmtPartnerClients = $pdo->query('
+            SELECT pa.id,
+                (SELECT COUNT(*) FROM "Client" c WHERE c."partnerId" = pa.id AND c.status = \'ACTIVE\') AS "clientCount"
+            FROM "Partner" pa
+            WHERE pa.status = \'ACTIVE\'
+        ');
+        $partnerRows = $stmtPartnerClients->fetchAll();
 
-        foreach ($allTiers as $tier) {
-            $count = 0;
-            foreach ($activePartnerIds as $pid) {
-                $stmtClientCount = $pdo->prepare('
-                    SELECT COUNT(*) FROM "Client" WHERE "partnerId" = :pid AND status = \'ACTIVE\'
-                ');
-                $stmtClientCount->execute([':pid' => $pid]);
-                $clientCount = (int) $stmtClientCount->fetchColumn();
+        $counts = [];
+        foreach ($allTiers as $t) {
+            $counts[$t['id']] = 0;
+        }
 
-                $minClients = (int) $tier['minClients'];
-                $maxClients = $tier['maxClients'] !== null ? (int) $tier['maxClients'] : PHP_INT_MAX;
-
-                if ($clientCount >= $minClients && $clientCount <= $maxClients) {
-                    $count++;
+        // Atribui cada parceiro a exatamente um tier, com a MESMA regra do calculateTier:
+        // o tier mais alto cujo intervalo contém a quantidade de clientes ativos;
+        // se nenhum casar (ex.: 0 clientes), cai no tier de entrada (menor "order").
+        foreach ($partnerRows as $pr) {
+            $clientCount = (int) $pr['clientCount'];
+            $assigned = null;
+            foreach ($allTiers as $t) {
+                $min = (int) $t['minClients'];
+                $max = $t['maxClients'] !== null ? (int) $t['maxClients'] : PHP_INT_MAX;
+                if ($clientCount >= $min && $clientCount <= $max) {
+                    $assigned = $t['id'];
                 }
             }
+            if ($assigned === null && !empty($allTiers)) {
+                $assigned = $allTiers[0]['id'];
+            }
+            if ($assigned !== null) {
+                $counts[$assigned]++;
+            }
+        }
+
+        $tierDistribution = [];
+        foreach ($allTiers as $t) {
             $tierDistribution[] = [
-                'name' => $tier['name'],
-                'percentage' => (float) $tier['percentage'],
-                'minClients' => (int) $tier['minClients'],
-                'maxClients' => $tier['maxClients'] !== null ? (int) $tier['maxClients'] : null,
-                'count' => $count,
+                'name' => $t['name'],
+                'percentage' => (float) $t['percentage'],
+                'minClients' => (int) $t['minClients'],
+                'maxClients' => $t['maxClients'] !== null ? (int) $t['maxClients'] : null,
+                'count' => $counts[$t['id']],
             ];
         }
 
