@@ -1,0 +1,2 @@
+a logo na tela de login, está muito pequena. Deve ter no minimo 250px de largura e 250px de altura
+
