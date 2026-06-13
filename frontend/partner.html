@@ -33,7 +33,7 @@
             </a>
             <a href="#" class="nav-item" data-section="pricing">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                Tabela de Precos
+                Tabela de Preços
             </a>
             <a href="#" class="nav-item" data-section="proposals">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -221,58 +221,56 @@
 
             <!-- Pricing Section -->
             <section id="section-pricing" class="section hidden">
-                <div class="section-header">
-                    <div>
-                        <h2 class="section-title">Tabela de Precos</h2>
-                        <p class="text-sm text-gray">Planos disponiveis, modulos e seus comissionamentos como parceiro.</p>
-                    </div>
+                <div class="pt-pricing-banner">
+                    <h2 class="pt-banner-title">Tabela de Preços</h2>
+                    <p class="pt-banner-sub">Planos disponíveis, módulos e suas comissões como parceiro.</p>
                 </div>
 
-                <div class="pricing-legend mb-4">
-                    <span class="legend-item"><span class="legend-icon legend-icon-included"></span> Incluido no plano</span>
-                    <span class="legend-item"><span class="legend-icon legend-icon-extra"></span> Taxa de setup (cobrado 1x na ativacao)</span>
+                <div class="pt-pricing-legend">
+                    <span class="pt-legend-item"><span class="pt-legend-dot pt-dot-blue"></span> Mensalidade recorrente</span>
+                    <span class="pt-legend-item"><span class="pt-legend-dot pt-dot-orange"></span> Taxa de setup (cobrada 1× na ativação)</span>
                 </div>
 
                 <!-- Global Plans -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold mb-4">Planos Globais</h3>
-                    <div class="grid-3" id="globalPlansGrid"></div>
+                <div class="pt-pricing-section">
+                    <h3 class="pt-section-title">Planos Globais</h3>
+                    <div class="pt-plans-grid" id="globalPlansGrid"></div>
                 </div>
 
                 <!-- My Custom Plans -->
-                <div class="mb-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold">Meus Planos Personalizados</h3>
-                        <button class="btn btn-primary btn-sm" onclick="showPartnerPlanModal()">+ Criar Plano</button>
-                    </div>
-                    <div class="grid-3" id="myPlansGrid"></div>
+                <div class="pt-pricing-section">
+                    <h3 class="pt-section-title">Meus Planos Personalizados</h3>
+                    <div class="pt-plans-grid" id="myPlansGrid"></div>
                 </div>
 
                 <!-- Available Modules -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold mb-4">Modulos Disponiveis</h3>
-                    <div class="modules-grid" id="modulesGrid"></div>
+                <div class="pt-pricing-section">
+                    <h3 class="pt-section-title">Módulos Disponíveis</h3>
+                    <div class="pt-modules-grid" id="modulesGrid"></div>
                 </div>
 
                 <!-- Commission Tiers -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold mb-4">Regras de Comissionamento</h3>
-                    <div class="tiers-display" id="tiersDisplay"></div>
+                <div class="pt-pricing-section">
+                    <h3 class="pt-section-title">Regras de Comissionamento</h3>
+                    <div class="pt-tiers-grid" id="tiersDisplay"></div>
+                    <div id="tierProgress"></div>
+                    <div id="commissionInfoBoxes"></div>
                 </div>
 
                 <!-- Infrastructure Prices -->
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold mb-4">Precos de Infraestrutura</h3>
-                    <div class="card">
-                        <table class="pricing-table">
+                <div class="pt-pricing-section">
+                    <h3 class="pt-section-title">Preços de Infraestrutura</h3>
+                    <div class="pt-infra-card">
+                        <table class="pt-infra-table">
                             <thead>
                                 <tr>
                                     <th>Recurso</th>
-                                    <th class="text-right">Preco / unidade</th>
+                                    <th class="text-right">Preço / unidade</th>
                                 </tr>
                             </thead>
                             <tbody id="resourcePricesTable"></tbody>
                         </table>
+                        <div class="pt-infra-note">O preço total de cada plano inclui: Preço Base + (Quantidade de cada recurso × Preço unitário) + Módulos adicionais ativos.</div>
                     </div>
                 </div>
             </section>

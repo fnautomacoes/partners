@@ -6,6 +6,56 @@ let modulePrices = [];
 let commissionsData = [];
 let tiersData = [];
 
+// ---- Shared module visuals (emoji + color), keyed by real backend moduleKey ----
+const MODULE_VISUALS = {
+    useWhatsapp:     { emoji: '💬', bg: '#dcfce7', text: '#166534' },
+    useFacebook:     { emoji: '📘', bg: '#dbeafe', text: '#1e40af' },
+    useInstagram:    { emoji: '📷', bg: '#fce7f3', text: '#9d174d' },
+    useCampaigns:    { emoji: '📣', bg: '#ffedd5', text: '#9a3412' },
+    useSchedules:    { emoji: '📅', bg: '#dbeafe', text: '#1e40af' },
+    useInternalChat: { emoji: '💬', bg: '#ede9fe', text: '#5b21b6' },
+    useExternalApi:  { emoji: '🔌', bg: '#fee2e2', text: '#991b1b' },
+    useKanban:       { emoji: '📋', bg: '#ffedd5', text: '#9a3412' },
+    usePixel:        { emoji: '🎯', bg: '#dbeafe', text: '#1e40af' },
+    useAI:           { emoji: '🤖', bg: '#dbeafe', text: '#1e40af' },
+    useGPT:          { emoji: '🧠', bg: '#fce7f3', text: '#9d174d' },
+    useGPTA:         { emoji: '🧠', bg: '#fce7f3', text: '#9d174d' },
+    useCRM:          { emoji: '🛍️', bg: '#fce7f3', text: '#9d174d' },
+    useFLOW:         { emoji: '🔀', bg: '#dbeafe', text: '#1e40af' },
+    useBTN:          { emoji: '⚪', bg: '#f3f4f6', text: '#4b5563' },
+    useCALL:         { emoji: '📞', bg: '#fce7f3', text: '#9d174d' },
+    useCHAMA:        { emoji: '📞', bg: '#fce7f3', text: '#9d174d' },
+    useVOIP:         { emoji: '📞', bg: '#dbeafe', text: '#1e40af' },
+    useTYPE:         { emoji: '🤖', bg: '#fce7f3', text: '#9d174d' },
+    useZAIA:         { emoji: '🤖', bg: '#dbeafe', text: '#1e40af' },
+    useDIFY:         { emoji: '🤖', bg: '#ede9fe', text: '#5b21b6' },
+    useWABAOWN:      { emoji: '✅', bg: '#dcfce7', text: '#166534' },
+    useWABAAINI:     { emoji: '✅', bg: '#dcfce7', text: '#166534' },
+    usePUSH:         { emoji: '📱', bg: '#dbeafe', text: '#1e40af' },
+    useProducts:     { emoji: '🛒', bg: '#fef9c3', text: '#854d0e' },
+    useServices:     { emoji: '🧰', bg: '#fef9c3', text: '#854d0e' },
+    useWEBCHAT:      { emoji: '💬', bg: '#e0f2fe', text: '#0369a1' },
+    useInternal:     { emoji: '💬', bg: '#ede9fe', text: '#5b21b6' },
+    usePerfex:       { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+    useRD:           { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+    useCV:           { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+    useIXC:          { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+    useHS:           { emoji: '🗄️', bg: '#f3f4f6', text: '#4b5563' },
+    useNNN:          { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+    useHUB:          { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+};
+const DEFAULT_MODULE_VISUAL = { emoji: '🔧', bg: '#f3f4f6', text: '#4b5563' };
+
+function iconPerson(size = 13, color = '#374151') {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${color}"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>`;
+}
+function iconDoc(size = 13, color = '#374151') {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${color}"><path d="M6 2h8l6 6v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm7 1.5V8h4.5L13 3.5zM8 12h8v1.5H8V12zm0 3h8v1.5H8V15zm0 3h5v1.5H8V18z"/></svg>`;
+}
+function iconConn(size = 13, color = '#374151') {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${color}"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21H8v2h8v-2h-3v-3.08A7 7 0 0 0 19 11h-2z"/></svg>`;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     currentUser = await checkAuth('SUPERADMIN');
     if (!currentUser) return;
@@ -392,39 +442,72 @@ function renderPlansGrid() {
         const isGlobal = !p.ownerId;
         const users = p.usersIncluded || p.resources?.users || p.users || 1;
         const queues = p.queuesIncluded || p.resources?.queues || p.queues || 1;
-        const wapp = p.connectionsWhatsappUnofficial || p.resources?.connectionsWhatsappUnofficial || 0;
-        const waba = p.connectionsWhatsappOfficial || p.resources?.connectionsWhatsappOfficial || 0;
-        const insta = p.connectionsInstagram || p.resources?.connectionsInstagram || 0;
+        const wapp = p.resources?.connectionsWhatsappUnofficial || 0;
+        const waba = p.resources?.connectionsWhatsappOfficial || 0;
+        const insta = p.resources?.connectionsInstagram || 0;
 
         const planModules = getPlanModules(p);
+        const maxTags = 6;
+        const shown = planModules.slice(0, maxTags);
+        const overflow = planModules.length - shown.length;
         const connectionsHtml = buildConnectionsHtml(wapp, waba, insta);
+        const setupFee = p.setupFee || 0;
+
+        let badgesHtml, subtitleHtml, setupBlockHtml;
+        if (isGlobal) {
+            badgesHtml = `<span class="sa-plan-badge sa-badge-global">Global</span>` +
+                (p.pacoticketPlanId ? `<span class="sa-plan-badge sa-badge-paco">PacoTicket #${p.pacoticketPlanId}</span>` : '');
+            subtitleHtml = '';
+            setupBlockHtml = `
+                <div class="sa-setup-row">
+                    <span>Taxa de setup (cobrada 1×)</span>
+                    <span class="sa-setup-total">${formatCurrency(setupFee)}</span>
+                </div>`;
+        } else {
+            const baseSetup = p.basePlan?.setupFee || 0;
+            const addition = setupFee - baseSetup;
+            badgesHtml = `<span class="sa-plan-badge sa-badge-owner">${iconPerson(11, '#4b5563')} ${escapeHtml(p.ownerName || 'Parceiro')}</span>`;
+            subtitleHtml = p.basePlan?.name ? `<span class="sa-plan-based">Baseado em: ${escapeHtml(p.basePlan.name)}</span>` : '';
+            setupBlockHtml = `
+                <div class="sa-setup-row"><span>Setup base do plano</span><span>${formatCurrency(baseSetup)}</span></div>
+                <div class="sa-setup-row"><span>Acréscimo do parceiro</span><span class="sa-setup-add">+ ${formatCurrency(addition)}</span></div>
+                <div class="sa-setup-row sa-setup-total-row"><span>Setup total (cobrado 1×)</span><span class="sa-setup-total">${formatCurrency(setupFee)}</span></div>`;
+        }
 
         return `
             <div class="sa-plan-card">
                 <div class="sa-plan-header">
                     <div class="sa-plan-title-row">
                         <span class="sa-plan-name">${escapeHtml(p.name)}</span>
-                        <span class="sa-plan-badge ${isGlobal ? 'sa-badge-global' : 'sa-badge-partner'}">${isGlobal ? 'Global' : (p.pacoticketPlanId ? 'PacoTicket #' + p.pacoticketPlanId : 'Parceiro')}</span>
+                        ${subtitleHtml}
+                        <div class="sa-plan-badges">${badgesHtml}</div>
                     </div>
-                    <div class="sa-plan-price">${formatCurrency(p.basePrice)}</div>
+                    <div class="sa-plan-price-col">
+                        <div class="sa-plan-price">${formatCurrency(p.basePrice)}</div>
+                        <div class="sa-plan-price-sub">/ mês</div>
+                        <div class="sa-plan-setup-hint">+ ${formatCurrency(setupFee)} setup</div>
+                    </div>
                 </div>
                 <div class="sa-plan-resources">
-                    <span class="sa-resource"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${users}</span>
-                    <span class="sa-resource"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> ${queues}</span>
+                    <span class="sa-resource">${iconPerson()} ${users}</span>
+                    <span class="sa-resource">${iconDoc()} ${queues}</span>
                     ${connectionsHtml}
                 </div>
                 ${planModules.length > 0 ? `
                 <div class="sa-plan-modules">
-                    ${planModules.map(m => `<span class="sa-module-tag" style="background-color: ${getModuleColor(m.key).bg}; color: ${getModuleColor(m.key).text};">${getModuleIconSmall(m.key)} ${escapeHtml(m.label)}</span>`).join('')}
+                    ${shown.map(m => `<span class="sa-module-tag" style="background-color: ${getModuleColor(m.key).bg}; color: ${getModuleColor(m.key).text};">${getModuleIconSmall(m.key)} ${escapeHtml(m.label)}</span>`).join('')}
+                    ${overflow > 0 ? `<span class="sa-module-more">+${overflow}</span>` : ''}
                 </div>
                 ` : ''}
-                <div class="sa-plan-footer">
-                    <span class="sa-plan-setup">Taxa de setup (cobrada 1x)</span>
-                    <span class="sa-plan-setup-value">${formatCurrency(p.setupFee || 0)}</span>
+                <div class="sa-plan-setup">
+                    ${setupBlockHtml}
                 </div>
-                <div class="sa-plan-actions">
-                    <a href="#" class="sa-link-edit" onclick="editPlan('${p.id}'); return false;">Editar</a>
-                    <a href="#" class="sa-link-delete" onclick="deletePlan('${p.id}'); return false;">Desativar</a>
+                <div class="sa-plan-footer">
+                    <span class="sa-plan-clients">${p.clientCount || 0} cliente(s)</span>
+                    <div class="sa-plan-actions">
+                        <a href="#" class="sa-link-edit" onclick="editPlan('${p.id}'); return false;">Editar</a>
+                        <a href="#" class="sa-link-delete" onclick="deletePlan('${p.id}'); return false;">Desativar</a>
+                    </div>
                 </div>
             </div>
         `;
@@ -437,7 +520,7 @@ function buildConnectionsHtml(wapp, waba, insta) {
     if (waba > 0) parts.push(`${waba}× WABA`);
     if (insta > 0) parts.push(`${insta}× Insta`);
     if (parts.length === 0) parts.push('1× WApp');
-    return `<span class="sa-resource"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> ${parts.join(' ')}</span>`;
+    return `<span class="sa-resource">${iconConn()} ${parts.join(' ')}</span>`;
 }
 
 function getPlanModules(plan) {
@@ -451,73 +534,12 @@ function getPlanModules(plan) {
 }
 
 function getModuleColor(moduleKey) {
-    const colors = {
-        useAgendamentos: { bg: '#dbeafe', text: '#1e40af' },
-        useChatInterno: { bg: '#fef3c7', text: '#92400e' },
-        useCRM: { bg: '#fce7f3', text: '#9d174d' },
-        useApiExterna: { bg: '#e0e7ff', text: '#3730a3' },
-        useKanban: { bg: '#d1fae5', text: '#065f46' },
-        useCampanhas: { bg: '#fee2e2', text: '#991b1b' },
-        useChatbot: { bg: '#ede9fe', text: '#5b21b6' },
-        useTypebot: { bg: '#ede9fe', text: '#5b21b6' },
-        useTypebotExterno: { bg: '#ede9fe', text: '#5b21b6' },
-        useGPT: { bg: '#dcfce7', text: '#166534' },
-        useGPTAssistant: { bg: '#dcfce7', text: '#166534' },
-        useIA: { bg: '#dbeafe', text: '#1e40af' },
-        useInteligenciaArtificial: { bg: '#dbeafe', text: '#1e40af' },
-        useWebhooks: { bg: '#f3e8ff', text: '#7c3aed' },
-        useIntegracoes: { bg: '#f3e8ff', text: '#7c3aed' },
-        useBoletos: { bg: '#fef9c3', text: '#854d0e' },
-        useFinanceiro: { bg: '#fef9c3', text: '#854d0e' },
-        useRelatorios: { bg: '#e0f2fe', text: '#0369a1' },
-        useDashboard: { bg: '#e0f2fe', text: '#0369a1' },
-        useAvaliacoes: { bg: '#fef3c7', text: '#b45309' },
-        useNPS: { bg: '#fef3c7', text: '#b45309' }
-    };
-    return colors[moduleKey] || { bg: '#f3f4f6', text: '#4b5563' };
+    const v = MODULE_VISUALS[moduleKey] || DEFAULT_MODULE_VISUAL;
+    return { bg: v.bg, text: v.text };
 }
 
 function getModuleIconSmall(moduleKey) {
-    const icons = {
-        useAgendamentos: '📅',
-        useChatInterno: '💬',
-        useCRM: '📁',
-        useApiExterna: '🔗',
-        useKanban: '📋',
-        useCampanhas: '📣',
-        useChatbot: '🤖',
-        useTypebot: '🤖',
-        useTypebotExterno: '🤖',
-        useGPT: '🧠',
-        useGPTAssistant: '🧠',
-        useIA: '🧠',
-        useInteligenciaArtificial: '🧠',
-        useWebhooks: '🔌',
-        useIntegracoes: '🔌',
-        useBoletos: '💰',
-        useFinanceiro: '💰',
-        useRelatorios: '📊',
-        useDashboard: '📊',
-        useAvaliacoes: '⭐',
-        useNPS: '⭐',
-        useFacebook: '📘',
-        useInstagram: '📷',
-        useLigacoesVoIP: '📞',
-        useChamadasWhatsApp: '📞',
-        useFlowBuilder: '🔀',
-        useAutoresponder: '⚡',
-        useRespostasRapidas: '⚡',
-        useEtiquetas: '🏷️',
-        useTags: '🏷️',
-        useMultiAtendentes: '👥',
-        useHistoricoCompleto: '📚',
-        useExportacaoDados: '📥',
-        useAppAndroid005: '📱',
-        usePixelTracker: '🎯',
-        useEmail: '📧',
-        useIntegracaoEmail: '📧'
-    };
-    return icons[moduleKey] || '📦';
+    return (MODULE_VISUALS[moduleKey] || DEFAULT_MODULE_VISUAL).emoji;
 }
 
 
