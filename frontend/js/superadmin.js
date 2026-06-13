@@ -201,20 +201,19 @@ function renderTierDistribution(tiers) {
         return;
     }
 
-    const colors = ['tier-item-yellow', 'tier-item-green', 'tier-item-blue'];
-    container.innerHTML = tiers.map((t, i) => `
+    const colors = ['tier-item-blue', 'tier-item-yellow', 'tier-item-green'];
+    container.innerHTML = tiers.map((t, i) => {
+        const range = `${t.minClients ?? 0}${t.maxClients ? '–' + t.maxClients : '+'} clientes`;
+        const pct = t.percentage != null ? Math.round(t.percentage) : 0;
+        return `
         <div class="tier-item ${colors[i % colors.length]}">
             <div class="tier-item-info">
-                <div class="tier-item-name">${escapeHtml(t.name)}</div>
-                <div class="tier-item-percentage">${t.percentage || 0}% de comissao</div>
-                <div class="tier-item-range">${t.minClients || 0}${t.maxClients ? ' - ' + t.maxClients : '+'} clientes</div>
+                <div class="tier-item-name">${escapeHtml(t.name)} — ${pct}%</div>
+                <div class="tier-item-range">${range}</div>
             </div>
-            <div class="tier-item-stats">
-                <div class="tier-item-count">${t.count || 0}</div>
-                <div class="tier-item-count-label">parceiros</div>
-            </div>
-        </div>
-    `).join('');
+            <div class="tier-item-count">${t.count || 0}</div>
+        </div>`;
+    }).join('');
 }
 
 function renderTopPartners(topPartners) {
@@ -226,9 +225,9 @@ function renderTopPartners(topPartners) {
 
     tbody.innerHTML = topPartners.map(p => `
         <tr>
-            <td>${escapeHtml(p.name)}</td>
-            <td><span class="badge badge-primary">${escapeHtml(p.tier || '-')}</span></td>
-            <td>${p.activeClients || 0}</td>
+            <td class="top-partner-name">${escapeHtml(p.name)}</td>
+            <td><span class="tier-badge">${escapeHtml(p.tier || '-')}</span></td>
+            <td class="text-right top-partner-clients">${p.activeClients || 0}</td>
         </tr>
     `).join('');
 }

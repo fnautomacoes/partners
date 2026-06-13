@@ -383,7 +383,7 @@ class PartnerController
 
         $tierDistribution = [];
         $stmtAllTiers = $pdo->query('
-            SELECT ct.id, ct.name, ct."minClients", ct."maxClients"
+            SELECT ct.id, ct.name, ct."minClients", ct."maxClients", ct.percentage
             FROM "CommissionTier" ct
             WHERE ct."isActive" = true
             ORDER BY ct."order" ASC
@@ -411,6 +411,9 @@ class PartnerController
             }
             $tierDistribution[] = [
                 'name' => $tier['name'],
+                'percentage' => (float) $tier['percentage'],
+                'minClients' => (int) $tier['minClients'],
+                'maxClients' => $tier['maxClients'] !== null ? (int) $tier['maxClients'] : null,
                 'count' => $count,
             ];
         }
