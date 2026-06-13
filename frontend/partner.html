@@ -277,31 +277,33 @@
 
             <!-- Proposals Section -->
             <section id="section-proposals" class="section hidden">
-                <div class="proposals-header">
-                    <h2 class="section-title">Propostas</h2>
-                    <p class="text-sm text-gray">Gere propostas personalizadas com base nos planos disponiveis</p>
+                <div class="pt-pricing-banner">
+                    <h2 class="pt-banner-title">Propostas</h2>
+                    <p class="pt-banner-sub">Monte propostas personalizadas com base nos planos disponíveis.</p>
                 </div>
 
                 <!-- Existing Proposals -->
-                <div class="card mb-6">
-                    <div class="card-header">
-                        <div>
-                            <h3 class="card-title">Propostas geradas</h3>
+                <div class="prop-card prop-list-card">
+                    <div class="prop-list-header">
+                        <div class="prop-list-title">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                            <span>Propostas geradas</span>
                         </div>
-                        <div class="flex gap-2 items-center">
-                            <span class="text-sm text-gray">Mostrando ate 50</span>
-                            <button class="btn-link" onclick="loadProposals()">Atualizar</button>
+                        <div class="prop-list-search">
+                            <input type="text" id="proposalSearch" class="prop-search-input" placeholder="Buscar por ID ou cliente..." oninput="filterProposals()">
+                            <button class="prop-search-btn" onclick="filterProposals()">Buscar</button>
                         </div>
+                        <span class="prop-list-count" id="proposalsCount">0 no total</span>
                     </div>
-                    <div class="table-container">
-                        <table>
+                    <div class="prop-table-wrap">
+                        <table class="prop-table">
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Plano</th>
-                                    <th>Lead/Cliente</th>
-                                    <th>Criado em</th>
-                                    <th>Acoes</th>
+                                    <th>PLANO</th>
+                                    <th>LEAD</th>
+                                    <th>DATA</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="proposalsTable"></tbody>
@@ -309,139 +311,104 @@
                     </div>
                 </div>
 
-                <!-- Proposal Generator -->
-                <div class="proposal-generator">
-                    <div class="proposal-step">
-                        <div class="proposal-step-number">1</div>
-                        <div class="proposal-step-content">
-                            <h4 class="proposal-step-title">Escolha um plano base</h4>
-                            <p class="text-sm text-gray mb-3">O plano base define o preco mensal e os recursos inclusos.</p>
-                            <div class="grid-3" id="proposalPlansGrid"></div>
+                <!-- Step 1: base plan -->
+                <div class="prop-card">
+                    <div class="prop-step-head">
+                        <span class="prop-step-num">1</span>
+                        <div>
+                            <h4 class="prop-step-title">Escolha um plano base</h4>
+                            <p class="prop-step-sub">O plano base define o preço mensal e os recursos incluídos.</p>
                         </div>
                     </div>
-
-                    <div class="proposal-step">
-                        <div class="proposal-step-number">2</div>
-                        <div class="proposal-step-content">
-                            <h4 class="proposal-step-title">Modulos adicionais</h4>
-                            <p class="text-sm text-gray mb-3">Modulos serao adicionados ao plano base. Precos conforme catalogo.</p>
-                            <div class="modules-checkboxes" id="proposalModulesGrid"></div>
-                        </div>
-                    </div>
-
-                    <div class="proposal-step">
-                        <div class="proposal-step-number">3</div>
-                        <div class="proposal-step-content">
-                            <h4 class="proposal-step-title">Recursos adicionais</h4>
-                            <p class="text-sm text-gray mb-3">Quantidade extra alem do plano base.</p>
-                            <div class="resources-inputs">
-                                <div class="resource-input-row">
-                                    <span class="resource-label">WhatsApp Nao Oficial (por conexao)</span>
-                                    <div class="resource-input-group">
-                                        <button type="button" class="resource-btn" onclick="changeResource('whatsappUnofficial', -1)">-</button>
-                                        <input type="number" class="resource-input" id="propWhatsappUnofficial" value="0" min="0" onchange="updateProposalSummary()">
-                                        <button type="button" class="resource-btn" onclick="changeResource('whatsappUnofficial', 1)">+</button>
-                                    </div>
-                                    <span class="resource-total" id="totalWhatsappUnofficial">R$ 0,00</span>
-                                </div>
-                                <div class="resource-input-row">
-                                    <span class="resource-label">WhatsApp Oficial / WABA (por conexao)</span>
-                                    <div class="resource-input-group">
-                                        <button type="button" class="resource-btn" onclick="changeResource('whatsappOfficial', -1)">-</button>
-                                        <input type="number" class="resource-input" id="propWhatsappOfficial" value="0" min="0" onchange="updateProposalSummary()">
-                                        <button type="button" class="resource-btn" onclick="changeResource('whatsappOfficial', 1)">+</button>
-                                    </div>
-                                    <span class="resource-total" id="totalWhatsappOfficial">R$ 0,00</span>
-                                </div>
-                                <div class="resource-input-row">
-                                    <span class="resource-label">Instagram (por conexao)</span>
-                                    <div class="resource-input-group">
-                                        <button type="button" class="resource-btn" onclick="changeResource('instagram', -1)">-</button>
-                                        <input type="number" class="resource-input" id="propInstagram" value="0" min="0" onchange="updateProposalSummary()">
-                                        <button type="button" class="resource-btn" onclick="changeResource('instagram', 1)">+</button>
-                                    </div>
-                                    <span class="resource-total" id="totalInstagram">R$ 0,00</span>
-                                </div>
-                                <div class="resource-input-row">
-                                    <span class="resource-label">Usuario adicional (por usuario)</span>
-                                    <div class="resource-input-group">
-                                        <button type="button" class="resource-btn" onclick="changeResource('user', -1)">-</button>
-                                        <input type="number" class="resource-input" id="propUser" value="0" min="0" onchange="updateProposalSummary()">
-                                        <button type="button" class="resource-btn" onclick="changeResource('user', 1)">+</button>
-                                    </div>
-                                    <span class="resource-total" id="totalUser">R$ 0,00</span>
-                                </div>
-                                <div class="resource-input-row">
-                                    <span class="resource-label">Fila adicional (por fila)</span>
-                                    <div class="resource-input-group">
-                                        <button type="button" class="resource-btn" onclick="changeResource('queue', -1)">-</button>
-                                        <input type="number" class="resource-input" id="propQueue" value="0" min="0" onchange="updateProposalSummary()">
-                                        <button type="button" class="resource-btn" onclick="changeResource('queue', 1)">+</button>
-                                    </div>
-                                    <span class="resource-total" id="totalQueue">R$ 0,00</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="prop-plans-grid" id="proposalPlansGrid"></div>
                 </div>
 
-                <!-- Proposal Summary - Inline at the end -->
-                <div class="proposal-summary-inline" id="proposalSummaryPanel">
-                    <div class="proposal-summary-header">
-                        <h4>Resumo da Proposta</h4>
+                <!-- Step 2: extra modules -->
+                <div class="prop-card">
+                    <div class="prop-step-head">
+                        <span class="prop-step-num">2</span>
+                        <div>
+                            <h4 class="prop-step-title">Módulos adicionais</h4>
+                            <p class="prop-step-sub">Módulos extras além do plano base. Preços conforme catálogo.</p>
+                        </div>
                     </div>
-                    <div class="proposal-summary-body">
-                        <div class="proposal-summary-row">
-                            <span>Plano Base</span>
-                            <span id="summaryPlanPrice">R$ 0,00/mes</span>
-                        </div>
-                        <div class="proposal-summary-row proposal-summary-total">
-                            <span>Total Mensal</span>
-                            <span id="summaryMonthlyTotal">R$ 0,00</span>
-                        </div>
-                        <div class="proposal-summary-row">
-                            <span>Taxa de Setup (cobrada 1x)</span>
-                            <span id="summarySetupFee">R$ 0,00</span>
-                        </div>
-                        <div class="proposal-summary-row text-sm" style="opacity: 0.8">
-                            <span>Comissao mensal (<span id="summaryCommissionPercent">15</span>%)</span>
-                            <span id="summaryCommission">R$ 0,00/mes</span>
-                        </div>
+                    <div class="prop-modules-grid" id="proposalModulesGrid"></div>
+                </div>
 
-                        <div class="proposal-setup-info">
-                            <h5>Taxa de Setup Adicional</h5>
-                            <p>Ao definir uma margem de setup adicional, voce aumenta o valor de setup no momento da ativacao.</p>
-                            <div class="form-group mt-2">
-                                <input type="number" class="form-input" id="propSetupExtra" value="0" min="0" step="0.01" onchange="updateProposalSummary()" style="background: white; color: #333;">
-                            </div>
-                            <div class="proposal-setup-totals mt-3">
-                                <div class="proposal-summary-row">
-                                    <span>Setup total cobrado do cliente</span>
-                                    <span id="summaryTotalSetup">R$ 0,00</span>
-                                </div>
-                            </div>
+                <!-- Step 3: extra resources -->
+                <div class="prop-card">
+                    <div class="prop-step-head">
+                        <span class="prop-step-num">3</span>
+                        <div>
+                            <h4 class="prop-step-title">Recursos adicionais</h4>
+                            <p class="prop-step-sub">Conexões e recursos extras além do plano base.</p>
                         </div>
-
-                        <div class="form-group mt-4">
-                            <label class="form-label" style="color: white;">Nome do plano personalizado</label>
-                            <input type="text" class="form-input" id="propCustomPlanName" placeholder="Ex: Plano Especial Cliente X" style="background: white; color: #333;">
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" style="color: white;">Vincular a lead (opcional)</label>
-                            <select class="form-select" id="propLeadSelect" style="background: white; color: #333;">
-                                <option value="">- Nenhum lead -</option>
-                            </select>
-                        </div>
-
-                        <div class="proposal-actions mt-4">
-                            <button class="btn btn-secondary" onclick="savePlanOnly()">Salvar Plano</button>
-                            <button class="btn btn-primary" onclick="generateProposalPDF()">Gerar a PDF</button>
-                        </div>
-                        <p class="text-xs text-center mt-2" style="opacity: 0.8">
-                            <label><input type="checkbox" id="propSavePlan"> Salvar PDF sem salvar plano</label>
-                        </p>
                     </div>
+                    <div class="prop-resources" id="proposalResourcesGrid"></div>
+                </div>
+
+                <!-- Proposal Summary -->
+                <div class="prop-summary" id="proposalSummaryPanel">
+                    <div class="prop-summary-head">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>
+                        <span>Resumo da Proposta</span>
+                    </div>
+
+                    <div class="prop-summary-row prop-base-row">
+                        <span id="summaryPlanLabel">Plano base &mdash; &mdash;</span>
+                        <span id="summaryPlanPrice">R$ 0,00/mês</span>
+                    </div>
+                    <div class="prop-summary-row prop-total-row">
+                        <span>Total Mensal</span>
+                        <span id="summaryMonthlyTotal" class="prop-total-value">R$ 0,00</span>
+                    </div>
+                    <div class="prop-summary-row prop-setup-row">
+                        <span>Taxa de Setup (cobrada 1×)</span>
+                        <span id="summarySetupFee">R$ 0,00</span>
+                    </div>
+
+                    <div class="prop-commission-row">
+                        <span>Comissão mensal (<span id="summaryCommissionPercent">15</span>%)</span>
+                        <span id="summaryCommission">R$ 0,00/mês</span>
+                    </div>
+
+                    <div class="prop-setup-extra">
+                        <h5>Taxa de Setup Adicional</h5>
+                        <p id="propSetupExtraDesc">Adicione sua margem ao setup base do catálogo (R$ 0,00). 100% do acréscimo é sua comissão de ativação.</p>
+                        <div class="prop-setup-extra-input">
+                            <span class="prop-currency">R$</span>
+                            <input type="number" id="propSetupExtra" value="0" min="0" step="0.01" oninput="updateProposalSummary()">
+                            <span class="prop-acrescimo">acréscimo</span>
+                        </div>
+                        <div class="prop-setup-total-row">
+                            <span>Setup total cobrado do cliente:</span>
+                            <span id="summaryTotalSetup">R$ 0,00</span>
+                        </div>
+                    </div>
+
+                    <div class="prop-info prop-info-warn" id="propCommissionDuration"></div>
+
+                    <div class="prop-info prop-info-tip">
+                        <div class="prop-info-title">&#128161; Comissão de setup: quando se aplica</div>
+                        <div class="prop-info-text">Você recebe comissão de ativação <strong>somente quando define um acréscimo de setup</strong> ao criar o plano personalizado. Em demais ativações, o comissionamento é <strong>apenas sobre a mensalidade</strong>, quando couber.</div>
+                    </div>
+
+                    <div class="prop-field">
+                        <label>Nome do plano personalizado</label>
+                        <input type="text" id="propCustomPlanName" placeholder="Ex: Pro Plus Personalizado">
+                    </div>
+
+                    <div class="prop-field">
+                        <label>Vincular a lead (opcional)</label>
+                        <select id="propLeadSelect"><option value="">— Nenhum lead —</option></select>
+                    </div>
+
+                    <div class="prop-buttons">
+                        <button class="prop-btn prop-btn-save" onclick="savePlanOnly()">&#128190; Salvar Plano</button>
+                        <button class="prop-btn prop-btn-savepdf" onclick="generateProposalPDF(true)">&#128196; Salvar + PDF</button>
+                    </div>
+                    <button class="prop-btn prop-btn-pdf" onclick="generateProposalPDF(false)">&#128196; Gerar PDF (sem salvar plano)</button>
+                    <p class="prop-foot-note">O plano salvo ficará disponível nos seus clientes e na Tabela de Preços.</p>
                 </div>
             </section>
 

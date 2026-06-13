@@ -969,16 +969,34 @@ async function deletePartnerPlan(id) {
 }
 
 // Proposals
+let proposalsData = [];
+
+const API_RESOURCE_FIELD = {
+    whatsappUnofficial: 'extraWhatsappUnofficial',
+    whatsappOfficial: 'extraWhatsappOfficial',
+    instagram: 'extraInstagram',
+    user: 'extraUsers',
+    queue: 'extraQueues',
+};
+
 async function loadProposals() {
     try {
-        const [proposalsRes, plansRes, leadsRes] = await Promise.all([
+        const [proposalsRes, plansRes, leadsRes, modulesRes, resourcesRes, tiersRes] = await Promise.all([
             apiRequest('/api/pdf/proposals'),
             apiRequest('/api/plans'),
-            apiRequest('/api/funnel/leads')
+            apiRequest('/api/funnel/leads'),
+            apiRequest('/api/plans/modules/prices'),
+            apiRequest('/api/resource-prices'),
+            apiRequest('/api/commission-tiers')
         ]);
 
+        if (tiersRes.success) {
+            tiersData = tiersRes.data;
+        }
+
         if (proposalsRes.success) {
-            renderProposalsTable(proposalsRes.data);
+            proposalsData = proposalsRes.data;
+            renderProposalsTable(proposalsData);
         }
 
         if (plansRes.success) {
@@ -992,49 +1010,101 @@ async function loadProposals() {
             populateLeadSelect();
         }
 
+        if (modulesRes.success) {
+            modulePrices = modulesRes.data.filter(m => m.isVisible);
+        }
+
+        if (resourcesRes.success) {
+            resourcePrices = resourcesRes.data;
+            renderProposalResources();
+        }
+
         renderProposalModulesGrid();
+        updateProposalSummary();
     } catch (e) {
         showToast('Erro ao carregar propostas', 'error');
     }
 }
 
-function renderProposalsTable(proposals) {
-    const tbody = document.getElementById('proposalsTable');
+function proposalLeadLabel(p) {
+    return p.leadName ? escapeHtml(p.leadName) : '<span class="prop-empty">—</span>';
+}
 
-    if (proposals.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-gray">Nenhuma proposta gerada</td></tr>';
+function renderProposalsTable(list) {
+    const tbody = document.getElementById('proposalsTable');
+    const countEl = document.getElementById('proposalsCount');
+    if (countEl) countEl.textContent = `${proposalsData.length} no total`;
+
+    if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="prop-empty-row">Nenhuma proposta gerada</td></tr>';
         return;
     }
 
-    tbody.innerHTML = proposals.map(p => `
+    tbody.innerHTML = list.map(p => `
         <tr>
-            <td class="font-mono text-primary">${escapeHtml(p.proposalCode || p.id?.substring(0, 8))}</td>
-            <td>${escapeHtml(p.planName || '-')}</td>
-            <td>${escapeHtml(p.leadName || '-')}</td>
-            <td>${formatDate(p.createdAt)}</td>
-            <td>
-                <button class="btn-link" onclick="downloadProposal('${p.id}')">Baixar</button>
+            <td class="prop-code">${escapeHtml(p.proposalCode || p.id?.substring(0, 8))}</td>
+            <td class="prop-plan-name">${escapeHtml(p.planName || '-')}</td>
+            <td>${proposalLeadLabel(p)}</td>
+            <td class="prop-date">${formatDate(p.createdAt)}</td>
+            <td class="text-right">
+                <a href="#" class="prop-download" onclick="downloadProposal('${p.id}'); return false;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Baixar
+                </a>
             </td>
         </tr>
     `).join('');
 }
 
+function filterProposals() {
+    const term = (document.getElementById('proposalSearch')?.value || '').trim().toLowerCase();
+    if (!term) { renderProposalsTable(proposalsData); return; }
+    const filtered = proposalsData.filter(p =>
+        (p.proposalCode || '').toLowerCase().includes(term) ||
+        (p.leadName || '').toLowerCase().includes(term) ||
+        (p.planName || '').toLowerCase().includes(term)
+    );
+    renderProposalsTable(filtered);
+}
+
+function proposalConnections(p) {
+    const wapp = p.resources?.connectionsWhatsappUnofficial || 0;
+    const waba = p.resources?.connectionsWhatsappOfficial || 0;
+    const insta = p.resources?.connectionsInstagram || 0;
+    const items = [];
+    if (wapp > 0) items.push(`${wapp}× WApp N.Oficial`);
+    if (waba > 0) items.push(`${waba}× WApp Oficial`);
+    if (insta > 0) items.push(`${insta}× Instagram`);
+    if (items.length === 0) items.push('1× WApp N.Oficial');
+    return items;
+}
+
 function renderProposalPlansGrid() {
     const container = document.getElementById('proposalPlansGrid');
-    container.innerHTML = globalPlans.map(p => `
-        <div class="pricing-card ${selectedPlan?.id === p.id ? 'selected' : ''}" onclick="selectPlanForProposal('${p.id}')">
-            <div class="pricing-card-header">
-                <div class="pricing-card-name">${escapeHtml(p.name)}</div>
-                <div class="pricing-card-price">${formatCurrency(p.basePrice)}<span class="pricing-card-price-sub">/mes</span></div>
+    container.innerHTML = globalPlans.map(p => {
+        const users = p.usersIncluded || p.resources?.users || 1;
+        const queues = p.queuesIncluded || p.resources?.queues || 1;
+        const mods = getPlanModulesPartner(p);
+        const sel = selectedPlan?.id === p.id;
+        const conns = proposalConnections(p);
+        return `
+        <div class="prop-plan-card ${sel ? 'selected' : ''}" onclick="selectPlanForProposal('${p.id}')">
+            <div class="prop-plan-name">${escapeHtml(p.name)}</div>
+            <div class="prop-plan-price">${formatCurrency(p.basePrice)}<span class="prop-plan-price-sub">/mês</span></div>
+            <div class="prop-plan-setup">+ ${formatCurrency(p.setupFee || 0)} setup (1×)</div>
+            <div class="prop-plan-base">
+                <span class="prop-plan-base-item prop-base-half">${ptIconPerson()} ${users} usuário${users !== 1 ? 's' : ''}</span>
+                <span class="prop-plan-base-item prop-base-half">${ptIconDoc()} ${queues} fila${queues !== 1 ? 's' : ''}</span>
+                ${conns.map(c => `<span class="prop-plan-base-item prop-base-full">${ptIconConn()} ${c}</span>`).join('')}
             </div>
-            <div class="pricing-card-info">
-                <div class="pricing-card-row">
-                    <span>Taxa de setup</span>
-                    <span>${formatCurrency(p.setupFee || 0)}</span>
-                </div>
-            </div>
-        </div>
-    `).join('');
+            ${mods.length > 0 ? `
+            <div class="prop-plan-block-label">MÓDULOS INCLUÍDOS</div>
+            <div class="prop-plan-modules">
+                ${mods.map(m => { const v = moduleVisual(m.key); return `<span class="pt-module-tag" style="background-color:${v.bg};color:${v.text};">${v.emoji} ${escapeHtml(m.label)}</span>`; }).join('')}
+            </div>` : ''}
+            <div class="prop-plan-foot">${sel ? '<span class="prop-plan-selected">✓ Selecionado</span>' : '<span class="prop-plan-select">Selecionar</span>'}</div>
+        </div>`;
+    }).join('');
 }
 
 function selectPlanForProposal(planId) {
@@ -1045,18 +1115,18 @@ function selectPlanForProposal(planId) {
 
 function renderProposalModulesGrid() {
     const container = document.getElementById('proposalModulesGrid');
-    if (modulePrices.length === 0) {
-        container.innerHTML = '<div class="text-gray">Carregando modulos...</div>';
+    if (!modulePrices || modulePrices.length === 0) {
+        container.innerHTML = '<div class="prop-empty">Carregando módulos...</div>';
         return;
     }
 
     container.innerHTML = modulePrices.map(m => `
-        <label class="module-checkbox" onclick="toggleModule(this)">
+        <label class="prop-module-check" onclick="toggleModule(this)">
             <input type="checkbox" name="module_${m.moduleKey}" value="${m.price}">
-            <span class="module-checkbox-icon">&#x1F4E6;</span>
-            <span class="module-checkbox-info">
-                <span class="module-checkbox-name">${escapeHtml(m.label)}</span>
-                <span class="module-checkbox-price">+ ${formatCurrency(m.price)}/mes</span>
+            <span class="prop-check-box"></span>
+            <span class="prop-module-info">
+                <span class="prop-module-name">${escapeHtml(m.label)}</span>
+                <span class="prop-module-price">+ ${formatCurrency(m.price)}/mês${m.setupFee > 0 ? ` &middot; setup ${formatCurrency(m.setupFee)}` : ''}</span>
             </span>
         </label>
     `).join('');
@@ -1064,19 +1134,40 @@ function renderProposalModulesGrid() {
 
 function toggleModule(el) {
     el.classList.toggle('checked');
+    const cb = el.querySelector('input');
+    if (cb) cb.checked = el.classList.contains('checked');
     updateProposalSummary();
+}
+
+function renderProposalResources() {
+    const container = document.getElementById('proposalResourcesGrid');
+    if (!container) return;
+    const known = Object.keys(API_RESOURCE_FIELD);
+    const rows = resourcePrices.filter(r => known.includes(r.key));
+    container.innerHTML = rows.map(r => `
+        <div class="prop-resource-row">
+            <div class="prop-resource-label">
+                <span class="prop-resource-name">${escapeHtml(r.label || r.key)}</span>
+                <span class="prop-resource-unit">${formatCurrency(r.price)} por unidade/mês</span>
+            </div>
+            <div class="prop-stepper">
+                <button type="button" class="prop-step-btn" onclick="changeResource('${r.key}', -1)">−</button>
+                <input type="number" class="prop-step-input" id="propRes_${r.key}" value="0" min="0" oninput="updateProposalSummary()">
+                <button type="button" class="prop-step-btn" onclick="changeResource('${r.key}', 1)">+</button>
+            </div>
+            <span class="prop-resource-total" id="totRes_${r.key}">R$ 0,00</span>
+        </div>
+    `).join('');
 }
 
 function populateLeadSelect() {
     const select = document.getElementById('propLeadSelect');
-    select.innerHTML = '<option value="">- Nenhum lead -</option>' +
+    select.innerHTML = '<option value="">— Nenhum lead —</option>' +
         leads.map(l => `<option value="${l.id}">${escapeHtml(l.name)}</option>`).join('');
 }
 
-function changeResource(type, delta) {
-    const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
-    const inputId = 'prop' + capitalizedType;
-    const input = document.getElementById(inputId);
+function changeResource(key, delta) {
+    const input = document.getElementById('propRes_' + key);
     if (!input) return;
     let val = parseInt(input.value) || 0;
     val = Math.max(0, val + delta);
@@ -1085,76 +1176,92 @@ function changeResource(type, delta) {
 }
 
 function updateProposalSummary() {
+    const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    const commission = Number(partnerData?.tierPercentage) || 15;
+    setEl('summaryCommissionPercent', commission);
+
+    // Tier duration warning box (DB-driven)
+    const durBox = document.getElementById('propCommissionDuration');
+    if (durBox) {
+        const tierName = partnerData?.tier || 'Indicador';
+        const tier = (tiersData || []).find(t => t.name === tierName);
+        const dur = tier ? tier.durationMonths : 0;
+        const durText = dur > 0
+            ? `Tier atual: comissão por <strong>${dur} ${dur === 1 ? 'mês' : 'meses'}</strong> a partir do cadastro de cada cliente.`
+            : `Tier atual: comissão por <strong>tempo indeterminado</strong> a partir do cadastro de cada cliente.`;
+        durBox.innerHTML = `
+            <div class="prop-info-title">&#9201;&#65039; Por quanto tempo você recebe comissão</div>
+            <div class="prop-info-text">${durText}</div>
+            <div class="prop-info-text prop-info-warn-line">&#9888;&#65039; Clientes adquiridos neste tier não geram comissão após upgrade de tier. A regra é travada na época do cadastro.</div>`;
+    }
+
     if (!selectedPlan) {
-        document.getElementById('summaryPlanPrice').textContent = 'R$ 0,00/mes';
-        document.getElementById('summaryMonthlyTotal').textContent = 'R$ 0,00';
-        document.getElementById('summarySetupFee').textContent = 'R$ 0,00';
-        document.getElementById('summaryCommission').textContent = 'R$ 0,00/mes';
-        document.getElementById('summaryTotalSetup').textContent = 'R$ 0,00';
+        setEl('summaryPlanLabel', 'Plano base — —');
+        setEl('summaryPlanPrice', 'R$ 0,00/mês');
+        setEl('summaryMonthlyTotal', 'R$ 0,00');
+        setEl('summarySetupFee', 'R$ 0,00');
+        setEl('summaryCommission', 'R$ 0,00/mês');
+        setEl('summaryTotalSetup', 'R$ 0,00');
+        const d = document.getElementById('propSetupExtraDesc');
+        if (d) d.innerHTML = 'Adicione sua margem ao setup base do catálogo (R$ 0,00). 100% do acréscimo é sua comissão de ativação.';
         return;
     }
 
     let monthlyTotal = selectedPlan.basePrice || 0;
-    let setupFee = selectedPlan.setupFee || 0;
+    const setupFee = selectedPlan.setupFee || 0;
 
-    document.querySelectorAll('.module-checkbox.checked input').forEach(cb => {
+    document.querySelectorAll('.prop-module-check.checked input').forEach(cb => {
         monthlyTotal += parseFloat(cb.value) || 0;
     });
 
-    const resourceMap = {
-        whatsappUnofficial: 'WhatsappUnofficial',
-        whatsappOfficial: 'WhatsappOfficial',
-        instagram: 'Instagram',
-        user: 'User',
-        queue: 'Queue'
-    };
-
-    Object.keys(resourceMap).forEach(rid => {
-        const cap = resourceMap[rid];
-        const qty = parseInt(document.getElementById('prop' + cap)?.value) || 0;
-        const price = resourcePrices.find(r => r.key === rid)?.price || 0;
-        const total = qty * price;
+    (resourcePrices || []).forEach(r => {
+        if (!API_RESOURCE_FIELD[r.key]) return;
+        const qty = parseInt(document.getElementById('propRes_' + r.key)?.value) || 0;
+        const total = qty * (r.price || 0);
         monthlyTotal += total;
-        const totalEl = document.getElementById('total' + cap);
+        const totalEl = document.getElementById('totRes_' + r.key);
         if (totalEl) totalEl.textContent = formatCurrency(total);
     });
 
     const setupExtra = parseFloat(document.getElementById('propSetupExtra')?.value) || 0;
     const totalSetup = setupFee + setupExtra;
-
-    const commission = Number(partnerData?.tierPercentage) || 15;
     const monthlyCommission = monthlyTotal * commission / 100;
 
-    document.getElementById('summaryPlanPrice').textContent = formatCurrency(selectedPlan.basePrice) + '/mes';
-    document.getElementById('summaryMonthlyTotal').textContent = formatCurrency(monthlyTotal);
-    document.getElementById('summarySetupFee').textContent = formatCurrency(setupFee);
-    document.getElementById('summaryCommission').textContent = formatCurrency(monthlyCommission) + '/mes';
-    document.getElementById('summaryTotalSetup').textContent = formatCurrency(totalSetup);
+    setEl('summaryPlanLabel', `Plano base — ${selectedPlan.name}`);
+    setEl('summaryPlanPrice', formatCurrency(selectedPlan.basePrice) + '/mês');
+    setEl('summaryMonthlyTotal', formatCurrency(monthlyTotal));
+    setEl('summarySetupFee', formatCurrency(setupFee));
+    setEl('summaryCommission', formatCurrency(monthlyCommission) + '/mês');
+    setEl('summaryTotalSetup', formatCurrency(totalSetup));
+    const desc = document.getElementById('propSetupExtraDesc');
+    if (desc) desc.innerHTML = `Adicione sua margem ao setup base do catálogo (${formatCurrency(setupFee)}). 100% do acréscimo é sua comissão de ativação.`;
 }
 
-async function generateProposalPDF() {
+async function generateProposalPDF(savePlan = true) {
     if (!selectedPlan) {
         showToast('Selecione um plano primeiro', 'warning');
         return;
     }
 
     const modules = [];
-    document.querySelectorAll('.module-checkbox.checked input').forEach(cb => {
+    document.querySelectorAll('.prop-module-check.checked input').forEach(cb => {
         modules.push(cb.name.replace('module_', ''));
     });
+
+    const getRes = (key) => parseInt(document.getElementById('propRes_' + key)?.value) || 0;
 
     const data = {
         planId: selectedPlan.id,
         modules,
-        extraWhatsappUnofficial: parseInt(document.getElementById('propWhatsappUnofficial')?.value) || 0,
-        extraWhatsappOfficial: parseInt(document.getElementById('propWhatsappOfficial')?.value) || 0,
-        extraInstagram: parseInt(document.getElementById('propInstagram')?.value) || 0,
-        extraUsers: parseInt(document.getElementById('propUser')?.value) || 0,
-        extraQueues: parseInt(document.getElementById('propQueue')?.value) || 0,
+        extraWhatsappUnofficial: getRes('whatsappUnofficial'),
+        extraWhatsappOfficial: getRes('whatsappOfficial'),
+        extraInstagram: getRes('instagram'),
+        extraUsers: getRes('user'),
+        extraQueues: getRes('queue'),
         setupFeeExtra: parseFloat(document.getElementById('propSetupExtra')?.value) || 0,
         customPlanName: document.getElementById('propCustomPlanName')?.value || null,
         leadId: document.getElementById('propLeadSelect')?.value || null,
-        savePlan: !document.getElementById('propSavePlan')?.checked
+        savePlan: savePlan
     };
 
     try {
