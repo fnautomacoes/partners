@@ -383,191 +383,212 @@
 
             <!-- Config Section -->
             <section id="section-config" class="section hidden">
-                <h2 class="section-title mb-6">Configuracoes</h2>
+                <h2 class="section-title mb-6">Configurações</h2>
 
                 <!-- General Settings -->
                 <div class="card mb-6">
-                    <h3 class="card-title mb-4">Configuracoes Gerais do Sistema</h3>
+                    <h3 class="card-title">Configurações Gerais do Sistema</h3>
+                    <p class="text-sm text-gray mb-4">Personalize a identidade visual e integração com a API PacoTicket.</p>
                     <form id="companyConfigForm">
                         <div class="grid-2 mb-4">
                             <div class="form-group">
-                                <label class="form-label">Nome da Empresa</label>
-                                <input type="text" class="form-input" name="company_name">
+                                <label class="form-label">Nome do Sistema</label>
+                                <input type="text" class="form-input" name="businessName">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">URL da API PacoTicket</label>
-                                <input type="text" class="form-input" name="pacoticket_api_url">
+                                <label class="form-label">URL do Sistema</label>
+                                <input type="text" class="form-input" name="appUrl">
+                                <p class="text-xs text-gray mt-1">Usada no link do e-mail de recuperação de senha.</p>
                             </div>
-                        </div>
-                        <div class="form-group mb-4">
-                            <label class="form-label">Token Bearer API PacoTicket</label>
-                            <input type="password" class="form-input" name="pacoticket_bearer_token" placeholder="Preenchido automaticamente do .env">
                         </div>
                         <div class="grid-2 mb-4">
                             <div class="form-group">
-                                <label class="form-label">Logo (URL)</label>
-                                <input type="text" class="form-input" name="company_logo">
+                                <label class="form-label">URL da API PacoTicket</label>
+                                <input type="text" class="form-input" name="apiBaseUrl">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Logo Interno (URL)</label>
-                                <input type="text" class="form-input" name="company_logo_internal">
+                                <label class="form-label">Logo Login (URL)</label>
+                                <input type="text" class="form-input" name="logoLogin">
+                                <p class="text-xs text-gray mt-1">Exibido na tela de login.</p>
+                            </div>
+                        </div>
+                        <div class="grid-2 mb-4">
+                            <div class="form-group">
+                                <label class="form-label">Logo Interna (URL)</label>
+                                <input type="text" class="form-input" name="logoInternal">
+                                <p class="text-xs text-gray mt-1">Exibida no cabeçalho dos painéis.</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Logo (para PDF) (URL)</label>
+                                <input type="text" class="form-input" name="logoPdf">
+                                <p class="text-xs text-gray mt-1">Exibida no topo das propostas geradas em PDF.</p>
                             </div>
                         </div>
                         <div class="grid-2 mb-4">
                             <div class="form-group">
                                 <label class="form-label">Favicon (URL)</label>
-                                <input type="text" class="form-input" name="favicon_url">
+                                <input type="text" class="form-input" name="favicon">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Largura Logo Login (px)</label>
-                                <input type="number" class="form-input" name="logo_login_width" placeholder="250">
-                                <p class="text-xs text-gray mt-1">Largura maxima do logo na tela de login. Deixe vazio para automatico.</p>
+                                <input type="number" class="form-input" name="logoLoginWidth" placeholder="250">
+                                <p class="text-xs text-gray mt-1">Largura máxima do logo na tela de login. Deixe vazio para automático.</p>
                             </div>
                         </div>
                         <div class="form-group mb-4">
-                            <label class="form-label">Webhook - Plano Salvo (URL)</label>
-                            <input type="text" class="form-input" name="webhook_plan_saved">
-                            <p class="text-xs text-gray mt-1">Se preenchida, esta URL recebera um POST (JSON) sempre que um plano for criado ou editado.</p>
+                            <label class="form-label">Webhook — Plano Salvo (URL)</label>
+                            <input type="text" class="form-input" name="webhookPlanSaved">
+                            <p class="text-xs text-gray mt-1">Se preenchida, esta URL receberá um POST (JSON) sempre que um plano for criado ou editado.</p>
                         </div>
-                        <button type="submit" class="btn btn-primary">Salvar Configuracoes</button>
+                        <button type="submit" class="btn btn-primary">Salvar Configurações</button>
                     </form>
                 </div>
 
                 <!-- Module Prices -->
                 <div class="card mb-6">
                     <div class="card-header">
-                        <h3 class="card-title">Precos dos Modulos</h3>
-                        <button class="btn btn-sm btn-primary" onclick="showModuleModal()">+ Novo Modulo</button>
+                        <div>
+                            <h3 class="card-title">Preços dos Módulos</h3>
+                            <p class="text-sm text-gray">Marque "Visível" para que o módulo apareça no simulador do parceiro. Edite o nome diretamente na célula.</p>
+                        </div>
+                        <button class="btn btn-sm cfg-btn-green" onclick="showModuleModal()">+ Novo Módulo</button>
                     </div>
-                    <p class="text-sm text-gray mb-2">Marque "Visivel" para que o modulo apareca no simulador do parceiro.</p>
-                    <div class="alert alert-warning mb-4">
-                        <strong>Alterar precos nao recalcula planos ja cadastrados.</strong> Para reajustar precos de planos existentes, edite-os individualmente.
+                    <div class="cfg-warn">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <span><strong>Alterar preços não recalcula planos já cadastrados.</strong> Edite os planos manualmente se necessário.</span>
                     </div>
-                    <div class="table-container" style="max-height: 500px; overflow-y: auto;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="width: 40px"></th>
-                                    <th>Nome</th>
-                                    <th style="width: 120px">Preco</th>
-                                    <th style="width: 120px">Taxa Setup</th>
-                                    <th style="width: 80px">Acoes</th>
-                                </tr>
-                            </thead>
-                            <tbody id="modulePricesTable"></tbody>
-                        </table>
-                    </div>
-                    <button class="btn btn-primary mt-4" onclick="saveModulePrices()">Salvar Precos de Modulos</button>
+                    <div class="cfg-modules" id="modulePricesList"></div>
+                    <button class="btn btn-primary mt-4" onclick="saveModulePrices()">Salvar Módulos</button>
                 </div>
 
-                <!-- SMTP Settings -->
+                <!-- PDF Config -->
                 <div class="card mb-6">
-                    <h3 class="card-title mb-4">Configuracoes de SMTP</h3>
-                    <form id="smtpConfigForm">
+                    <h3 class="card-title">Configuração de PDF</h3>
+                    <p class="text-sm text-gray mb-4">Margens e espaçamento interno das propostas geradas.</p>
+                    <form id="pdfConfigForm">
+                        <div class="cfg-sublabel">MARGENS DA PÁGINA (MM)</div>
+                        <div class="grid-4 mb-4">
+                            <div class="form-group"><label class="form-label">Superior</label><input type="number" class="form-input" name="pdfMarginTop"></div>
+                            <div class="form-group"><label class="form-label">Inferior</label><input type="number" class="form-input" name="pdfMarginBottom"></div>
+                            <div class="form-group"><label class="form-label">Esquerda</label><input type="number" class="form-input" name="pdfMarginLeft"></div>
+                            <div class="form-group"><label class="form-label">Direita</label><input type="number" class="form-input" name="pdfMarginRight"></div>
+                        </div>
+                        <div class="cfg-sublabel">ESPAÇAMENTO INTERNO DO CONTEÚDO (PX)</div>
                         <div class="grid-2 mb-4">
-                            <div class="form-group">
-                                <label class="form-label">Host SMTP</label>
-                                <input type="text" class="form-input" name="smtp_host">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Porta</label>
-                                <input type="text" class="form-input" name="smtp_port">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Modo de Seguranca</label>
-                                <select class="form-select" name="smtp_mode">
-                                    <option value="starttls">STARTTLS</option>
-                                    <option value="ssl">SSL</option>
-                                    <option value="none">Nenhum</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Usuario</label>
-                                <input type="text" class="form-input" name="smtp_user">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Senha</label>
-                                <input type="password" class="form-input" name="smtp_pass">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Email Remetente</label>
-                                <input type="email" class="form-input" name="smtp_from">
-                            </div>
+                            <div class="form-group"><label class="form-label">Padding Horizontal</label><input type="number" class="form-input" name="pdfPaddingHorizontal"></div>
+                            <div class="form-group"><label class="form-label">Padding Vertical</label><input type="number" class="form-input" name="pdfPaddingVertical"></div>
                         </div>
-                        <div class="flex gap-2">
-                            <button type="submit" class="btn btn-primary">Salvar SMTP</button>
-                            <button type="button" class="btn btn-secondary" onclick="testSmtp()">Testar SMTP</button>
-                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar PDF</button>
                     </form>
                 </div>
 
                 <!-- Resource Prices -->
                 <div class="card mb-6">
-                    <h3 class="card-title mb-4">Recursos de Infraestrutura</h3>
+                    <h3 class="card-title">Recursos de Infraestrutura</h3>
+                    <p class="text-sm text-gray mb-4">Preço cobrado por unidade. O total de cada plano multiplica a quantidade de cada recurso pelo preço unitário.</p>
                     <form id="resourcePricesForm">
-                        <div class="table-container">
-                            <table class="pricing-table">
-                                <thead>
-                                    <tr>
-                                        <th>Recurso</th>
-                                        <th class="text-right" style="width: 150px">Preco / unidade</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="resourcePricesTable"></tbody>
-                            </table>
-                        </div>
-                        <button type="submit" class="btn btn-primary mt-4">Salvar Precos de Infraestrutura</button>
+                        <table class="cfg-resource-table">
+                            <thead>
+                                <tr>
+                                    <th>Recurso</th>
+                                    <th class="text-right">Preço unitário (R$)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resourcePricesTable"></tbody>
+                        </table>
+                        <button type="submit" class="btn btn-primary mt-4">Salvar Recursos</button>
                     </form>
                 </div>
 
                 <!-- Commission Tiers -->
                 <div class="card mb-6">
                     <div class="card-header">
-                        <h3 class="card-title">Tiers de Comissionamento</h3>
-                        <button class="btn btn-sm btn-primary" onclick="showTierModal()">+ Novo Tier</button>
+                        <div>
+                            <h3 class="card-title">Tiers de Comissionamento</h3>
+                            <p class="text-sm text-gray">Define os níveis de comissão por quantidade de clientes ativos.</p>
+                        </div>
+                        <button class="btn btn-sm cfg-btn-green" onclick="showTierModal()">+ Novo Tier</button>
                     </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Ordem</th>
-                                    <th>Nome</th>
-                                    <th>Min. Clientes</th>
-                                    <th>Max. Clientes</th>
-                                    <th>Percentual</th>
-                                    <th>Status</th>
-                                    <th>Acoes</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tiersTable"></tbody>
-                        </table>
-                    </div>
+                    <table class="cfg-tier-table">
+                        <thead>
+                            <tr>
+                                <th>Ord.</th>
+                                <th>Nome</th>
+                                <th>Clientes</th>
+                                <th>%</th>
+                                <th>Suporte</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tiersTable"></tbody>
+                    </table>
                 </div>
 
-                <!-- E-mail SMTP -->
+                <!-- Token PacoTicket -->
                 <div class="card mb-6">
-                    <h3 class="card-title mb-4">E-mails SMTP</h3>
-                    <p class="text-sm text-gray mb-4">Selecione quais e-mails automaticos devem ser enviados. Apenas funcionam se o SMTP estiver configurado corretamente.</p>
-                    <div class="grid-2">
-                        <label class="form-checkbox">
-                            <input type="checkbox" id="emailWelcomePartner" name="email_welcome_partner">
-                            <span>Boas vindas parceiro</span>
-                        </label>
-                        <label class="form-checkbox">
-                            <input type="checkbox" id="emailPasswordReset" name="email_password_reset">
-                            <span>Reset de senha</span>
-                        </label>
-                    </div>
+                    <h3 class="card-title">Token PacoTicket</h3>
+                    <p class="text-sm text-gray mb-4">O token de acesso à API PacoTicket está configurado via variável de ambiente no servidor (<code>PACOTICKET_BEARER_TOKEN</code>) e não pode ser editado por aqui.</p>
+                    <span class="cfg-token-status">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                        Configurado
+                    </span>
                 </div>
 
-                <!-- Webhooks -->
+                <!-- E-mail (SMTP) -->
                 <div class="card mb-6">
-                    <h3 class="card-title mb-4">Webhooks Ativos / Email</h3>
-                    <div class="grid-2">
-                        <label class="form-checkbox">
-                            <input type="checkbox" id="webhookNewPlan" name="webhook_new_plan">
-                            <span>Novo plano</span>
-                        </label>
+                    <h3 class="card-title">E-mail (SMTP)</h3>
+                    <p class="text-sm text-gray mb-4">Configuração para envio de e-mails de recuperação de senha. Deixe em branco para usar as configurações de ambiente do servidor.</p>
+                    <form id="smtpConfigForm">
+                        <div class="grid-3 mb-4">
+                            <div class="form-group">
+                                <label class="form-label">Servidor SMTP (Host)</label>
+                                <input type="text" class="form-input" name="smtpHost">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Porta</label>
+                                <input type="text" class="form-input" name="smtpPort">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Modo de Segurança</label>
+                                <select class="form-select" name="smtpMode">
+                                    <option value="starttls">STARTTLS (porta 587)</option>
+                                    <option value="ssl">SSL/TLS (porta 465)</option>
+                                    <option value="none">Nenhum</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Usuário</label>
+                                <input type="text" class="form-input" name="smtpUser">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Senha</label>
+                                <input type="password" class="form-input" name="smtpPass">
+                                <p class="text-xs text-gray mt-1">Gmail/Google Workspace: use uma App Password.</p>
+                            </div>
+                        </div>
+                        <div class="form-group mb-4">
+                            <label class="form-label">Remetente (campo 'De')</label>
+                            <input type="text" class="form-input" name="smtpFrom" placeholder="Parceiros Pacoticket <parceiros@pacoticket.com.br>">
+                            <p class="text-xs text-gray mt-1">Deixe vazio para usar o nome do sistema automaticamente.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="submit" class="btn btn-primary">Salvar SMTP</button>
+                            <button type="button" class="btn btn-secondary" onclick="testSmtp()">
+                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px"><path d="M4 4h16v16H4z" fill="none"/><polyline points="22,6 12,13 2,6"/><path d="M2 6h20v12H2z"/></svg>
+                                Testar Conexão
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Visual Identity / Colors -->
+                <div class="card mb-6">
+                    <h3 class="card-title">Identidade Visual — Cores</h3>
+                    <p class="text-sm text-gray mb-4">Personalize as cores da plataforma. Clique em qualquer swatch para usar o seletor de cor. O preview aplica as cores em tempo real sem salvar.</p>
+                    <div id="colorGroups"></div>
+                    <div class="flex gap-2 mt-4">
+                        <button type="button" class="btn btn-primary" onclick="saveColors()">Salvar Cores</button>
+                        <button type="button" class="btn btn-secondary" onclick="restoreColors()">Restaurar Padrão</button>
                     </div>
                 </div>
             </section>
@@ -816,17 +837,17 @@
                     </div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Clientes min. *</label>
+                            <label class="form-label">Clientes mín. *</label>
                             <input type="number" class="form-input" name="minClients" required min="0">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Clientes max.</label>
-                            <input type="number" class="form-input" name="maxClients" placeholder="Deixe vazio = Ilimitado">
+                            <label class="form-label">Clientes máx.</label>
+                            <input type="number" class="form-input" name="maxClients" placeholder="Deixe vazio = ilimitado">
                         </div>
                     </div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Comissao % *</label>
+                            <label class="form-label">Comissão % *</label>
                             <input type="number" step="0.01" class="form-input" name="percentage" required>
                         </div>
                         <div class="form-group">
@@ -835,35 +856,34 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Duracao da comissao (meses)</label>
+                        <label class="form-label">Duração da comissão (meses)</label>
                         <input type="number" class="form-input" name="commissionDuration" placeholder="0">
-                        <p class="text-xs text-gray mt-1">0, ou -1: a comissao vence apos N meses, regras atualizarao das comissoes apuradas, quando nao preenchido, o tier nao tem carencia.</p>
+                        <p class="text-xs text-gray mt-1">0 = indefinido. Se &gt; 0, a comissão expira após N meses; regras existentes são congeladas quando o parceiro avança de tier.</p>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Modo de Suporte *</label>
                         <select class="form-select" name="supportMode">
-                            <option value="CLIENT">Suporte direto PacoTicket → Cliente</option>
-                            <option value="PARTNER">Suporte via Parceiro</option>
+                            <option value="PACOTICKET_DIRECT">Suporte direto PacoTicket → Cliente</option>
+                            <option value="PARTNER_INTERMEDIARY">Suporte via Parceiro</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Observacoes</label>
-                        <textarea class="form-textarea" name="notes" rows="2" placeholder="Visivel apenas no SuperAdmin..."></textarea>
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-textarea" name="notes" rows="2" placeholder="Visível apenas no SuperAdmin..."></textarea>
                     </div>
-                    <div class="flex gap-4 mt-4">
-                        <label class="form-checkbox">
-                            <input type="checkbox" name="allowNewSales" checked>
-                            <span>Aceitar novas adicoes</span>
-                        </label>
+                    <div class="cfg-toggle-row">
+                        <div class="cfg-toggle-info">
+                            <div class="cfg-toggle-title">Aceitar novas adições</div>
+                            <div class="cfg-toggle-desc">Se desativado, parceiros neste tier não poderão cadastrar novos clientes.</div>
+                        </div>
+                        <label class="cfg-switch"><input type="checkbox" name="acceptNewClients" checked><span class="cfg-slider"></span></label>
                     </div>
-                    <p class="text-xs text-gray mt-1">Se desativado, parceiros neste tier nao poderao cadastrar novos clientes.</p>
-                    <div class="form-group mt-4">
-                        <label class="form-label">Comissao sobre taxa de setup</label>
-                        <p class="text-xs text-gray mb-2">Ao primeiro cliente, a taxa de setup do plano sera paga ao parceiro como comissao de ativacao da cliente (apos varios dias apos a ativacao).</p>
-                        <label class="form-checkbox mt-2">
-                            <input type="checkbox" name="setupCommission">
-                            <span>Ativar comissao de setup</span>
-                        </label>
+                    <div class="cfg-toggle-row">
+                        <div class="cfg-toggle-info">
+                            <div class="cfg-toggle-title">Comissão sobre taxa de setup</div>
+                            <div class="cfg-toggle-desc">Se ativado, o parceiro receberá comissão sobre a taxa de setup na ativação do cliente (paga uma única vez).</div>
+                        </div>
+                        <label class="cfg-switch"><input type="checkbox" name="commissionOnSetup"><span class="cfg-slider"></span></label>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -878,7 +898,7 @@
     <div class="modal-overlay hidden" id="moduleModal">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title" id="moduleModalTitle">Novo Modulo</h3>
+                <h3 class="modal-title" id="moduleModalTitle">Novo Módulo</h3>
                 <button class="modal-close" onclick="closeModal('moduleModal')">&times;</button>
             </div>
             <form id="moduleForm">
@@ -887,15 +907,15 @@
                     <div class="form-group">
                         <label class="form-label">Chave (moduleKey) *</label>
                         <input type="text" class="form-input" name="moduleKey" required placeholder="useNomeModulo">
-                        <p class="text-xs text-gray mt-1">Deve comecar com "use", ex: useNomeModulo</p>
+                        <p class="text-xs text-gray mt-1">Deve começar com "use", ex: useNomeModulo</p>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Nome de Exibicao *</label>
-                        <input type="text" class="form-input" name="label" required placeholder="Nome do Modulo">
+                        <label class="form-label">Nome de Exibição *</label>
+                        <input type="text" class="form-input" name="label" required placeholder="Nome do Módulo">
                     </div>
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">Preco/mes (R$)</label>
+                            <label class="form-label">Preço/mês (R$)</label>
                             <input type="number" step="0.01" class="form-input" name="price" value="0">
                         </div>
                         <div class="form-group">
@@ -906,13 +926,13 @@
                     <div class="form-group mt-4">
                         <label class="form-checkbox">
                             <input type="checkbox" name="isVisible" checked>
-                            <span>Visivel no simulador do parceiro</span>
+                            <span>Visível no simulador do parceiro</span>
                         </label>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('moduleModal')">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Criar Modulo</button>
+                    <button type="submit" class="btn btn-primary">Criar Módulo</button>
                 </div>
             </form>
         </div>

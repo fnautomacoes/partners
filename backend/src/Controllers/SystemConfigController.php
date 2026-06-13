@@ -12,12 +12,17 @@ use Services\MailService;
 class SystemConfigController
 {
     private const ALLOWED_KEYS = [
-        'businessName', 'appUrl', 'logoLogin', 'logoInternal', 'logoPdf',
-        'favicon', 'logoLoginWidth', 'colorBrandPrimary', 'colorBrandHover',
-        'colorBrandMist', 'colorAccent', 'colorPartner', 'colorDarkBase',
+        'businessName', 'appUrl', 'apiBaseUrl', 'logoLogin', 'logoInternal', 'logoPdf',
+        'favicon', 'logoLoginWidth',
+        // Identidade visual — cores
+        'colorBrandPrimary', 'colorBrandHover', 'colorBrandMist',
+        'colorAccent', 'colorAccentHover',
+        'colorPartner', 'colorPartnerDark', 'colorPartnerAccent',
+        'colorStatusPending', 'colorStatusPaid', 'colorStatusActive', 'colorStatusOverdue',
+        'colorDarkBase', 'colorDarkSurface', 'colorDarkElevated', 'colorRateLimit',
         'webhookPlanSaved', 'smtpHost', 'smtpPort', 'smtpMode', 'smtpUser',
         'smtpPass', 'smtpFrom', 'pdfMarginTop', 'pdfMarginBottom',
-        'pdfMarginLeft', 'pdfMarginRight',
+        'pdfMarginLeft', 'pdfMarginRight', 'pdfPaddingHorizontal', 'pdfPaddingVertical',
     ];
 
     private const SMTP_KEYS = ['smtpHost', 'smtpPort', 'smtpMode', 'smtpUser', 'smtpPass', 'smtpFrom'];
