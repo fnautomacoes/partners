@@ -392,61 +392,52 @@ function renderPlansGrid() {
         const isGlobal = !p.ownerId;
         const users = p.usersIncluded || p.resources?.users || p.users || 1;
         const queues = p.queuesIncluded || p.resources?.queues || p.queues || 1;
-        const whatsappUnofficial = p.connectionsWhatsappUnofficial || 0;
-        const whatsappOfficial = p.connectionsWhatsappOfficial || 0;
-        const instagram = p.connectionsInstagram || 0;
+        const wapp = p.connectionsWhatsappUnofficial || p.resources?.connectionsWhatsappUnofficial || 0;
+        const waba = p.connectionsWhatsappOfficial || p.resources?.connectionsWhatsappOfficial || 0;
+        const insta = p.connectionsInstagram || p.resources?.connectionsInstagram || 0;
 
         const planModules = getPlanModules(p);
-        const connectionsList = getConnectionsList(whatsappUnofficial, whatsappOfficial, instagram);
+        const connectionsHtml = buildConnectionsHtml(wapp, waba, insta);
 
         return `
-            <div class="plan-card">
-                <div class="plan-card-header">
-                    <div>
-                        <h3 class="plan-card-title">${escapeHtml(p.name)}</h3>
-                        ${!isGlobal ? `<div class="plan-card-subtitle">${escapeHtml(p.ownerName || 'Parceiro')}</div>` : ''}
+            <div class="sa-plan-card">
+                <div class="sa-plan-header">
+                    <div class="sa-plan-title-row">
+                        <span class="sa-plan-name">${escapeHtml(p.name)}</span>
+                        <span class="sa-plan-badge ${isGlobal ? 'sa-badge-global' : 'sa-badge-partner'}">${isGlobal ? 'Global' : (p.pacoticketPlanId ? 'PacoTicket #' + p.pacoticketPlanId : 'Parceiro')}</span>
                     </div>
-                    <span class="badge ${isGlobal ? 'badge-primary' : 'badge-secondary'}">${isGlobal ? 'Global' : 'Parceiro'}</span>
+                    <div class="sa-plan-price">${formatCurrency(p.basePrice)}</div>
                 </div>
-                <div class="plan-card-price">
-                    ${formatCurrency(p.basePrice)}
-                    <span class="plan-card-price-sub">/mes</span>
+                <div class="sa-plan-resources">
+                    <span class="sa-resource"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${users}</span>
+                    <span class="sa-resource"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> ${queues}</span>
+                    ${connectionsHtml}
                 </div>
-                <div class="plan-card-resources">
-                    <span class="plan-resource-icon" title="Usuarios">
-                        <span class="resource-icon">&#128100;</span>
-                        <span class="resource-count">${users}</span>
-                    </span>
-                    <span class="plan-resource-icon" title="Filas">
-                        <span class="resource-icon">&#128209;</span>
-                        <span class="resource-count">${queues}</span>
-                    </span>
-                </div>
-                ${connectionsList ? `<div class="plan-card-connections">${connectionsList}</div>` : ''}
                 ${planModules.length > 0 ? `
-                <div class="plan-card-modules">
-                    ${planModules.map(m => `<span class="plan-module-tag">${getModuleIcon(m.key)} ${escapeHtml(m.label)}</span>`).join('')}
+                <div class="sa-plan-modules">
+                    ${planModules.map(m => `<span class="sa-module-tag" style="background-color: ${getModuleColor(m.key).bg}; color: ${getModuleColor(m.key).text};">${getModuleIconSmall(m.key)} ${escapeHtml(m.label)}</span>`).join('')}
                 </div>
                 ` : ''}
-                <div class="plan-card-info">
-                    <div class="plan-card-info-row">
-                        <span>Taxa de setup (cobrada 1x)</span>
-                        <span>${formatCurrency(p.setupFee || 0)}</span>
-                    </div>
-                    <div class="plan-card-info-row">
-                        <span>Clientes no plano</span>
-                        <span>${p.clientCount || 0}</span>
-                    </div>
+                <div class="sa-plan-footer">
+                    <span class="sa-plan-setup">Taxa de setup (cobrada 1x)</span>
+                    <span class="sa-plan-setup-value">${formatCurrency(p.setupFee || 0)}</span>
                 </div>
-                ${isGlobal ? `
-                <div class="plan-card-actions">
-                    <button class="btn-link" onclick="editPlan('${p.id}')">Editar</button>
-                    <button class="btn-link btn-link-danger" onclick="deletePlan('${p.id}')">Desativar</button>
+                <div class="sa-plan-actions">
+                    <a href="#" class="sa-link-edit" onclick="editPlan('${p.id}'); return false;">Editar</a>
+                    <a href="#" class="sa-link-delete" onclick="deletePlan('${p.id}'); return false;">Desativar</a>
                 </div>
-                ` : ''}
             </div>
         `;
     }).join('');
+}
+
+function buildConnectionsHtml(wapp, waba, insta) {
+    const parts = [];
+    if (wapp > 0) parts.push(`${wapp}× WApp`);
+    if (waba > 0) parts.push(`${waba}× WABA`);
+    if (insta > 0) parts.push(`${insta}× Insta`);
+    if (parts.length === 0) parts.push('1× WApp');
+    return `<span class="sa-resource"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> ${parts.join(' ')}</span>`;
 }
 
 function getPlanModules(plan) {
@@ -459,116 +450,77 @@ function getPlanModules(plan) {
     return modules;
 }
 
-function getModuleIcon(moduleKey) {
-    const svgIcons = {
-        // Storage / Armazenamento
-        useTBAdicionalArmazenamento: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
-        useArmazenamento: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>',
-        // API Externa
-        useApiExterna: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>',
-        // API Oficial
-        useApiOficial: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-        // Agendamentos
-        useAgendamentos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-        useScheduleMessages: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-        // App Android
-        useAppAndroid005: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
-        // Gerenciamento Remoto
-        useGerenciamentoRemoto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
-        // Boletos
-        useBoletos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
-        useFinanceiro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
-        // CRM
-        useCRM: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
-        // Campanhas
-        useCampanhas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>',
-        // Chamadas WhatsApp
-        useChamadasWhatsApp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>',
-        // Chat Interno
-        useChatInterno: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
-        // Facebook
-        useFacebook: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>',
-        // Flow Builder
-        useFlowBuilder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
-        // GPT / IA
-        useGPT: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-        useGPTAssistant: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M12 8v3"/></svg>',
-        useGPTAnalises: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
-        // Instagram
-        useInstagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>',
-        // Inteligencia Artificial
-        useInteligenciaArtificial: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v1h1a3 3 0 0 1 3 3v1a3 3 0 0 1-3 3h-1v4a4 4 0 0 1-8 0v-4H7a3 3 0 0 1-3-3v-1a3 3 0 0 1 3-3h1V6a4 4 0 0 1 4-4z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>',
-        useIA: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 1 4 4v1h1a3 3 0 0 1 3 3v1a3 3 0 0 1-3 3h-1v4a4 4 0 0 1-8 0v-4H7a3 3 0 0 1-3-3v-1a3 3 0 0 1 3-3h1V6a4 4 0 0 1 4-4z"/><circle cx="9" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg>',
-        // Kanban
-        useKanban: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>',
-        // Ligacoes VoIP
-        useLigacoesVoIP: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/><path d="M15 7a2 2 0 0 1 2 2"/><path d="M15 3a6 6 0 0 1 6 6"/></svg>',
-        // Pixel Tracker
-        usePixelTracker: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
-        // Typebot
-        useTypebot: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M12 8v3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg>',
-        useTypebotExterno: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M12 8v3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg>',
-        // Chatbot
-        useChatbot: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="3"/><path d="M12 8v3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg>',
-        // Webhooks
-        useWebhooks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
-        useIntegracoes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
-        // Relatorios
-        useRelatorios: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
-        useDashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
-        // Autoresponder
-        useAutoresponder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-        // Avaliacoes / NPS
-        useAvaliacoes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-        useNPS: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-        // Email
-        useIntegracaoEmail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
-        useEmail: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
-        // Etiquetas
-        useEtiquetas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
-        useTags: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
-        // Multi Atendentes
-        useMultiAtendentes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-        // Respostas Rapidas
-        useRespostasRapidas: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-        // Transferencia
-        useTransferenciaAtendimento: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg>',
-        // Historico
-        useHistoricoCompleto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
-        // Exportacao
-        useExportacaoDados: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-        // Customizacao
-        useCustomizacaoInterface: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-        // Suporte VIP
-        useSuporteVip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
-        // SLA
-        useSLA: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
-        // Filas Inteligentes
-        useFilasInteligentes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
-        // Telegram
-        useTelegram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>',
-        // OpenAI
-        useOpenAI: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+function getModuleColor(moduleKey) {
+    const colors = {
+        useAgendamentos: { bg: '#dbeafe', text: '#1e40af' },
+        useChatInterno: { bg: '#fef3c7', text: '#92400e' },
+        useCRM: { bg: '#fce7f3', text: '#9d174d' },
+        useApiExterna: { bg: '#e0e7ff', text: '#3730a3' },
+        useKanban: { bg: '#d1fae5', text: '#065f46' },
+        useCampanhas: { bg: '#fee2e2', text: '#991b1b' },
+        useChatbot: { bg: '#ede9fe', text: '#5b21b6' },
+        useTypebot: { bg: '#ede9fe', text: '#5b21b6' },
+        useTypebotExterno: { bg: '#ede9fe', text: '#5b21b6' },
+        useGPT: { bg: '#dcfce7', text: '#166534' },
+        useGPTAssistant: { bg: '#dcfce7', text: '#166534' },
+        useIA: { bg: '#dbeafe', text: '#1e40af' },
+        useInteligenciaArtificial: { bg: '#dbeafe', text: '#1e40af' },
+        useWebhooks: { bg: '#f3e8ff', text: '#7c3aed' },
+        useIntegracoes: { bg: '#f3e8ff', text: '#7c3aed' },
+        useBoletos: { bg: '#fef9c3', text: '#854d0e' },
+        useFinanceiro: { bg: '#fef9c3', text: '#854d0e' },
+        useRelatorios: { bg: '#e0f2fe', text: '#0369a1' },
+        useDashboard: { bg: '#e0f2fe', text: '#0369a1' },
+        useAvaliacoes: { bg: '#fef3c7', text: '#b45309' },
+        useNPS: { bg: '#fef3c7', text: '#b45309' }
     };
-    return svgIcons[moduleKey] || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>';
+    return colors[moduleKey] || { bg: '#f3f4f6', text: '#4b5563' };
 }
 
-function getConnectionsList(whatsappUnofficial, whatsappOfficial, instagram) {
-    const parts = [];
-    if (whatsappUnofficial > 0) {
-        parts.push(`<span class="connection-tag connection-whatsapp">${whatsappUnofficial}x WApp</span>`);
-    }
-    if (whatsappOfficial > 0) {
-        parts.push(`<span class="connection-tag connection-waba">${whatsappOfficial}x WABA</span>`);
-    }
-    if (instagram > 0) {
-        parts.push(`<span class="connection-tag connection-instagram">${instagram}x Insta</span>`);
-    }
-    if (parts.length === 0) {
-        parts.push(`<span class="connection-tag connection-whatsapp">1x WApp</span>`);
-    }
-    return parts.join(' ');
+function getModuleIconSmall(moduleKey) {
+    const icons = {
+        useAgendamentos: '📅',
+        useChatInterno: '💬',
+        useCRM: '📁',
+        useApiExterna: '🔗',
+        useKanban: '📋',
+        useCampanhas: '📣',
+        useChatbot: '🤖',
+        useTypebot: '🤖',
+        useTypebotExterno: '🤖',
+        useGPT: '🧠',
+        useGPTAssistant: '🧠',
+        useIA: '🧠',
+        useInteligenciaArtificial: '🧠',
+        useWebhooks: '🔌',
+        useIntegracoes: '🔌',
+        useBoletos: '💰',
+        useFinanceiro: '💰',
+        useRelatorios: '📊',
+        useDashboard: '📊',
+        useAvaliacoes: '⭐',
+        useNPS: '⭐',
+        useFacebook: '📘',
+        useInstagram: '📷',
+        useLigacoesVoIP: '📞',
+        useChamadasWhatsApp: '📞',
+        useFlowBuilder: '🔀',
+        useAutoresponder: '⚡',
+        useRespostasRapidas: '⚡',
+        useEtiquetas: '🏷️',
+        useTags: '🏷️',
+        useMultiAtendentes: '👥',
+        useHistoricoCompleto: '📚',
+        useExportacaoDados: '📥',
+        useAppAndroid005: '📱',
+        usePixelTracker: '🎯',
+        useEmail: '📧',
+        useIntegracaoEmail: '📧'
+    };
+    return icons[moduleKey] || '📦';
 }
+
+
 
 function renderPlanModuleCheckboxes() {
     const container = document.getElementById('planModulesCheckboxes');

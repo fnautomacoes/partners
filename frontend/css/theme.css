@@ -764,6 +764,330 @@ tr:hover { background: var(--gray-50); }
     border-top: 1px solid var(--gray-100);
 }
 
+/* SuperAdmin Plans - Exact Design */
+.sa-plan-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.sa-plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.sa-plan-title-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.sa-plan-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--gray-900);
+}
+
+.sa-plan-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.625rem;
+    font-weight: 500;
+}
+
+.sa-badge-global {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.sa-badge-partner {
+    background: #f3f4f6;
+    color: #4b5563;
+}
+
+.sa-plan-price {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #dc2626;
+}
+
+.sa-plan-resources {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--gray-600);
+}
+
+.sa-resource {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.sa-resource svg {
+    color: var(--gray-400);
+}
+
+.sa-plan-modules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 0.75rem;
+}
+
+.sa-module-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.625rem;
+    font-weight: 500;
+}
+
+.sa-plan-footer {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--gray-100);
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    margin-bottom: 0.5rem;
+}
+
+.sa-plan-setup-value {
+    color: var(--gray-700);
+    font-weight: 500;
+}
+
+.sa-plan-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.sa-link-edit {
+    color: #2563eb;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.sa-link-edit:hover {
+    text-decoration: underline;
+}
+
+.sa-link-delete {
+    color: #dc2626;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.sa-link-delete:hover {
+    text-decoration: underline;
+}
+
+/* Partner Tabela de Precos - Exact Design */
+.pt-plan-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.pt-plan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.pt-plan-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.pt-plan-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--gray-900);
+}
+
+.pt-plan-badge {
+    display: inline-block;
+    padding: 0.125rem 0.375rem;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 0.25rem;
+    font-size: 0.625rem;
+    font-weight: 500;
+    width: fit-content;
+}
+
+.pt-plan-price {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #dc2626;
+}
+
+.pt-plan-price-sub {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--gray-500);
+}
+
+.pt-plan-resources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--gray-600);
+}
+
+.pt-resource {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.pt-resource svg {
+    color: var(--gray-400);
+}
+
+.pt-plan-modules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 0.75rem;
+}
+
+.pt-module-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.625rem;
+    font-weight: 500;
+}
+
+.pt-plan-info {
+    border-top: 1px solid var(--gray-100);
+    padding-top: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.pt-plan-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    margin-bottom: 0.25rem;
+}
+
+.pt-plan-row span:last-child {
+    color: var(--gray-700);
+}
+
+.pt-plan-commission {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed var(--gray-200);
+}
+
+.pt-commission-value {
+    color: #16a34a !important;
+    font-weight: 600;
+}
+
+.pt-plan-footer {
+    background: #f0fdf4;
+    margin: -1rem;
+    margin-top: 0;
+    padding: 0.75rem 1rem;
+    border-radius: 0 0 0.5rem 0.5rem;
+    text-align: center;
+}
+
+.pt-annual-price {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #16a34a;
+}
+
+.pt-annual-label {
+    font-size: 0.625rem;
+    color: var(--gray-500);
+}
+
+.pt-plan-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    padding-top: 0.75rem;
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--gray-100);
+}
+
+.pt-link-edit {
+    color: #2563eb;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.pt-link-edit:hover {
+    text-decoration: underline;
+}
+
+.pt-link-delete {
+    color: #dc2626;
+    font-size: 0.75rem;
+    text-decoration: none;
+}
+
+.pt-link-delete:hover {
+    text-decoration: underline;
+}
+
+/* Partner Modules Grid - Exact Design */
+.pt-module-card {
+    background: white;
+    border: 1px solid var(--gray-200);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.pt-module-icon {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 0.5rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.pt-module-name {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    margin-bottom: 0.25rem;
+}
+
+.pt-module-price {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
 /* Config grid */
 .config-grid {
     display: grid;
