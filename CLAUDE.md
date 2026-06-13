@@ -8,7 +8,7 @@
 
 ## 1. O que estamos construindo
 
-Sistema web multi-portal para **gestão de parceiros/revendedores** do PacoTicket.
+Sistema web multi-portal para **gestão de parceiros** do PacoTicket.
 Três portais distintos num único deploy:
 
 | Portal | URL | Role |
