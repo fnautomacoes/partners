@@ -31,14 +31,21 @@ class MailService
 
         try {
             $pdo = Database::getInstance();
-            $stmt = $pdo->prepare('SELECT key, value FROM "SystemConfig" WHERE key LIKE :prefix');
-            $stmt->execute([':prefix' => 'smtp_%']);
+            $stmt = $pdo->query('SELECT key, value FROM "SystemConfig" WHERE key LIKE \'smtp%\'');
             $rows = $stmt->fetchAll();
 
+            $keyMap = [
+                'smtpHost' => 'host',
+                'smtpPort' => 'port',
+                'smtpMode' => 'mode',
+                'smtpUser' => 'user',
+                'smtpPass' => 'pass',
+                'smtpFrom' => 'from',
+            ];
+
             foreach ($rows as $row) {
-                $key = str_replace('smtp_', '', $row['key']);
-                if (isset($defaults[$key])) {
-                    $defaults[$key] = $row['value'];
+                if (isset($keyMap[$row['key']])) {
+                    $defaults[$keyMap[$row['key']]] = $row['value'];
                 }
             }
         } catch (\Exception $e) {
@@ -83,6 +90,52 @@ class MailService
         ];
 
         $mail->setFrom($this->config['from'], $this->config['fromName']);
+        $mail->addAddress($to);
+        $mail->isHTML(true);
+        $mail->CharSet = 'UTF-8';
+        $mail->Subject = $subject;
+        $mail->Body = $htmlBody;
+        $mail->AltBody = strip_tags($htmlBody);
+
+        return $mail->send();
+    }
+
+    public function sendWithConfig(array $config, string $to, string $subject, string $htmlBody): bool
+    {
+        $mail = new PHPMailer(true);
+
+        $mail->isSMTP();
+        $mail->Host = $config['host'];
+        $mail->Port = (int) ($config['port'] ?? 587);
+        $mail->Username = $config['user'] ?? '';
+        $mail->Password = $config['pass'] ?? '';
+        $mail->SMTPAuth = true;
+
+        switch ($config['mode'] ?? 'starttls') {
+            case 'ssl':
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
+                break;
+            case 'none':
+                $mail->SMTPAutoTLS = false;
+                $mail->SMTPSecure = '';
+                break;
+            case 'starttls':
+            default:
+                $mail->SMTPSecure = '';
+                $mail->SMTPAutoTLS = true;
+                break;
+        }
+
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+            ],
+        ];
+
+        $from = $config['from'] ?? $config['user'] ?? '';
+        $mail->setFrom($from, $config['fromName'] ?? 'PacoTicket Parceiros');
         $mail->addAddress($to);
         $mail->isHTML(true);
         $mail->CharSet = 'UTF-8';

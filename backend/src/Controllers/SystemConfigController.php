@@ -103,34 +103,63 @@ class SystemConfigController
 
     public function testSmtp(Request $request, Response $response): void
     {
+        $testEmail = $request->body['email'] ?? null;
+
+        $pdo = Database::getInstance();
+        $stmt = $pdo->query('SELECT key, value FROM "SystemConfig" WHERE key LIKE \'smtp%\'');
+        $rows = $stmt->fetchAll();
+
         $config = [
-            'host' => $request->body['smtpHost'] ?? null,
-            'port' => $request->body['smtpPort'] ?? 587,
-            'mode' => $request->body['smtpMode'] ?? 'starttls',
-            'user' => $request->body['smtpUser'] ?? null,
-            'pass' => $request->body['smtpPass'] ?? null,
+            'host' => null,
+            'port' => 587,
+            'mode' => 'starttls',
+            'user' => null,
+            'pass' => null,
+            'from' => null,
         ];
 
-        if (empty($config['host'])) {
-            $pdo = Database::getInstance();
-            $stmt = $pdo->query('SELECT key, value FROM "SystemConfig" WHERE key LIKE \'smtp%\'');
-            $rows = $stmt->fetchAll();
+        $keyMap = [
+            'smtpHost' => 'host',
+            'smtpPort' => 'port',
+            'smtpMode' => 'mode',
+            'smtpUser' => 'user',
+            'smtpPass' => 'pass',
+            'smtpFrom' => 'from',
+        ];
 
-            foreach ($rows as $row) {
-                $shortKey = lcfirst(str_replace('smtp', '', $row['key']));
-                if (isset($config[$shortKey]) && $config[$shortKey] === null) {
-                    $config[$shortKey] = $row['value'];
-                }
+        foreach ($rows as $row) {
+            if (isset($keyMap[$row['key']])) {
+                $config[$keyMap[$row['key']]] = $row['value'];
             }
+        }
+
+        if (empty($config['host'])) {
+            $response->error('SMTP_NOT_CONFIGURED', 'SMTP host not configured', 400);
+            return;
         }
 
         $mailService = new MailService();
         $result = $mailService->testConnection($config);
 
-        if ($result['success']) {
-            $response->success(['message' => $result['message']]);
-        } else {
+        if (!$result['success']) {
             $response->error('SMTP_ERROR', $result['message'], 400);
+            return;
+        }
+
+        if ($testEmail) {
+            try {
+                $mailService->sendWithConfig(
+                    $config,
+                    $testEmail,
+                    'Teste de Configuração SMTP - PacoTicket Parceiros',
+                    '<h2>Teste de Email</h2><p>Se você está lendo isto, a configuração SMTP está funcionando corretamente!</p>'
+                );
+                $response->success(['message' => 'Connection OK and test email sent to ' . $testEmail]);
+            } catch (\Exception $e) {
+                $response->error('SMTP_SEND_ERROR', 'Connection OK but failed to send: ' . $e->getMessage(), 400);
+            }
+        } else {
+            $response->success(['message' => $result['message']]);
         }
     }
 }
