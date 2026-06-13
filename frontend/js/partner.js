@@ -11,6 +11,60 @@ let currentLead = null;
 let selectedPlan = null;
 let tiersData = [];
 
+// ---- Shared module visuals (emoji + color), keyed by real backend moduleKey ----
+const MODULE_VISUALS = {
+    useWhatsapp:     { emoji: '💬', bg: '#dcfce7', text: '#166534' },
+    useFacebook:     { emoji: '📘', bg: '#dbeafe', text: '#1e40af' },
+    useInstagram:    { emoji: '📷', bg: '#fce7f3', text: '#9d174d' },
+    useCampaigns:    { emoji: '📣', bg: '#ffedd5', text: '#9a3412' },
+    useSchedules:    { emoji: '📅', bg: '#dbeafe', text: '#1e40af' },
+    useInternalChat: { emoji: '💬', bg: '#ede9fe', text: '#5b21b6' },
+    useExternalApi:  { emoji: '🔌', bg: '#fee2e2', text: '#991b1b' },
+    useKanban:       { emoji: '📋', bg: '#ffedd5', text: '#9a3412' },
+    usePixel:        { emoji: '🎯', bg: '#dbeafe', text: '#1e40af' },
+    useAI:           { emoji: '🤖', bg: '#dbeafe', text: '#1e40af' },
+    useGPT:          { emoji: '🧠', bg: '#fce7f3', text: '#9d174d' },
+    useGPTA:         { emoji: '🧠', bg: '#fce7f3', text: '#9d174d' },
+    useCRM:          { emoji: '🛍️', bg: '#fce7f3', text: '#9d174d' },
+    useFLOW:         { emoji: '🔀', bg: '#dbeafe', text: '#1e40af' },
+    useBTN:          { emoji: '⚪', bg: '#f3f4f6', text: '#4b5563' },
+    useCALL:         { emoji: '📞', bg: '#fce7f3', text: '#9d174d' },
+    useCHAMA:        { emoji: '📞', bg: '#fce7f3', text: '#9d174d' },
+    useVOIP:         { emoji: '📞', bg: '#dbeafe', text: '#1e40af' },
+    useTYPE:         { emoji: '🤖', bg: '#fce7f3', text: '#9d174d' },
+    useZAIA:         { emoji: '🤖', bg: '#dbeafe', text: '#1e40af' },
+    useDIFY:         { emoji: '🤖', bg: '#ede9fe', text: '#5b21b6' },
+    useWABAOWN:      { emoji: '✅', bg: '#dcfce7', text: '#166534' },
+    useWABAAINI:     { emoji: '✅', bg: '#dcfce7', text: '#166534' },
+    usePUSH:         { emoji: '📱', bg: '#dbeafe', text: '#1e40af' },
+    useProducts:     { emoji: '🛒', bg: '#fef9c3', text: '#854d0e' },
+    useServices:     { emoji: '🧰', bg: '#fef9c3', text: '#854d0e' },
+    useWEBCHAT:      { emoji: '💬', bg: '#e0f2fe', text: '#0369a1' },
+    useInternal:     { emoji: '💬', bg: '#ede9fe', text: '#5b21b6' },
+    usePerfex:       { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+    useRD:           { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+    useCV:           { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+    useIXC:          { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+    useHS:           { emoji: '🗄️', bg: '#f3f4f6', text: '#4b5563' },
+    useNNN:          { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+    useHUB:          { emoji: '🔗', bg: '#e0e7ff', text: '#3730a3' },
+};
+const DEFAULT_MODULE_VISUAL = { emoji: '🔧', bg: '#f3f4f6', text: '#4b5563' };
+
+function moduleVisual(moduleKey) {
+    return MODULE_VISUALS[moduleKey] || DEFAULT_MODULE_VISUAL;
+}
+
+function ptIconPerson(size = 13, color = '#374151') {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${color}"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/></svg>`;
+}
+function ptIconDoc(size = 13, color = '#374151') {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${color}"><path d="M6 2h8l6 6v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm7 1.5V8h4.5L13 3.5zM8 12h8v1.5H8V12zm0 3h8v1.5H8V15zm0 3h5v1.5H8V18z"/></svg>`;
+}
+function ptIconConn(size = 13, color = '#374151') {
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${color}"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21H8v2h8v-2h-3v-3.08A7 7 0 0 0 19 11h-2z"/></svg>`;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     currentUser = await checkAuth('PARTNER');
     if (!currentUser) return;
@@ -92,8 +146,8 @@ function renderDashboard(data) {
     const userName = data.name || currentUser.email.split('@')[0];
     document.getElementById('dashboardUserName').textContent = userName;
 
-    document.getElementById('dashTierName').textContent = data.tier?.name || 'Indicador';
-    document.getElementById('dashTierPercentage').textContent = (data.tier?.percentage || 15) + '%';
+    document.getElementById('dashTierName').textContent = data.tier || 'Indicador';
+    document.getElementById('dashTierPercentage').textContent = (data.tierPercentage || 15) + '%';
 
     const activeClients = data.activeClients || 0;
     const nextTierMin = data.nextTier?.minClients || 3;
@@ -630,67 +684,97 @@ function renderMyPlans() {
 function renderPricingCard(plan, isOwn) {
     const users = plan.usersIncluded || plan.resources?.users || plan.users || 1;
     const queues = plan.queuesIncluded || plan.resources?.queues || plan.queues || 1;
-    const wapp = plan.connectionsWhatsappUnofficial || plan.resources?.connectionsWhatsappUnofficial || 0;
-    const waba = plan.connectionsWhatsappOfficial || plan.resources?.connectionsWhatsappOfficial || 0;
-    const insta = plan.connectionsInstagram || plan.resources?.connectionsInstagram || 0;
-    const commission = partnerData?.tier?.percentage || 15;
+    const wapp = plan.resources?.connectionsWhatsappUnofficial || 0;
+    const waba = plan.resources?.connectionsWhatsappOfficial || 0;
+    const insta = plan.resources?.connectionsInstagram || 0;
+    const commission = Number(partnerData?.tierPercentage) || 15;
     const planModules = getPlanModulesPartner(plan);
-    const connectionsHtml = buildConnectionsHtmlPartner(wapp, waba, insta);
+    const setupFee = plan.setupFee || 0;
+
+    // BASE resources list
+    const baseItems = [
+        `<span class="pt-base-item pt-base-half">${ptIconPerson()} ${users} usuário${users !== 1 ? 's' : ''}</span>`,
+        `<span class="pt-base-item pt-base-half">${ptIconDoc()} ${queues} fila${queues !== 1 ? 's' : ''}</span>`,
+    ];
+    const connItems = [];
+    if (wapp > 0) connItems.push(`${wapp}× WApp Não Oficial`);
+    if (waba > 0) connItems.push(`${waba}× WApp Oficial`);
+    if (insta > 0) connItems.push(`${insta}× Instagram`);
+    if (connItems.length === 0) connItems.push('1× WApp Não Oficial');
+    const connHtml = connItems.map(c => `<span class="pt-base-item pt-base-full">${ptIconConn()} ${c}</span>`).join('');
+
+    // Header badge / subtitle
+    let headBadge, subtitle;
+    if (isOwn) {
+        headBadge = '';
+        subtitle = plan.basePlan?.name ? `<span class="pt-plan-based">Baseado em: ${escapeHtml(plan.basePlan.name)}</span>` : '';
+    } else {
+        headBadge = plan.pacoticketPlanId ? `<span class="pt-plan-badge">PacoTicket #${plan.pacoticketPlanId}</span>` : '';
+        subtitle = '';
+    }
+
+    // Setup block
+    let setupHtml;
+    if (isOwn) {
+        const baseSetup = plan.basePlan?.setupFee || 0;
+        const addition = setupFee - baseSetup;
+        setupHtml = `
+            <div class="pt-setup-row"><span>Setup base do plano</span><span>${formatCurrency(baseSetup)}</span></div>
+            <div class="pt-setup-row"><span>Seu acréscimo de setup</span><span class="pt-setup-add">+ ${formatCurrency(addition)}</span></div>
+            <div class="pt-setup-row pt-setup-total-row"><span>Total setup (cobrado 1×)</span><span class="pt-setup-total">${formatCurrency(setupFee)}</span></div>`;
+    } else {
+        setupHtml = `
+            <div class="pt-setup-row"><span>Taxa de setup (cobrada 1×)</span><span class="pt-setup-total">${formatCurrency(setupFee)}</span></div>`;
+    }
+
+    const commissionValue = (plan.basePrice || 0) * commission / 100;
+
+    const footer = isOwn ? `
+        <div class="pt-plan-actions">
+            <a href="#" class="pt-link-edit" onclick="editPartnerPlan('${plan.id}'); return false;">Editar</a>
+            <a href="#" class="pt-link-delete" onclick="deletePartnerPlan('${plan.id}'); return false;">Excluir</a>
+        </div>` : `
+        <a href="#" class="pt-create-from-base" onclick="createPlanFromBase('${plan.id}'); return false;">+ Criar plano baseado neste</a>`;
 
     return `
         <div class="pt-plan-card">
             <div class="pt-plan-header">
                 <div class="pt-plan-title">
                     <span class="pt-plan-name">${escapeHtml(plan.name)}</span>
-                    ${plan.pacoticketPlanId ? `<span class="pt-plan-badge">PacoTicket #${plan.pacoticketPlanId}</span>` : ''}
+                    ${subtitle}
+                    ${headBadge}
                 </div>
-                <div class="pt-plan-price">${formatCurrency(plan.basePrice)}<span class="pt-plan-price-sub">/mes</span></div>
+                <div class="pt-plan-price">${formatCurrency(plan.basePrice)}<span class="pt-plan-price-sub">/mês</span></div>
             </div>
-            <div class="pt-plan-resources">
-                <span class="pt-resource"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${users} usuario${users > 1 ? 's' : ''}</span>
-                <span class="pt-resource"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> ${queues} fila${queues > 1 ? 's' : ''}</span>
-                ${connectionsHtml}
+
+            <div class="pt-plan-block-label">BASE</div>
+            <div class="pt-plan-base">
+                ${baseItems.join('')}
+                ${connHtml}
             </div>
+
             ${planModules.length > 0 ? `
+            <div class="pt-plan-block-label">MÓDULOS INCLUÍDOS</div>
             <div class="pt-plan-modules">
-                ${planModules.map(m => `<span class="pt-module-tag" style="background-color: ${getModuleColorPartner(m.key).bg}; color: ${getModuleColorPartner(m.key).text};">${getModuleEmoji(m.key)} ${escapeHtml(m.label)}</span>`).join('')}
+                ${planModules.map(m => { const v = moduleVisual(m.key); return `<span class="pt-module-tag" style="background-color: ${v.bg}; color: ${v.text};">${v.emoji} ${escapeHtml(m.label)}</span>`; }).join('')}
             </div>
             ` : ''}
-            <div class="pt-plan-info">
-                <div class="pt-plan-row">
-                    <span>Taxa de ativacao (cobrada 1x)</span>
-                    <span>${formatCurrency(plan.setupFee || 0)}</span>
-                </div>
-                <div class="pt-plan-row">
-                    <span>Setup total (cobrado 1x)</span>
-                    <span>${formatCurrency(plan.setupFee || 0)}</span>
-                </div>
-                <div class="pt-plan-row pt-plan-commission">
-                    <span>Comissao por venda (${commission}%)</span>
-                    <span class="pt-commission-value">${formatCurrency((plan.basePrice || 0) * commission / 100)}</span>
-                </div>
+
+            <div class="pt-plan-setup">
+                ${setupHtml}
             </div>
+
+            <div class="pt-commission-box">
+                <div class="pt-commission-label">Sua comissão estimada (${commission}%)</div>
+                <div class="pt-commission-value">${formatCurrency(commissionValue)}<span class="pt-commission-sub">/mês</span></div>
+                <div class="pt-commission-note">Baseado no seu tier atual &middot; por cliente neste plano</div>
+            </div>
+
             <div class="pt-plan-footer">
-                <span class="pt-annual-price">${formatCurrency((plan.basePrice || 0) * 12 * 0.9)}</span>
-                <span class="pt-annual-label">1 Ano pagamento unico</span>
+                ${footer}
             </div>
-            ${isOwn ? `
-            <div class="pt-plan-actions">
-                <a href="#" class="pt-link-edit" onclick="editPartnerPlan('${plan.id}'); return false;">Editar</a>
-                <a href="#" class="pt-link-delete" onclick="deletePartnerPlan('${plan.id}'); return false;">Excluir</a>
-            </div>
-            ` : ''}
         </div>
     `;
-}
-
-function buildConnectionsHtmlPartner(wapp, waba, insta) {
-    const parts = [];
-    if (wapp > 0) parts.push(`${wapp}× WApp`);
-    if (waba > 0) parts.push(`${waba}× WABA`);
-    if (insta > 0) parts.push(`${insta}× Insta`);
-    if (parts.length === 0) parts.push('1× WApp');
-    return `<span class="pt-resource"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> ${parts.join(' ')}</span>`;
 }
 
 function getPlanModulesPartner(plan) {
@@ -703,116 +787,113 @@ function getPlanModulesPartner(plan) {
     return modules;
 }
 
-function getModuleColorPartner(moduleKey) {
-    const colors = {
-        useAgendamentos: { bg: '#dbeafe', text: '#1e40af' },
-        useChatInterno: { bg: '#fef3c7', text: '#92400e' },
-        useCRM: { bg: '#fce7f3', text: '#9d174d' },
-        useApiExterna: { bg: '#e0e7ff', text: '#3730a3' },
-        useKanban: { bg: '#d1fae5', text: '#065f46' },
-        useCampanhas: { bg: '#fee2e2', text: '#991b1b' },
-        useChatbot: { bg: '#ede9fe', text: '#5b21b6' },
-        useTypebot: { bg: '#ede9fe', text: '#5b21b6' },
-        useTypebotExterno: { bg: '#ede9fe', text: '#5b21b6' },
-        useGPT: { bg: '#dcfce7', text: '#166534' },
-        useGPTAssistant: { bg: '#dcfce7', text: '#166534' },
-        useIA: { bg: '#dbeafe', text: '#1e40af' },
-        useInteligenciaArtificial: { bg: '#dbeafe', text: '#1e40af' },
-        useWebhooks: { bg: '#f3e8ff', text: '#7c3aed' },
-        useIntegracoes: { bg: '#f3e8ff', text: '#7c3aed' },
-        useBoletos: { bg: '#fef9c3', text: '#854d0e' },
-        useFinanceiro: { bg: '#fef9c3', text: '#854d0e' },
-        useRelatorios: { bg: '#e0f2fe', text: '#0369a1' },
-        useDashboard: { bg: '#e0f2fe', text: '#0369a1' },
-        useAvaliacoes: { bg: '#fef3c7', text: '#b45309' },
-        useNPS: { bg: '#fef3c7', text: '#b45309' }
-    };
-    return colors[moduleKey] || { bg: '#f3f4f6', text: '#4b5563' };
-}
-
-function getModuleEmoji(moduleKey) {
-    const icons = {
-        useAgendamentos: '📅',
-        useChatInterno: '💬',
-        useCRM: '📁',
-        useApiExterna: '🔗',
-        useKanban: '📋',
-        useCampanhas: '📣',
-        useChatbot: '🤖',
-        useTypebot: '🤖',
-        useTypebotExterno: '🤖',
-        useGPT: '🧠',
-        useGPTAssistant: '🧠',
-        useIA: '🧠',
-        useInteligenciaArtificial: '🧠',
-        useWebhooks: '🔌',
-        useIntegracoes: '🔌',
-        useBoletos: '💰',
-        useFinanceiro: '💰',
-        useRelatorios: '📊',
-        useDashboard: '📊',
-        useAvaliacoes: '⭐',
-        useNPS: '⭐',
-        useFacebook: '📘',
-        useInstagram: '📷',
-        useLigacoesVoIP: '📞',
-        useChamadasWhatsApp: '📞',
-        useFlowBuilder: '🔀',
-        useAutoresponder: '⚡',
-        useRespostasRapidas: '⚡',
-        useEtiquetas: '🏷️',
-        useTags: '🏷️',
-        useMultiAtendentes: '👥',
-        useHistoricoCompleto: '📚',
-        useExportacaoDados: '📥',
-        useAppAndroid005: '📱',
-        usePixelTracker: '🎯',
-        useEmail: '📧',
-        useIntegracaoEmail: '📧'
-    };
-    return icons[moduleKey] || '📦';
+function createPlanFromBase(basePlanId) {
+    showPartnerPlanModal();
+    const sel = document.getElementById('basePlanSelect');
+    if (sel) sel.value = basePlanId;
 }
 
 function renderModulesGrid() {
     const container = document.getElementById('modulesGrid');
-    container.innerHTML = modulePrices.map(m => `
+    container.innerHTML = modulePrices.map(m => {
+        const v = moduleVisual(m.moduleKey);
+        return `
         <div class="pt-module-card">
-            <div class="pt-module-icon" style="background-color: ${getModuleColorPartner(m.moduleKey).bg}; color: ${getModuleColorPartner(m.moduleKey).text};">
-                ${getModuleEmoji(m.moduleKey)}
-            </div>
+            <div class="pt-module-icon" style="background-color: ${v.bg}; color: ${v.text};">${v.emoji}</div>
             <div class="pt-module-name">${escapeHtml(m.label)}</div>
-            <div class="pt-module-price">+ ${formatCurrency(m.price)}/mes</div>
-        </div>
-    `).join('');
+            ${m.description ? `<div class="pt-module-desc">${escapeHtml(m.description)}</div>` : ''}
+            <div class="pt-module-prices">
+                <div class="pt-module-price-row"><span>Mensalidade</span><span class="pt-module-price-month">${formatCurrency(m.price)}</span></div>
+                ${m.setupFee > 0 ? `<div class="pt-module-price-row"><span>setup (1x)</span><span class="pt-module-price-setup">${formatCurrency(m.setupFee)}</span></div>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function tierSupportText(mode) {
+    return mode === 'PACOTICKET_DIRECT'
+        ? 'PacoTicket atende o cliente diretamente'
+        : 'Você é o ponto de contato do cliente';
 }
 
 function renderTiersDisplay() {
     const container = document.getElementById('tiersDisplay');
-    const currentTier = partnerData?.tier?.id;
+    const activeTiers = tiersData.filter(t => t.isActive).sort((a, b) => a.order - b.order);
+    const currentName = partnerData?.tier || 'Indicador';
+    const currentTier = activeTiers.find(t => t.name === currentName) || activeTiers[0];
 
-    container.innerHTML = tiersData.filter(t => t.isActive).map(t => `
-        <div class="tier-display-card ${t.id === currentTier ? 'active' : ''}">
-            <div class="tier-display-name">${escapeHtml(t.name)}</div>
-            <div class="tier-display-percentage">${t.percentage}%</div>
-            <div class="tier-display-range">${t.minClients}${t.maxClients ? '-' + t.maxClients : '+'} clientes</div>
+    container.innerHTML = activeTiers.map(t => {
+        const range = `${t.minClients}${t.maxClients ? '-' + t.maxClients : '+'} clientes`;
+        const isCurrent = currentTier && t.id === currentTier.id;
+        return `
+        <div class="pt-tier-card ${isCurrent ? 'active' : ''}">
+            <div class="pt-tier-range">${range}</div>
+            <div class="pt-tier-name">${escapeHtml(t.name)}</div>
+            <div class="pt-tier-pct">${t.percentage}%</div>
+            <div class="pt-tier-support">Suporte: ${tierSupportText(t.supportMode)}</div>
+            ${t.notes ? `<div class="pt-tier-notes">${escapeHtml(t.notes)}</div>` : ''}
+            ${isCurrent ? `<div class="pt-tier-current">Seu tier atual</div>` : ''}
+        </div>`;
+    }).join('');
+
+    renderTierProgress(activeTiers, currentTier);
+    renderCommissionInfoBoxes(currentTier);
+}
+
+function renderTierProgress(activeTiers, currentTier) {
+    const el = document.getElementById('tierProgress');
+    if (!el) return;
+    const activeClients = partnerData?.activeClients || 0;
+    const idx = currentTier ? activeTiers.findIndex(t => t.id === currentTier.id) : -1;
+    const nextTier = idx >= 0 ? activeTiers[idx + 1] : null;
+
+    if (!nextTier) {
+        el.innerHTML = `
+        <div class="pt-progress-block">
+            <div class="pt-progress-labels"><span>${activeClients} clientes ativos</span><span>Tier máximo atingido</span></div>
+            <div class="pt-progress-bar"><div class="pt-progress-fill" style="width:100%"></div></div>
+        </div>`;
+        return;
+    }
+
+    const nextMin = nextTier.minClients;
+    const remaining = Math.max(0, nextMin - activeClients);
+    const pct = Math.min(100, nextMin > 0 ? (activeClients / nextMin) * 100 : 100);
+    el.innerHTML = `
+        <div class="pt-progress-block">
+            <div class="pt-progress-labels"><span>${activeClients} clientes ativos</span><span>Faltam ${remaining} para próximo tier</span></div>
+            <div class="pt-progress-bar"><div class="pt-progress-fill" style="width:${pct}%"></div></div>
+            <div class="pt-progress-caption">${nextMin} clientes &middot; próximo tier</div>
+        </div>`;
+}
+
+function renderCommissionInfoBoxes(currentTier) {
+    const el = document.getElementById('commissionInfoBoxes');
+    if (!el) return;
+    const tierName = currentTier?.name || 'Indicador';
+    const duration = currentTier ? currentTier.durationMonths : 0;
+    const durationText = duration > 0
+        ? `gera comissão por <strong>${duration} ${duration === 1 ? 'mês' : 'meses'}</strong> a partir do cadastro de cada cliente. Após esse período, o cliente não gera mais comissão para você.`
+        : `gera comissão por <strong>tempo indeterminado</strong> a partir do cadastro de cada cliente.`;
+
+    el.innerHTML = `
+        <div class="pt-info-box pt-info-blue">
+            <div class="pt-info-title">&#128161; Quando você recebe comissão de setup</div>
+            <div class="pt-info-text">Você recebe comissão de ativação <strong>somente quando define um acréscimo de setup</strong> no momento da criação do plano personalizado. Em todas as demais ativações, o comissionamento é <strong>apenas sobre a mensalidade</strong>, quando aplicável ao seu tier.</div>
         </div>
-    `).join('');
+        <div class="pt-info-box pt-info-yellow">
+            <div class="pt-info-title">&#9201;&#65039; Por quanto tempo você recebe comissão &mdash; Tier ${escapeHtml(tierName)}</div>
+            <div class="pt-info-text">Seu tier atual ${durationText}</div>
+            <div class="pt-info-warn">&#9888;&#65039; Clientes adquiridos enquanto você está neste tier não gerarão comissão após você fazer upgrade de tier. A regra de comissão é travada na época do cadastro de cada cliente &mdash; o upgrade não muda retroativamente as regras dos clientes já cadastrados.</div>
+        </div>`;
 }
 
 function renderResourcePrices() {
     const tbody = document.getElementById('resourcePricesTable');
-    const labels = {
-        whatsappUnofficial: 'WhatsApp Nao Oficial (por conexao)',
-        whatsappOfficial: 'WhatsApp Oficial / WABA (por conexao)',
-        instagram: 'Instagram (por conexao)',
-        user: 'Usuario adicional (por usuario)',
-        queue: 'Fila adicional (por fila)'
-    };
-
     tbody.innerHTML = resourcePrices.map(r => `
         <tr>
-            <td>${labels[r.key] || r.key}</td>
-            <td class="text-right">${formatCurrency(r.price)}</td>
+            <td>${escapeHtml(r.label || r.key)}</td>
+            <td class="text-right pt-infra-price">${formatCurrency(r.price)}</td>
         </tr>
     `).join('');
 }
@@ -1041,7 +1122,7 @@ function updateProposalSummary() {
     const setupExtra = parseFloat(document.getElementById('propSetupExtra')?.value) || 0;
     const totalSetup = setupFee + setupExtra;
 
-    const commission = partnerData?.tier?.percentage || 15;
+    const commission = Number(partnerData?.tierPercentage) || 15;
     const monthlyCommission = monthlyTotal * commission / 100;
 
     document.getElementById('summaryPlanPrice').textContent = formatCurrency(selectedPlan.basePrice) + '/mes';
@@ -1144,7 +1225,7 @@ async function loadProfile() {
             document.getElementById('profileName').textContent = user.name || user.email;
             document.getElementById('profileEmail').textContent = user.email || '-';
             document.getElementById('profilePhone').textContent = user.phone || '-';
-            document.getElementById('profileTier').textContent = partnerData?.tier?.name || 'Indicador';
+            document.getElementById('profileTier').textContent = partnerData?.tier || 'Indicador';
         }
     } catch (e) {
         showToast('Erro ao carregar perfil', 'error');
