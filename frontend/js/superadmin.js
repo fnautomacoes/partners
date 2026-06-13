@@ -120,6 +120,9 @@ function setupForms() {
 
     const moduleForm = document.getElementById('moduleForm');
     if (moduleForm) moduleForm.addEventListener('submit', saveModule);
+
+    const pdfForm = document.getElementById('pdfConfigForm');
+    if (pdfForm) pdfForm.addEventListener('submit', savePdfConfig);
 }
 
 function setupFilters() {
@@ -1052,6 +1055,8 @@ async function loadConfig() {
             const data = configRes.data;
             populateConfigForm('companyConfigForm', data);
             populateConfigForm('smtpConfigForm', data);
+            populateConfigForm('pdfConfigForm', data);
+            renderColorGroups(data);
         }
 
         if (modulesRes.success) {
@@ -1072,40 +1077,165 @@ async function loadConfig() {
     }
 }
 
+function cfgValue(entry) {
+    return (entry && typeof entry === 'object' && 'value' in entry) ? entry.value : entry;
+}
+
 function populateConfigForm(formId, data) {
     const form = document.getElementById(formId);
     if (!form) return;
 
-    Object.entries(data).forEach(([key, value]) => {
+    Object.entries(data).forEach(([key, entry]) => {
         const input = form.querySelector(`[name="${key}"]`);
-        if (input) input.value = value || '';
+        if (input) input.value = cfgValue(entry) ?? '';
     });
 }
 
-function renderModulePricesTable() {
-    const tbody = document.getElementById('modulePricesTable');
-    if (!tbody) return;
+async function savePdfConfig(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    try {
+        const res = await apiRequest('/api/system-config', { method: 'PUT', body: JSON.stringify(data) });
+        showToast(res.success ? 'Configuração de PDF salva!' : (res.message || 'Erro'), res.success ? 'success' : 'error');
+    } catch (e) {
+        showToast('Erro ao salvar PDF', 'error');
+    }
+}
 
-    tbody.innerHTML = modulePrices.map(m => `
-        <tr data-module-key="${m.moduleKey}">
-            <td>
-                <label class="form-checkbox">
-                    <input type="checkbox" name="${m.moduleKey}_visible" ${m.isVisible ? 'checked' : ''}>
-                    <span></span>
+// ---- Identidade Visual / Cores ----
+const COLOR_GROUPS = [
+    { title: 'MARCA — INDIGO', items: [
+        { key: 'colorBrandPrimary', label: 'Cor Principal', def: '#4F46E5', desc: 'Logo, botões primários, links', cssVar: '--primary' },
+        { key: 'colorBrandHover', label: 'Cor Hover', def: '#4338CA', desc: 'Hover de botões primários', cssVar: '--primary-hover' },
+        { key: 'colorBrandMist', label: 'Adesão (fundo suave)', def: '#EEF2FF', desc: 'Badges, fundos de destaque', cssVar: '--primary-light' },
+    ]},
+    { title: 'AGENTE — ÂMBAR', items: [
+        { key: 'colorAccent', label: 'Agente', def: '#F59E0B', desc: 'Modulação, urgência, CTAs secundários' },
+        { key: 'colorAccentHover', label: 'Agente Hover', def: '#D97706', desc: 'Hover do âmbar' },
+    ]},
+    { title: 'PROGRAMA DE PARCEIROS — ESMERALDA', items: [
+        { key: 'colorPartner', label: 'Esmeralda', def: '#10B981', desc: 'Comissões, ganhos, sucesso' },
+        { key: 'colorPartnerDark', label: 'Esmeralda Escuro', def: '#059669', desc: 'Hover/ênfase do programa' },
+        { key: 'colorPartnerAccent', label: 'Ênfase Esmeralda', def: '#ECFDF5', desc: 'Fundos suaves do programa' },
+    ]},
+    { title: 'SEMÁFOROS DE STATUS', items: [
+        { key: 'colorStatusPending', label: 'Pendente', def: '#F59E0B', desc: 'Fatura pendente' },
+        { key: 'colorStatusPaid', label: 'Pago', def: '#10B981', desc: 'Fatura paga, comissão' },
+        { key: 'colorStatusActive', label: 'No Ar', def: '#3B82F6', desc: 'Aguardando atendimento' },
+        { key: 'colorStatusOverdue', label: 'Vencido', def: '#EF4444', desc: 'Prazo excedido' },
+    ]},
+    { title: 'FUNDOS DARK (HEADER & DRAG/DROP)', items: [
+        { key: 'colorDarkBase', label: 'Base', def: '#0F172A', desc: 'Fundo escuro do topo' },
+        { key: 'colorDarkSurface', label: 'Super-fície', def: '#1E293B', desc: 'Superfície intermediária' },
+        { key: 'colorDarkElevated', label: 'Elevado', def: '#334155', desc: 'Cartões elevados sobre o dark' },
+    ]},
+    { title: 'AVISO RATE-LIMIT', items: [
+        { key: 'colorRateLimit', label: 'Cor de Fundo', def: '#7F1D1D', desc: 'Fundo do aviso de limite de tentativas' },
+    ]},
+];
+
+function colorTextOn(hex) {
+    const h = (hex || '').replace('#', '');
+    if (h.length < 6) return '#111827';
+    const r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b);
+    return lum > 150 ? '#111827' : '#ffffff';
+}
+
+function renderColorGroups(data) {
+    const container = document.getElementById('colorGroups');
+    if (!container) return;
+
+    container.innerHTML = COLOR_GROUPS.map(g => `
+        <div class="cfg-color-group">
+            <div class="cfg-color-group-title">${g.title}</div>
+            <div class="cfg-color-grid">
+                ${g.items.map(it => {
+                    const val = (cfgValue(data?.[it.key]) || it.def);
+                    return `<div class="cfg-color">
+                        <div class="cfg-color-label">${it.label}</div>
+                        <label class="cfg-swatch" style="background:${val};color:${colorTextOn(val)}">
+                            <span class="cfg-swatch-hex">${val.toUpperCase()}</span>
+                            <input type="color" value="${val}" data-key="${it.key}" ${it.cssVar ? `data-cssvar="${it.cssVar}"` : ''} oninput="onColorInput(this)">
+                        </label>
+                        ${it.desc ? `<div class="cfg-color-desc">${it.desc}</div>` : ''}
+                    </div>`;
+                }).join('')}
+            </div>
+        </div>`).join('');
+
+    // Aplica preview das cores de marca salvas
+    COLOR_GROUPS.forEach(g => g.items.forEach(it => {
+        if (it.cssVar) {
+            const v = cfgValue(data?.[it.key]) || it.def;
+            document.documentElement.style.setProperty(it.cssVar, v);
+        }
+    }));
+}
+
+function onColorInput(input) {
+    const val = input.value;
+    const swatch = input.closest('.cfg-swatch');
+    if (swatch) {
+        swatch.style.background = val;
+        swatch.style.color = colorTextOn(val);
+        const hex = swatch.querySelector('.cfg-swatch-hex');
+        if (hex) hex.textContent = val.toUpperCase();
+    }
+    if (input.dataset.cssvar) document.documentElement.style.setProperty(input.dataset.cssvar, val);
+}
+
+function collectColors() {
+    const out = {};
+    document.querySelectorAll('#colorGroups input[type="color"]').forEach(i => { out[i.dataset.key] = i.value; });
+    return out;
+}
+
+async function saveColors() {
+    try {
+        const res = await apiRequest('/api/system-config', { method: 'PUT', body: JSON.stringify(collectColors()) });
+        showToast(res.success ? 'Cores salvas!' : (res.message || 'Erro'), res.success ? 'success' : 'error');
+    } catch (e) {
+        showToast('Erro ao salvar cores', 'error');
+    }
+}
+
+function restoreColors() {
+    const data = {};
+    COLOR_GROUPS.forEach(g => g.items.forEach(it => { data[it.key] = { value: it.def }; }));
+    renderColorGroups(data);
+    showToast('Cores restauradas ao padrão. Clique em Salvar Cores para persistir.', 'info');
+}
+
+function renderModulePricesTable() {
+    const container = document.getElementById('modulePricesList');
+    if (!container) return;
+
+    container.innerHTML = modulePrices.map(m => `
+        <div class="cfg-module" data-module-key="${m.moduleKey}">
+            <div class="cfg-module-row">
+                <label class="cfg-check">
+                    <input type="checkbox" class="cfg-mod-visible" ${m.isVisible ? 'checked' : ''}>
+                    <span class="cfg-checkmark"></span>
                 </label>
-            </td>
-            <td>${escapeHtml(m.label)}</td>
-            <td>
-                <input type="number" step="0.01" class="form-input" name="${m.moduleKey}_price" value="${m.price || 0}" style="max-width: 100px">
-            </td>
-            <td>
-                <input type="number" step="0.01" class="form-input" name="${m.moduleKey}_setup" value="${m.setupFee || 0}" style="max-width: 100px">
-            </td>
-            <td>
-                <button class="btn-link btn-link-danger" onclick="deleteModule('${m.moduleKey}')">Excluir</button>
-            </td>
-        </tr>
+                <input type="text" class="cfg-mod-name" value="${escapeHtml(m.label)}">
+                <input type="number" step="0.01" class="cfg-mod-num cfg-mod-price" value="${(m.price || 0).toFixed(2)}">
+                <input type="number" step="0.01" class="cfg-mod-num cfg-mod-setup" value="${(m.setupFee || 0).toFixed(2)}">
+                <button type="button" class="cfg-desc-toggle" onclick="toggleModuleDesc(this)">Desc. ▾</button>
+                <button type="button" class="cfg-mod-del" onclick="deleteModule('${m.moduleKey}')" title="Excluir módulo">✕</button>
+            </div>
+            <div class="cfg-module-desc hidden">
+                <textarea class="cfg-mod-descinput" rows="2" placeholder="Descrição exibida ao parceiro na Tabela de Preços...">${escapeHtml(m.description || '')}</textarea>
+            </div>
+        </div>
     `).join('');
+}
+
+function toggleModuleDesc(btn) {
+    const wrap = btn.closest('.cfg-module');
+    const desc = wrap?.querySelector('.cfg-module-desc');
+    if (desc) desc.classList.toggle('hidden');
+    btn.textContent = desc && desc.classList.contains('hidden') ? 'Desc. ▾' : 'Desc. ▲';
 }
 
 async function deleteModule(moduleKey) {
@@ -1149,39 +1279,36 @@ function renderTiersTable() {
     const tbody = document.getElementById('tiersTable');
     if (!tbody) return;
 
-    tbody.innerHTML = tiersData.map(t => `
+    tbody.innerHTML = tiersData.map(t => {
+        const clientes = t.maxClients ? `${t.minClients} a ${t.maxClients}` : `${t.minClients}+`;
+        const durBadge = `<span class="cfg-tier-pill cfg-pill-blue">${t.durationMonths > 0 ? t.durationMonths + 'm' : '∞'}</span>`;
+        const setupBadge = t.commissionOnSetup ? `<span class="cfg-tier-pill cfg-pill-green">setup</span>` : '';
+        const closedBadge = t.acceptNewClients === false ? `<span class="cfg-tier-pill cfg-pill-red">fechado</span>` : '';
+        const suporte = t.supportMode === 'PARTNER_INTERMEDIARY' ? 'Via Parceiro' : 'PacoTicket direto';
+        return `
         <tr>
             <td>${t.order}</td>
-            <td>${escapeHtml(t.name)}</td>
-            <td>${t.minClients}</td>
-            <td>${t.maxClients || 'Ilimitado'}</td>
-            <td>${t.percentage}%</td>
-            <td><span class="badge ${t.isActive ? 'badge-success' : 'badge-danger'}">${t.isActive ? 'Ativo' : 'Inativo'}</span></td>
-            <td>
-                <button class="btn-link" onclick="editTier('${t.id}')">Editar</button>
-                <button class="btn-link btn-link-danger" onclick="deleteTier('${t.id}')">Excluir</button>
+            <td><div class="cfg-tier-name">${escapeHtml(t.name)} ${durBadge}${setupBadge}${closedBadge}</div></td>
+            <td>${clientes}</td>
+            <td class="cfg-tier-pct">${t.percentage.toFixed(1)}%</td>
+            <td class="cfg-tier-support">${suporte}</td>
+            <td class="cfg-tier-actions">
+                <a href="#" class="sa-link-edit" onclick="editTier('${t.id}'); return false;">Editar</a>
+                <a href="#" class="sa-link-delete" onclick="deleteTier('${t.id}'); return false;">Excluir</a>
             </td>
-        </tr>
-    `).join('') || '<tr><td colspan="7" class="text-center text-gray">Nenhum tier</td></tr>';
+        </tr>`;
+    }).join('') || '<tr><td colspan="6" class="text-center text-gray">Nenhum tier</td></tr>';
 }
 
 function renderResourcePricesTable(resources) {
     const tbody = document.getElementById('resourcePricesTable');
     if (!tbody) return;
 
-    const labels = {
-        user: 'Usuario adicional (por usuario)',
-        queue: 'Fila adicional (por fila)',
-        whatsappUnofficial: 'WhatsApp Nao Oficial (por conexao)',
-        whatsappOfficial: 'WhatsApp Oficial / WABA (por conexao)',
-        instagram: 'Instagram (por conexao)'
-    };
-
     tbody.innerHTML = resources.map(r => `
         <tr>
-            <td>${labels[r.key] || r.key}</td>
-            <td>
-                <input type="number" step="0.01" class="form-input" name="resource_${r.key}" value="${r.price}" style="max-width: 120px">
+            <td>${escapeHtml(r.label || r.key)}</td>
+            <td class="text-right">
+                <input type="number" step="0.01" class="cfg-resource-input" name="resource_${r.key}" value="${(r.price || 0).toFixed(2)}">
             </td>
         </tr>
     `).join('');
@@ -1199,11 +1326,14 @@ function showTierModal(tier = null) {
         form.maxClients.value = tier.maxClients || '';
         form.percentage.value = tier.percentage;
         form.order.value = tier.order;
-        if (form.commissionDuration) form.commissionDuration.value = tier.commissionDuration || '';
-        if (form.supportMode) form.supportMode.value = tier.supportMode || 'CLIENT';
+        if (form.commissionDuration) form.commissionDuration.value = tier.durationMonths || 0;
+        if (form.supportMode) form.supportMode.value = tier.supportMode || 'PACOTICKET_DIRECT';
         if (form.notes) form.notes.value = tier.notes || '';
-        if (form.allowNewSales) form.allowNewSales.checked = tier.allowNewSales !== false;
-        if (form.setupCommission) form.setupCommission.checked = tier.setupCommission || false;
+        if (form.acceptNewClients) form.acceptNewClients.checked = tier.acceptNewClients !== false;
+        if (form.commissionOnSetup) form.commissionOnSetup.checked = tier.commissionOnSetup || false;
+    } else {
+        form.order.value = (tiersData?.length || 0) + 1;
+        if (form.commissionDuration) form.commissionDuration.value = 0;
     }
 
     document.getElementById('tierModal').classList.remove('hidden');
@@ -1225,11 +1355,11 @@ async function saveTier(e) {
         maxClients: form.maxClients.value ? parseInt(form.maxClients.value) : null,
         percentage: parseFloat(form.percentage.value),
         order: parseInt(form.order.value),
-        commissionDuration: form.commissionDuration?.value ? parseInt(form.commissionDuration.value) : null,
-        supportMode: form.supportMode?.value || 'CLIENT',
+        durationMonths: form.commissionDuration?.value ? parseInt(form.commissionDuration.value) : 0,
+        supportMode: form.supportMode?.value || 'PACOTICKET_DIRECT',
         notes: form.notes?.value || null,
-        allowNewSales: form.allowNewSales?.checked !== false,
-        setupCommission: form.setupCommission?.checked || false
+        acceptNewClients: form.acceptNewClients?.checked !== false,
+        commissionOnSetup: form.commissionOnSetup?.checked || false
     };
 
     try {
@@ -1481,25 +1611,24 @@ function getSectionTitle(section) {
 }
 
 function saveModulePrices() {
-    const rows = document.querySelectorAll('#modulePricesTable tr[data-module-key]');
+    const rows = document.querySelectorAll('#modulePricesList .cfg-module[data-module-key]');
     const modules = [];
 
     rows.forEach(row => {
         const moduleKey = row.dataset.moduleKey;
-        const checkbox = row.querySelector(`input[name="${moduleKey}_visible"]`);
-        const priceInput = row.querySelector(`input[name="${moduleKey}_price"]`);
-        const setupInput = row.querySelector(`input[name="${moduleKey}_setup"]`);
+        if (!moduleKey) return;
         const moduleData = modulePrices.find(m => m.moduleKey === moduleKey);
+        const nameInput = row.querySelector('.cfg-mod-name');
+        const descInput = row.querySelector('.cfg-mod-descinput');
 
-        if (moduleKey) {
-            modules.push({
-                moduleKey,
-                label: moduleData?.label || moduleKey,
-                price: parseFloat(priceInput?.value) || 0,
-                setupFee: parseFloat(setupInput?.value) || 0,
-                isVisible: checkbox?.checked || false
-            });
-        }
+        modules.push({
+            moduleKey,
+            label: (nameInput?.value || '').trim() || moduleData?.label || moduleKey,
+            price: parseFloat(row.querySelector('.cfg-mod-price')?.value) || 0,
+            setupFee: parseFloat(row.querySelector('.cfg-mod-setup')?.value) || 0,
+            isVisible: row.querySelector('.cfg-mod-visible')?.checked || false,
+            description: descInput ? (descInput.value || null) : (moduleData?.description ?? null)
+        });
     });
 
     apiRequest('/api/plans/modules/prices', {
@@ -1519,7 +1648,7 @@ function showModuleModal(module = null) {
     const form = document.getElementById('moduleForm');
     form.reset();
     document.getElementById('moduleFormId').value = module?.moduleKey || '';
-    document.getElementById('moduleModalTitle').textContent = module ? 'Editar Modulo' : 'Novo Modulo';
+    document.getElementById('moduleModalTitle').textContent = module ? 'Editar Módulo' : 'Novo Módulo';
 
     if (module) {
         form.moduleKey.value = module.moduleKey;
