@@ -1278,6 +1278,7 @@ function computeProposal() {
     });
 
     const res = [];
+    const extras = { whatsappUnofficial: 0, whatsappOfficial: 0, instagram: 0, user: 0, queue: 0 };
     (resourcePrices || []).forEach(r => {
         if (!API_RESOURCE_FIELD[r.key]) return;
         const qty = parseInt(document.getElementById('propRes_' + r.key)?.value) || 0;
@@ -1287,69 +1288,226 @@ function computeProposal() {
             baseSetup += qty * (r.setupFee || 0);
             res.push({ label: r.label || r.key, qty, price: r.price || 0, total });
         }
+        if (r.key in extras) extras[r.key] = qty;
     });
 
     const setupExtra = parseFloat(document.getElementById('propSetupExtra')?.value) || 0;
     const totalSetup = baseSetup + setupExtra;
     const monthlyCommission = monthly * commission / 100;
-    return { commission, monthly, baseSetup, setupExtra, totalSetup, monthlyCommission, mods, res };
+    return { commission, monthly, baseSetup, setupExtra, totalSetup, monthlyCommission, mods, res, extras };
 }
 
-function buildProposalHtml(planName, d, cfg) {
-    cfg = cfg || {};
-    const brand = escapeHtml(cfg.businessName || 'PacoTicket');
-    const logo = cfg.logoPdf ? `<img src="${escapeHtml(cfg.logoPdf)}" alt="${brand}" style="max-height:48px">` : `<div style="font-size:22px;font-weight:700;color:#1e3a8a">${brand}</div>`;
-    const padH = parseInt(cfg.pdfPaddingHorizontal, 10); const padV = parseInt(cfg.pdfPaddingVertical, 10);
-    const pad = `${isNaN(padV) ? 24 : padV}px ${isNaN(padH) ? 24 : padH}px`;
-    const row = (label, value, opts = {}) =>
-        `<tr><td style="padding:8px 0;color:${opts.muted ? '#6b7280' : '#111827'};${opts.bold ? 'font-weight:700;' : ''}">${label}</td>
-         <td style="padding:8px 0;text-align:right;color:${opts.color || '#111827'};${opts.bold ? 'font-weight:700;' : ''}">${value}</td></tr>`;
+// Linha de impacto (fallback) por módulo, quando não houver descrição no banco
+const MODULE_IMPACT = {
+    useWhatsapp: 'Centralize todos os atendimentos. Fim do "quem pegou esse cliente?"',
+    useCRM: 'Cada cliente com histórico completo. Nunca mais começar do zero.',
+    useAI: 'Respostas imediatas 24h. Sua equipe dorme, o atendimento não.',
+    useCampaigns: 'Mensagens certas, para as pessoas certas, no momento certo.',
+    useKanban: 'Visualize onde está cada venda. Feche mais sem esforço extra.',
+    useFLOW: 'Automações sem código. Configure uma vez, funciona para sempre.',
+    useRD: 'CRM e marketing no mesmo fluxo. Lead capturado, lead trabalhado.',
+    useSchedules: 'Cliente agenda sozinho. Sua agenda sempre organizada.',
+    useGPT: 'Respostas humanizadas com velocidade de máquina.',
+    useGPTA: 'Respostas humanizadas com velocidade de máquina.',
+    useVOIP: 'Ligue direto do painel. Tudo gravado, tudo rastreável.',
+    useExternalApi: 'Integre com qualquer sistema que você já usa.',
+    useTYPE: 'Fluxos de conversa inteligentes. Qualifique antes de atender.',
+    useWEBCHAT: 'Botão de chat no seu site. Captura quem estava indo embora.',
+    usePUSH: 'Lembre o cliente de você antes que ele lembre do concorrente.',
+    useHUB: 'Sua operação de vendas integrada ao CRM mais poderoso do mercado.',
+    useDIFY: 'Agentes de IA treinados na sua base de conhecimento.',
+    useInternalChat: 'Comunicação interna da equipe, sem o cliente ver.',
+};
 
-    const moduleRows = d.mods.map(m => row(escapeHtml(m.label), formatCurrency(m.price) + '/mês', { muted: true })).join('');
-    const resourceRows = d.res.map(r => row(`${escapeHtml(r.label)} (${r.qty}×)`, formatCurrency(r.total) + '/mês', { muted: true })).join('');
+function generateProposalCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 5; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    const n = new Date();
+    const dd = String(n.getDate()).padStart(2, '0');
+    const mm = String(n.getMonth() + 1).padStart(2, '0');
+    return `${code}_${dd}${mm}${n.getFullYear()}`;
+}
+
+function proposalLongDate(d) {
+    const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    return `${String(d.getDate()).padStart(2, '0')} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+}
+
+function buildProposalHtml(planName, d, cfg, proposalCode) {
+    cfg = cfg || {};
+    const primary = cfg.colorBrandPrimary || '#2563eb';
+    const brand = escapeHtml(cfg.businessName || 'PacoTicket');
+    const logo = cfg.logoPdf
+        ? `<img src="${escapeHtml(cfg.logoPdf)}" alt="${brand}" style="max-height:40px">`
+        : `<span style="font-size:20px;font-weight:700;color:#fff">${brand}</span>`;
+    const padH = parseInt(cfg.pdfPaddingHorizontal, 10); const padV = parseInt(cfg.pdfPaddingVertical, 10);
+    const padX = isNaN(padH) ? 40 : padH; const padY = isNaN(padV) ? 28 : padV;
+    const now = new Date();
+    const shortDate = now.toLocaleDateString('pt-BR');
+
+    // Infraestrutura (plano + recursos extras)
+    const r = selectedPlan.resources || {};
+    const users = (selectedPlan.usersIncluded || r.users || 1) + (d.extras.user || 0);
+    const queues = (selectedPlan.queuesIncluded || r.queues || 1) + (d.extras.queue || 0);
+    let wU = (r.connectionsWhatsappUnofficial || 0) + (d.extras.whatsappUnofficial || 0);
+    const wO = (r.connectionsWhatsappOfficial || 0) + (d.extras.whatsappOfficial || 0);
+    const ig = (r.connectionsInstagram || 0) + (d.extras.instagram || 0);
+    if (wU === 0 && wO === 0 && ig === 0) wU = 1;
+    const infra = [
+        { emoji: '👤', label: 'Usuários', count: users, sub: 'acesso ao sistema' },
+        { emoji: '📋', label: 'Filas', count: queues, sub: 'atendimento' },
+    ];
+    if (wU > 0) infra.push({ emoji: '💬', label: 'WhatsApp Não Oficial', count: wU, sub: 'conexões' });
+    if (wO > 0) infra.push({ emoji: '✅', label: 'WhatsApp Oficial', count: wO, sub: 'conexões' });
+    if (ig > 0) infra.push({ emoji: '📷', label: 'Instagram', count: ig, sub: 'conexões' });
+
+    // Módulos (incluídos no plano + extras selecionados)
+    const planMods = getPlanModulesPartner(selectedPlan);
+    const seen = new Set();
+    const moduleItems = [];
+    [...planMods, ...d.mods].forEach(m => {
+        if (seen.has(m.key)) return;
+        seen.add(m.key);
+        const mp = (modulePrices || []).find(x => x.moduleKey === m.key);
+        const v = moduleVisual(m.key);
+        moduleItems.push({ emoji: v.emoji, label: m.label, desc: (mp && mp.description) ? mp.description : (MODULE_IMPACT[m.key] || '') });
+    });
+
+    const infraCards = infra.map(i => `
+        <div class="infra-card">
+            <div class="infra-top"><span class="infra-emoji">${i.emoji}</span><span class="infra-label">${escapeHtml(i.label)}</span></div>
+            <div class="infra-count">${i.count}</div>
+            <div class="infra-sub">${escapeHtml(i.sub)}</div>
+        </div>`).join('');
+
+    const moduleCards = moduleItems.map(m => `
+        <div class="mod-card">
+            <div class="mod-emoji">${m.emoji}</div>
+            <div class="mod-body">
+                <div class="mod-title">${escapeHtml(m.label)}</div>
+                ${m.desc ? `<div class="mod-desc">${escapeHtml(m.desc)}</div>` : ''}
+            </div>
+        </div>`).join('');
+
+    const benefits = [
+        { e: '🚀', t: 'Atendimento centralizado', d: 'Toda a comunicação em um único lugar. WhatsApp, Instagram, chat — tudo integrado, com histórico completo e times bem definidos.' },
+        { e: '📊', t: 'Dados para decidir', d: 'Relatórios em tempo real sobre volume, tempo de resposta e satisfação. Chega de gestão no achismo.' },
+        { e: '⚡', t: 'Automação que libera sua equipe', d: 'Chatbots, filas inteligentes e fluxos automáticos para respostas de rotina — sua equipe foca no que realmente importa.' },
+        { e: '🔒', t: 'Segurança e continuidade', d: 'Acesso por usuário com permissões definidas. Nada se perde quando um colaborador sai ou entra na empresa.' },
+    ].map(b => `
+        <div class="benefit">
+            <div class="benefit-emoji">${b.e}</div>
+            <div class="benefit-title">${b.t}</div>
+            <div class="benefit-desc">${b.d}</div>
+        </div>`).join('');
 
     return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <style>
   * { box-sizing: border-box; }
-  body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 0; padding: ${pad}; }
-  .head { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #2563eb; padding-bottom:16px; margin-bottom:24px; }
-  .title { font-size:20px; font-weight:700; }
-  .sub { color:#6b7280; font-size:13px; margin-top:4px; }
-  table { width:100%; border-collapse:collapse; font-size:14px; }
-  .section-title { font-size:12px; font-weight:700; letter-spacing:.05em; color:#6b7280; text-transform:uppercase; margin:24px 0 4px; }
-  .total { border-top:2px solid #e5e7eb; }
-  .box { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px; margin-top:24px; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #1f2937; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { padding: 0 ${padX}px ${padY}px; }
+  .header { background: linear-gradient(120deg, #0a1733 0%, ${primary} 100%); color: #fff; padding: 22px ${padX}px; display: flex; justify-content: space-between; align-items: center; }
+  .header-logo { display: flex; align-items: center; gap: 8px; }
+  .header-right { text-align: right; }
+  .header-title { font-size: 18px; font-weight: 700; }
+  .header-code { font-size: 12px; color: rgba(255,255,255,0.6); font-family: monospace; margin-top: 2px; }
+  .warn-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 18px 22px; margin: 28px 0; }
+  .warn-title { font-size: 16px; font-weight: 700; color: #92400e; margin-bottom: 10px; }
+  .warn-intro { font-size: 13px; color: #78716c; margin-bottom: 8px; }
+  .warn-list { margin: 0; padding-left: 18px; color: #57534e; font-size: 13px; }
+  .warn-list li { margin: 5px 0; }
+  .benefits { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  .benefit { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 18px; }
+  .benefit-emoji { font-size: 22px; margin-bottom: 8px; }
+  .benefit-title { font-size: 14px; font-weight: 700; color: #166534; margin-bottom: 6px; }
+  .benefit-desc { font-size: 12.5px; color: #4b5563; line-height: 1.5; }
+  .cost-box { background: linear-gradient(120deg, #0a1733 0%, ${primary} 100%); color: #fff; border-radius: 12px; padding: 20px 24px; display: flex; gap: 16px; align-items: center; margin-bottom: 28px; }
+  .cost-emoji { font-size: 30px; }
+  .cost-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .cost-desc { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5; }
+  .sec-title { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #9ca3af; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin: 28px 0 16px; }
+  .infra-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .infra-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+  .infra-top { display: flex; align-items: center; gap: 8px; }
+  .infra-emoji { font-size: 16px; }
+  .infra-label { font-weight: 700; font-size: 13px; color: #374151; }
+  .infra-count { font-size: 22px; font-weight: 700; color: ${primary}; margin: 6px 0 2px; }
+  .infra-sub { font-size: 12px; color: #9ca3af; }
+  .mods-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .mod-card { display: flex; gap: 12px; background: #f8fafc; border: 1px solid #eef2f7; border-radius: 12px; padding: 14px 16px; page-break-inside: avoid; }
+  .mod-emoji { font-size: 18px; flex-shrink: 0; }
+  .mod-title { font-size: 13px; font-weight: 700; color: ${primary}; margin-bottom: 4px; }
+  .mod-desc { font-size: 12px; color: #6b7280; line-height: 1.5; }
+  .price-box { background: #0f172a; color: #fff; border-radius: 16px; padding: 28px 32px; margin: 28px 0; }
+  .price-name { font-size: 26px; font-weight: 800; }
+  .price-tag { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+  .price-value { font-size: 42px; font-weight: 800; color: #22c55e; margin: 18px 0 14px; }
+  .price-value span { font-size: 18px; font-weight: 400; color: rgba(255,255,255,0.6); }
+  .setup-pill { display: inline-block; background: rgba(180,83,9,0.18); border: 1px solid rgba(251,191,36,0.5); color: #fcd34d; border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 700; }
+  .cta-box { background: ${primary}; color: #fff; border-radius: 16px; padding: 28px 32px; text-align: center; }
+  .cta-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+  .cta-desc { font-size: 13.5px; color: rgba(255,255,255,0.9); line-height: 1.6; }
+  .cta-pill { display: inline-block; margin-top: 16px; border: 1px solid rgba(255,255,255,0.4); border-radius: 999px; padding: 8px 18px; font-size: 13px; font-weight: 700; }
+  .footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e7eb; padding: 16px ${padX}px; color: #9ca3af; font-size: 12px; margin-top: 28px; }
+  .footer b { color: ${primary}; }
+  .pagebreak { page-break-before: always; }
 </style></head><body>
-  <div class="head">
-    ${logo}
-    <div style="text-align:right">
-      <div class="title">Proposta Comercial</div>
-      <div class="sub">${new Date().toLocaleDateString('pt-BR')}</div>
+  <div class="header">
+    <div class="header-logo">${logo}</div>
+    <div class="header-right">
+      <div class="header-title">Proposta Comercial</div>
+      <div class="header-code">${escapeHtml(proposalCode || '')}</div>
     </div>
   </div>
 
-  <div class="title">${escapeHtml(planName)}</div>
-  <div class="sub">Plano base: ${escapeHtml(selectedPlan.name)}</div>
+  <div class="page">
+    <div class="warn-box">
+      <div class="warn-title">⚠️ O que acontece quando sua equipe perde o controle da comunicação?</div>
+      <div class="warn-intro">Empresas que não centralizam o atendimento enfrentam problemas que custam caro:</div>
+      <ul class="warn-list">
+        <li>Clientes sem resposta → perda de vendas e reputação</li>
+        <li>Histórico espalhado em diferentes celulares → zero visibilidade</li>
+        <li>Atendentes duplicando esforços → retrabalho e insatisfação</li>
+        <li>Gestão às cegas → sem dados para decisões estratégicas</li>
+      </ul>
+    </div>
 
-  <div class="section-title">Mensalidade</div>
-  <table>
-    ${row('Plano base — ' + escapeHtml(selectedPlan.name), formatCurrency(selectedPlan.basePrice) + '/mês', { muted: true })}
-    ${moduleRows}
-    ${resourceRows}
-    <tr><td colspan="2" style="border-top:2px solid #e5e7eb;padding:0"></td></tr>
-    ${row('Total mensal', formatCurrency(d.monthly) + '/mês', { bold: true, color: '#16a34a' })}
-  </table>
+    <div class="benefits">${benefits}</div>
 
-  <div class="section-title">Taxa de setup (cobrada 1×)</div>
-  <table>
-    ${row('Setup base do catálogo', formatCurrency(d.baseSetup), { muted: true })}
-    ${d.setupExtra > 0 ? row('Acréscimo de setup', '+ ' + formatCurrency(d.setupExtra), { muted: true, color: '#16a34a' }) : ''}
-    ${row('Setup total cobrado do cliente', formatCurrency(d.totalSetup), { bold: true, color: '#b45309' })}
-  </table>
+    <div class="cost-box">
+      <div class="cost-emoji">💡</div>
+      <div>
+        <div class="cost-title">Quanto custa não ter uma solução?</div>
+        <div class="cost-desc">Uma venda perdida por demora no atendimento pode valer 5× o investimento mensal neste plano. A pergunta não é "consigo pagar?" — é "posso me dar ao luxo de não ter?"</div>
+      </div>
+    </div>
 
-  <div class="box">
-    <div style="font-size:13px;color:#15803d">Comissão estimada (${d.commission}%)</div>
-    <div style="font-size:18px;font-weight:700;color:#16a34a">${formatCurrency(d.monthlyCommission)}/mês</div>
+    <div class="sec-title">O que está incluído no seu plano</div>
+    <div class="infra-grid">${infraCards}</div>
+  </div>
+
+  <div class="page pagebreak">
+    <div class="sec-title">Recursos e integrações ativadas</div>
+    <div class="mods-grid">${moduleCards}</div>
+
+    <div class="price-box">
+      <div class="price-name">${escapeHtml(planName)}</div>
+      <div class="price-tag">Plano personalizado para o seu negócio</div>
+      <div class="price-value">${formatCurrency(d.monthly)} <span>/ mês</span></div>
+      <span class="setup-pill">Taxa de ativação: ${formatCurrency(d.totalSetup)} (cobrada 1× na contratação)</span>
+    </div>
+
+    <div class="cta-box">
+      <div class="cta-title">Pronto para transformar seu atendimento?</div>
+      <div class="cta-desc">Entre em contato hoje mesmo e coloque seu negócio no próximo nível.<br>A implementação é rápida e o suporte acompanha você em cada etapa.</div>
+      <div class="cta-pill">Proposta válida por 7 dias · ${proposalLongDate(now)}</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div>Proposta gerada por <b>${brand}</b></div>
+    <div>${shortDate}</div>
   </div>
 </body></html>`;
 }
@@ -1369,6 +1527,7 @@ async function generateProposalPDF(savePlan = true) {
     const d = computeProposal();
     const leadId = document.getElementById('propLeadSelect')?.value || null;
     const planName = customName || selectedPlan.name;
+    const proposalCode = generateProposalCode();
 
     // Configurações de PDF / marca (do banco)
     let cfg = {};
@@ -1400,8 +1559,9 @@ async function generateProposalPDF(savePlan = true) {
     }
 
     const payload = {
-        html: buildProposalHtml(planName, d, cfg),
+        html: buildProposalHtml(planName, d, cfg, proposalCode),
         planName,
+        proposalCode,
         leadId,
         setupFeeBase: d.baseSetup,
         setupFeeExtra: d.setupExtra,
