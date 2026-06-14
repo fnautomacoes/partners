@@ -17,24 +17,25 @@ class GotenbergService
     {
         $url = rtrim($this->baseUrl, '/') . '/forms/chromium/convert/html';
 
-        $marginTop = isset($margins['top']) ? ($margins['top'] / 10) . 'cm' : '1cm';
-        $marginBottom = isset($margins['bottom']) ? ($margins['bottom'] / 10) . 'cm' : '1cm';
-        $marginLeft = isset($margins['left']) ? ($margins['left'] / 10) . 'cm' : '1cm';
-        $marginRight = isset($margins['right']) ? ($margins['right'] / 10) . 'cm' : '1cm';
-
         $tmpFile = tempnam(sys_get_temp_dir(), 'gotenberg_html_');
         file_put_contents($tmpFile, $html);
 
         $postFields = [
             'files' => new \CURLFile($tmpFile, 'text/html', 'index.html'),
-            'marginTop' => $marginTop,
-            'marginBottom' => $marginBottom,
-            'marginLeft' => $marginLeft,
-            'marginRight' => $marginRight,
             'paperWidth' => '21cm',
             'paperHeight' => '29.7cm',
             'preferCssPageSize' => 'true',
         ];
+
+        // Quando margens são informadas, aplica via API do Gotenberg.
+        // Quando vazio, deixa o HTML controlar as margens via CSS @page
+        // (necessário para header full-bleed só na primeira página).
+        if (!empty($margins)) {
+            $postFields['marginTop'] = (($margins['top'] ?? 10) / 10) . 'cm';
+            $postFields['marginBottom'] = (($margins['bottom'] ?? 10) / 10) . 'cm';
+            $postFields['marginLeft'] = (($margins['left'] ?? 10) / 10) . 'cm';
+            $postFields['marginRight'] = (($margins['right'] ?? 10) / 10) . 'cm';
+        }
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [

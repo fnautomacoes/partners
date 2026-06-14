@@ -37,12 +37,18 @@ class PdfController
         $setupFeeBase = $request->body['setupFeeBase'] ?? null;
         $setupFeeExtra = $request->body['setupFeeExtra'] ?? null;
 
-        $margins = [
-            'top' => $request->body['pdfMarginTop'] ?? 10,
-            'bottom' => $request->body['pdfMarginBottom'] ?? 10,
-            'left' => $request->body['pdfMarginLeft'] ?? 10,
-            'right' => $request->body['pdfMarginRight'] ?? 10,
-        ];
+        // Se o HTML controla as margens via CSS @page (header full-bleed na 1a pagina),
+        // não enviamos margens para o Gotenberg.
+        if (!empty($request->body['useCssMargins'])) {
+            $margins = [];
+        } else {
+            $margins = [
+                'top' => $request->body['pdfMarginTop'] ?? 10,
+                'bottom' => $request->body['pdfMarginBottom'] ?? 10,
+                'left' => $request->body['pdfMarginLeft'] ?? 10,
+                'right' => $request->body['pdfMarginRight'] ?? 10,
+            ];
+        }
 
         if ($leadId) {
             $stmt = $pdo->prepare('SELECT id FROM "Lead" WHERE id = :id AND "partnerId" = :partnerId');
