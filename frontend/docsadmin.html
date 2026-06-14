@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentação — Portal SuperAdmin</title>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; margin:0; background:#f8fafc; color:#374151; }
+    .docs-gradient { background: linear-gradient(120deg,#0a1733 0%,var(--primary,#2563eb) 100%); }
+    .docs-header { color:#fff; box-shadow:0 1px 3px rgba(0,0,0,.15); }
+    .docs-header-inner { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; }
+    .docs-brand { display:flex; align-items:center; gap:10px; }
+    .docs-brand-name { font-size:18px; font-weight:700; }
+    .docs-brand-sub { font-size:13px; color:rgba(255,255,255,.6); }
+    .docs-back { font-size:14px; color:rgba(255,255,255,.85); text-decoration:none; }
+    .docs-back:hover { color:#fff; }
+    .docs-layout { display:flex; align-items:flex-start; }
+    .docs-aside { width:264px; background:#fff; border-right:1px solid #e5e7eb; flex-shrink:0; position:sticky; top:0; height:100vh; overflow-y:auto; padding:16px; }
+    .docs-main { flex:1; padding:32px 40px; max-width:880px; }
+    .doc-nav-group { margin-bottom:22px; }
+    .doc-nav-title { font-size:11px; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.06em; margin:0 0 8px; padding:0 8px; }
+    .doc-nav-link { display:block; padding:8px 12px; border-radius:8px; font-size:14px; color:#4b5563; text-decoration:none; transition:.15s; }
+    .doc-nav-link:hover { background:#f9fafb; color:#1f2937; }
+    .doc-nav-link.active { background:#eff6ff; color:#1d4ed8; font-weight:600; }
+    .doc-h1 { font-size:28px; font-weight:700; color:#111827; margin:0 0 8px; }
+    .doc-h2 { font-size:20px; font-weight:700; color:#1f2937; margin:30px 0 10px; }
+    .doc-h3 { font-size:15px; font-weight:600; color:#374151; margin:18px 0 6px; }
+    .doc-p { color:#4b5563; line-height:1.65; margin:0 0 12px; }
+    .doc-ul,.doc-ol { color:#4b5563; line-height:1.7; margin:0 0 16px; padding-left:22px; }
+    .doc-ul { list-style:disc; } .doc-ol { list-style:decimal; }
+    .doc-ul li,.doc-ol li { margin:4px 0; }
+    .doc-content code { background:#f1f5f9; color:#0f172a; padding:1px 6px; border-radius:4px; font-size:.85em; }
+    .doc-content strong { color:#1f2937; }
+    .doc-callout { border-left:4px solid; border-radius:0 8px 8px 0; padding:12px 16px; margin:0 0 16px; font-size:14px; line-height:1.6; }
+    .doc-callout.info { background:#eff6ff; border-color:#93c5fd; color:#1e40af; }
+    .doc-callout.warning { background:#fffbeb; border-color:#fcd34d; color:#92400e; }
+    .doc-callout.danger { background:#fef2f2; border-color:#fca5a5; color:#991b1b; }
+    .doc-callout.success { background:#f0fdf4; border-color:#86efac; color:#166534; }
+    .doc-callout code { background:rgba(0,0,0,.06); }
+    .doc-badge { display:inline-flex; align-items:center; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600; }
+    .doc-badge.blue{background:#dbeafe;color:#1d4ed8;}
+    .doc-badge.green{background:#dcfce7;color:#166534;}
+    .doc-badge.amber{background:#fef3c7;color:#92400e;}
+    .doc-badge.red{background:#fee2e2;color:#991b1b;}
+    .doc-badge.gray{background:#f3f4f6;color:#374151;}
+    .doc-badge.purple{background:#ede9fe;color:#6d28d9;}
+    .doc-table-wrap { overflow-x:auto; margin:0 0 16px; }
+    .doc-table { width:100%; border-collapse:collapse; font-size:14px; }
+    .doc-table th { text-align:left; padding:9px 12px; font-weight:600; color:#374151; border-bottom:2px solid #e5e7eb; }
+    .doc-table td { padding:9px 12px; color:#4b5563; border-bottom:1px solid #f3f4f6; vertical-align:top; }
+    .doc-prevnext { display:flex; justify-content:space-between; margin-top:40px; padding-top:24px; border-top:1px solid #e5e7eb; }
+    .doc-prevnext a { color:var(--primary,#2563eb); font-size:14px; text-decoration:none; }
+    .doc-prevnext a:hover { text-decoration:underline; }
+    .doc-empty { text-align:center; padding:64px 0; }
+    @media (max-width:768px){ .docs-aside{ display:none; } .docs-main{ padding:24px; } }
+  </style>
+</head>
+<body>
+  <header class="docs-gradient docs-header">
+    <div class="docs-header-inner">
+      <div class="docs-brand">
+        <img id="headerLogo" class="hidden" alt="" style="max-height:34px;object-fit:contain">
+        <span id="headerName" class="docs-brand-name">Documentação</span>
+        <span class="docs-brand-sub">· Portal SuperAdmin</span>
+      </div>
+      <a href="superadmin.html" class="docs-back">← Voltar ao sistema</a>
+    </div>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="docs-aside"><nav id="docsSidebar"></nav></aside>
+    <main class="docs-main"><div id="docsContent"></div></main>
+  </div>
+
+  <script src="js/docsadmin.js"></script>
+</body>
+</html>
