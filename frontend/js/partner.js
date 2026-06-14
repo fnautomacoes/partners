@@ -1412,40 +1412,40 @@ function buildProposalHtml(planName, d, cfg, proposalCode) {
   .header-right { text-align: right; }
   .header-title { font-size: 18px; font-weight: 700; }
   .header-code { font-size: 12px; color: rgba(255,255,255,0.6); font-family: monospace; margin-top: 2px; }
-  .warn-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 18px 22px; margin: 28px 0; }
+  .warn-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 18px 22px; margin: 28px 0; break-inside: avoid; page-break-inside: avoid; }
   .warn-title { font-size: 16px; font-weight: 700; color: #92400e; margin-bottom: 10px; }
   .warn-intro { font-size: 13px; color: #78716c; margin-bottom: 8px; }
   .warn-list { margin: 0; padding-left: 18px; color: #57534e; font-size: 13px; }
   .warn-list li { margin: 5px 0; }
   .benefits { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
-  .benefit { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 18px; }
+  .benefit { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 18px; break-inside: avoid; page-break-inside: avoid; }
   .benefit-emoji { font-size: 22px; margin-bottom: 8px; }
   .benefit-title { font-size: 14px; font-weight: 700; color: #166534; margin-bottom: 6px; }
   .benefit-desc { font-size: 12.5px; color: #4b5563; line-height: 1.5; }
-  .cost-box { background: linear-gradient(120deg, #0a1733 0%, ${primary} 100%); color: #fff; border-radius: 12px; padding: 20px 24px; display: flex; gap: 16px; align-items: center; margin-bottom: 28px; }
+  .cost-box { background: linear-gradient(120deg, #0a1733 0%, ${primary} 100%); color: #fff; border-radius: 12px; padding: 20px 24px; display: flex; gap: 16px; align-items: center; margin-bottom: 28px; break-inside: avoid; page-break-inside: avoid; }
   .cost-emoji { font-size: 30px; }
   .cost-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
   .cost-desc { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5; }
   .sec-title { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #9ca3af; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin: 28px 0 16px; }
   .infra-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-  .infra-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+  .infra-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; break-inside: avoid; page-break-inside: avoid; }
   .infra-top { display: flex; align-items: center; gap: 8px; }
   .infra-emoji { font-size: 16px; }
   .infra-label { font-weight: 700; font-size: 13px; color: #374151; }
   .infra-count { font-size: 22px; font-weight: 700; color: ${primary}; margin: 6px 0 2px; }
   .infra-sub { font-size: 12px; color: #9ca3af; }
   .mods-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .mod-card { display: flex; gap: 12px; background: #f8fafc; border: 1px solid #eef2f7; border-radius: 12px; padding: 14px 16px; page-break-inside: avoid; }
+  .mod-card { display: flex; gap: 12px; background: #f8fafc; border: 1px solid #eef2f7; border-radius: 12px; padding: 14px 16px; break-inside: avoid; page-break-inside: avoid; }
   .mod-emoji { font-size: 18px; flex-shrink: 0; }
   .mod-title { font-size: 13px; font-weight: 700; color: ${primary}; margin-bottom: 4px; }
   .mod-desc { font-size: 12px; color: #6b7280; line-height: 1.5; }
-  .price-box { background: #0f172a; color: #fff; border-radius: 16px; padding: 28px 32px; margin: 28px 0; }
+  .price-box { background: #0f172a; color: #fff; border-radius: 16px; padding: 28px 32px; margin: 28px 0; break-inside: avoid; page-break-inside: avoid; }
   .price-name { font-size: 26px; font-weight: 800; }
   .price-tag { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px; }
   .price-value { font-size: 42px; font-weight: 800; color: #22c55e; margin: 18px 0 14px; }
   .price-value span { font-size: 18px; font-weight: 400; color: rgba(255,255,255,0.6); }
   .setup-pill { display: inline-block; background: rgba(180,83,9,0.18); border: 1px solid rgba(251,191,36,0.5); color: #fcd34d; border-radius: 999px; padding: 8px 16px; font-size: 13px; font-weight: 700; }
-  .cta-box { background: ${primary}; color: #fff; border-radius: 16px; padding: 28px 32px; text-align: center; }
+  .cta-box { background: ${primary}; color: #fff; border-radius: 16px; padding: 28px 32px; text-align: center; break-inside: avoid; page-break-inside: avoid; }
   .cta-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
   .cta-desc { font-size: 13.5px; color: rgba(255,255,255,0.9); line-height: 1.6; }
   .cta-pill { display: inline-block; margin-top: 16px; border: 1px solid rgba(255,255,255,0.4); border-radius: 999px; padding: 8px 18px; font-size: 13px; font-weight: 700; }
