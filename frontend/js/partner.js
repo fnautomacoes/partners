@@ -1122,11 +1122,13 @@ function renderProposalModulesGrid() {
 
     container.innerHTML = modulePrices.map(m => `
         <label class="prop-module-check">
-            <input type="checkbox" name="module_${m.moduleKey}" value="${m.price}" onchange="onModuleToggle(this)">
-            <span class="prop-check-box"></span>
             <span class="prop-module-info">
                 <span class="prop-module-name">${escapeHtml(m.label)}</span>
                 <span class="prop-module-price">+ ${formatCurrency(m.price)}/mês${m.setupFee > 0 ? ` &middot; setup ${formatCurrency(m.setupFee)}` : ''}</span>
+            </span>
+            <span class="prop-switch">
+                <input type="checkbox" name="module_${m.moduleKey}" value="${m.price}" data-setup="${m.setupFee || 0}" onchange="onModuleToggle(this)">
+                <span class="prop-slider"></span>
             </span>
         </label>
     `).join('');
@@ -1207,10 +1209,11 @@ function updateProposalSummary() {
     }
 
     let monthlyTotal = selectedPlan.basePrice || 0;
-    const setupFee = selectedPlan.setupFee || 0;
+    let baseSetup = selectedPlan.setupFee || 0;
 
     document.querySelectorAll('.prop-module-check.checked input').forEach(cb => {
         monthlyTotal += parseFloat(cb.value) || 0;
+        baseSetup += parseFloat(cb.dataset.setup) || 0;
     });
 
     (resourcePrices || []).forEach(r => {
@@ -1218,22 +1221,23 @@ function updateProposalSummary() {
         const qty = parseInt(document.getElementById('propRes_' + r.key)?.value) || 0;
         const total = qty * (r.price || 0);
         monthlyTotal += total;
+        baseSetup += qty * (r.setupFee || 0);
         const totalEl = document.getElementById('totRes_' + r.key);
         if (totalEl) totalEl.textContent = formatCurrency(total);
     });
 
     const setupExtra = parseFloat(document.getElementById('propSetupExtra')?.value) || 0;
-    const totalSetup = setupFee + setupExtra;
+    const totalSetup = baseSetup + setupExtra;
     const monthlyCommission = monthlyTotal * commission / 100;
 
     setEl('summaryPlanLabel', `Plano base — ${selectedPlan.name}`);
     setEl('summaryPlanPrice', formatCurrency(selectedPlan.basePrice) + '/mês');
     setEl('summaryMonthlyTotal', formatCurrency(monthlyTotal));
-    setEl('summarySetupFee', formatCurrency(setupFee));
+    setEl('summarySetupFee', formatCurrency(baseSetup));
     setEl('summaryCommission', formatCurrency(monthlyCommission) + '/mês');
     setEl('summaryTotalSetup', formatCurrency(totalSetup));
     const desc = document.getElementById('propSetupExtraDesc');
-    if (desc) desc.innerHTML = `Adicione sua margem ao setup base do catálogo (${formatCurrency(setupFee)}). 100% do acréscimo é sua comissão de ativação.`;
+    if (desc) desc.innerHTML = `Adicione sua margem ao setup base do catálogo (${formatCurrency(baseSetup)}). 100% do acréscimo é sua comissão de ativação.`;
 }
 
 async function generateProposalPDF(savePlan = true) {
