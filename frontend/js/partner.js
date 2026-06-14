@@ -1259,48 +1259,190 @@ function updateProposalSummary() {
     if (desc) desc.innerHTML = `Adicione sua margem ao setup base do catálogo (${formatCurrency(baseSetup)}). 100% do acréscimo é sua comissão de ativação.`;
 }
 
+// Agrega os números e itens da proposta a partir da seleção atual
+function computeProposal() {
+    if (!selectedPlan) return null;
+    const commission = Number(partnerData?.tierPercentage) || 15;
+    let monthly = selectedPlan.basePrice || 0;
+    let baseSetup = selectedPlan.setupFee || 0;
+
+    const mods = [];
+    document.querySelectorAll('.prop-module-check.checked input').forEach(cb => {
+        const key = cb.name.replace('module_', '');
+        const price = parseFloat(cb.value) || 0;
+        const setup = parseFloat(cb.dataset.setup) || 0;
+        monthly += price;
+        baseSetup += setup;
+        const m = (modulePrices || []).find(x => x.moduleKey === key);
+        mods.push({ key, label: m ? m.label : key, price, setup });
+    });
+
+    const res = [];
+    (resourcePrices || []).forEach(r => {
+        if (!API_RESOURCE_FIELD[r.key]) return;
+        const qty = parseInt(document.getElementById('propRes_' + r.key)?.value) || 0;
+        if (qty > 0) {
+            const total = qty * (r.price || 0);
+            monthly += total;
+            baseSetup += qty * (r.setupFee || 0);
+            res.push({ label: r.label || r.key, qty, price: r.price || 0, total });
+        }
+    });
+
+    const setupExtra = parseFloat(document.getElementById('propSetupExtra')?.value) || 0;
+    const totalSetup = baseSetup + setupExtra;
+    const monthlyCommission = monthly * commission / 100;
+    return { commission, monthly, baseSetup, setupExtra, totalSetup, monthlyCommission, mods, res };
+}
+
+function buildProposalHtml(planName, d, cfg) {
+    cfg = cfg || {};
+    const brand = escapeHtml(cfg.businessName || 'PacoTicket');
+    const logo = cfg.logoPdf ? `<img src="${escapeHtml(cfg.logoPdf)}" alt="${brand}" style="max-height:48px">` : `<div style="font-size:22px;font-weight:700;color:#1e3a8a">${brand}</div>`;
+    const padH = parseInt(cfg.pdfPaddingHorizontal, 10); const padV = parseInt(cfg.pdfPaddingVertical, 10);
+    const pad = `${isNaN(padV) ? 24 : padV}px ${isNaN(padH) ? 24 : padH}px`;
+    const row = (label, value, opts = {}) =>
+        `<tr><td style="padding:8px 0;color:${opts.muted ? '#6b7280' : '#111827'};${opts.bold ? 'font-weight:700;' : ''}">${label}</td>
+         <td style="padding:8px 0;text-align:right;color:${opts.color || '#111827'};${opts.bold ? 'font-weight:700;' : ''}">${value}</td></tr>`;
+
+    const moduleRows = d.mods.map(m => row(escapeHtml(m.label), formatCurrency(m.price) + '/mês', { muted: true })).join('');
+    const resourceRows = d.res.map(r => row(`${escapeHtml(r.label)} (${r.qty}×)`, formatCurrency(r.total) + '/mês', { muted: true })).join('');
+
+    return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; color: #111827; margin: 0; padding: ${pad}; }
+  .head { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #2563eb; padding-bottom:16px; margin-bottom:24px; }
+  .title { font-size:20px; font-weight:700; }
+  .sub { color:#6b7280; font-size:13px; margin-top:4px; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  .section-title { font-size:12px; font-weight:700; letter-spacing:.05em; color:#6b7280; text-transform:uppercase; margin:24px 0 4px; }
+  .total { border-top:2px solid #e5e7eb; }
+  .box { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px; margin-top:24px; }
+</style></head><body>
+  <div class="head">
+    ${logo}
+    <div style="text-align:right">
+      <div class="title">Proposta Comercial</div>
+      <div class="sub">${new Date().toLocaleDateString('pt-BR')}</div>
+    </div>
+  </div>
+
+  <div class="title">${escapeHtml(planName)}</div>
+  <div class="sub">Plano base: ${escapeHtml(selectedPlan.name)}</div>
+
+  <div class="section-title">Mensalidade</div>
+  <table>
+    ${row('Plano base — ' + escapeHtml(selectedPlan.name), formatCurrency(selectedPlan.basePrice) + '/mês', { muted: true })}
+    ${moduleRows}
+    ${resourceRows}
+    <tr><td colspan="2" style="border-top:2px solid #e5e7eb;padding:0"></td></tr>
+    ${row('Total mensal', formatCurrency(d.monthly) + '/mês', { bold: true, color: '#16a34a' })}
+  </table>
+
+  <div class="section-title">Taxa de setup (cobrada 1×)</div>
+  <table>
+    ${row('Setup base do catálogo', formatCurrency(d.baseSetup), { muted: true })}
+    ${d.setupExtra > 0 ? row('Acréscimo de setup', '+ ' + formatCurrency(d.setupExtra), { muted: true, color: '#16a34a' }) : ''}
+    ${row('Setup total cobrado do cliente', formatCurrency(d.totalSetup), { bold: true, color: '#b45309' })}
+  </table>
+
+  <div class="box">
+    <div style="font-size:13px;color:#15803d">Comissão estimada (${d.commission}%)</div>
+    <div style="font-size:18px;font-weight:700;color:#16a34a">${formatCurrency(d.monthlyCommission)}/mês</div>
+  </div>
+</body></html>`;
+}
+
 async function generateProposalPDF(savePlan = true) {
     if (!selectedPlan) {
         showToast('Selecione um plano primeiro', 'warning');
         return;
     }
 
-    const modules = [];
-    document.querySelectorAll('.prop-module-check.checked input').forEach(cb => {
-        modules.push(cb.name.replace('module_', ''));
-    });
+    const customName = (document.getElementById('propCustomPlanName')?.value || '').trim();
+    if (savePlan && !customName) {
+        showToast('Informe o nome do plano personalizado', 'warning');
+        return;
+    }
 
-    const getRes = (key) => parseInt(document.getElementById('propRes_' + key)?.value) || 0;
+    const d = computeProposal();
+    const leadId = document.getElementById('propLeadSelect')?.value || null;
+    const planName = customName || selectedPlan.name;
 
-    const data = {
-        planId: selectedPlan.id,
-        modules,
-        extraWhatsappUnofficial: getRes('whatsappUnofficial'),
-        extraWhatsappOfficial: getRes('whatsappOfficial'),
-        extraInstagram: getRes('instagram'),
-        extraUsers: getRes('user'),
-        extraQueues: getRes('queue'),
-        setupFeeExtra: parseFloat(document.getElementById('propSetupExtra')?.value) || 0,
-        customPlanName: document.getElementById('propCustomPlanName')?.value || null,
-        leadId: document.getElementById('propLeadSelect')?.value || null,
-        savePlan: savePlan
+    // Configurações de PDF / marca (do banco)
+    let cfg = {};
+    try {
+        const cfgRes = await apiRequest('/api/system-config');
+        if (cfgRes.success) cfg = cfgRes.data || {};
+    } catch (e) { /* usa defaults */ }
+
+    // "Salvar + PDF": cria o plano personalizado antes de gerar o PDF
+    if (savePlan) {
+        try {
+            const planRes = await apiRequest('/api/plans/partner', {
+                method: 'POST',
+                body: JSON.stringify({
+                    basePlanId: selectedPlan.id,
+                    name: customName,
+                    priceAddition: (d.monthly || 0) - (selectedPlan.basePrice || 0),
+                    setupAddition: d.setupExtra || 0
+                })
+            });
+            if (!planRes.success) {
+                showToast(planRes.message || 'Erro ao salvar o plano', 'error');
+                return;
+            }
+        } catch (e) {
+            showToast('Erro ao salvar o plano', 'error');
+            return;
+        }
+    }
+
+    const payload = {
+        html: buildProposalHtml(planName, d, cfg),
+        planName,
+        leadId,
+        setupFeeBase: d.baseSetup,
+        setupFeeExtra: d.setupExtra,
+        pdfMarginTop: cfg.pdfMarginTop,
+        pdfMarginBottom: cfg.pdfMarginBottom,
+        pdfMarginLeft: cfg.pdfMarginLeft,
+        pdfMarginRight: cfg.pdfMarginRight
     };
 
     try {
-        const res = await apiRequest('/api/pdf/plan', {
+        // O endpoint retorna o PDF binário (application/pdf), não JSON
+        let resp = await fetch('/api/pdf/plan', {
             method: 'POST',
-            body: JSON.stringify(data)
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
         });
 
-        if (res.success) {
-            showToast('Proposta gerada!', 'success');
-            if (res.data.downloadUrl) {
-                window.open(res.data.downloadUrl, '_blank');
-            }
-            loadProposals();
-        } else {
-            showToast(res.message || 'Erro ao gerar proposta', 'error');
+        if (resp.status === 401 && typeof refreshToken === 'function' && await refreshToken()) {
+            resp = await fetch('/api/pdf/plan', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
         }
+
+        if (!resp.ok) {
+            let msg = 'Erro ao gerar proposta';
+            try { const j = await resp.json(); msg = j.message || msg; } catch (e) {}
+            showToast(msg, 'error');
+            return;
+        }
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+        showToast('Proposta gerada!', 'success');
+        loadProposals();
     } catch (e) {
         showToast('Erro ao gerar proposta', 'error');
     }
