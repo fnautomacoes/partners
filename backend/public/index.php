@@ -121,7 +121,7 @@ $router->post('/api/system-config/smtp-test', [SystemConfigController::class, 't
 $router->get('/api/activity-log', [ActivityLogController::class, 'index'], ['auth']);
 
 // Commission Tiers routes
-$router->get('/api/commission-tiers',       [CommissionTierController::class, 'index'],   ['superadmin']);
+$router->get('/api/commission-tiers',       [CommissionTierController::class, 'index'],   ['auth']);
 $router->post('/api/commission-tiers',      [CommissionTierController::class, 'store'],   ['superadmin']);
 $router->put('/api/commission-tiers/:id',   [CommissionTierController::class, 'update'],  ['superadmin']);
 $router->delete('/api/commission-tiers/:id', [CommissionTierController::class, 'destroy'], ['superadmin']);
