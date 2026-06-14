@@ -1406,9 +1406,11 @@ function buildProposalHtml(planName, d, cfg, proposalCode, margins) {
     return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <style>
   * { box-sizing: border-box; }
+  @page { size: A4; margin: ${margins.top}mm 0 ${margins.bottom}mm 0; }
+  @page :first { margin-top: 0; }
   body { font-family: Arial, Helvetica, sans-serif; color: #1f2937; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .page { padding: 0 ${padX}px ${padY}px; }
-  .header { background: linear-gradient(120deg, #0a1733 0%, ${primary} 100%); color: #fff; margin: -${margins.top}mm -${margins.right}mm 0 -${margins.left}mm; padding: calc(${margins.top}mm + 18px) calc(${margins.right}mm + ${padX}px) 22px calc(${margins.left}mm + ${padX}px); display: flex; justify-content: space-between; align-items: center; }
+  .page { padding: 0 ${margins.right}mm ${padY}px ${margins.left}mm; }
+  .header { background: linear-gradient(120deg, #0a1733 0%, ${primary} 100%); color: #fff; padding: 24px ${margins.right}mm 24px ${margins.left}mm; display: flex; justify-content: space-between; align-items: center; }
   .header-logo { display: flex; align-items: center; gap: 8px; }
   .header-right { text-align: right; }
   .header-title { font-size: 18px; font-weight: 700; }
@@ -1450,7 +1452,7 @@ function buildProposalHtml(planName, d, cfg, proposalCode, margins) {
   .cta-title { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
   .cta-desc { font-size: 13.5px; color: rgba(255,255,255,0.9); line-height: 1.6; }
   .cta-pill { display: inline-block; margin-top: 16px; border: 1px solid rgba(255,255,255,0.4); border-radius: 999px; padding: 8px 18px; font-size: 13px; font-weight: 700; }
-  .footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e7eb; padding: 16px ${padX}px; color: #9ca3af; font-size: 12px; margin-top: 28px; }
+  .footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e5e7eb; padding: 16px ${margins.right}mm 16px ${margins.left}mm; margin-top: 28px; color: #9ca3af; font-size: 12px; }
   .footer b { color: ${primary}; }
 </style></head><body>
   <div class="header">
@@ -1572,6 +1574,7 @@ async function generateProposalPDF(savePlan = true) {
         leadId,
         setupFeeBase: d.baseSetup,
         setupFeeExtra: d.setupExtra,
+        useCssMargins: true,
         pdfMarginTop: margins.top,
         pdfMarginBottom: margins.bottom,
         pdfMarginLeft: margins.left,
