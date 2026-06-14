@@ -1334,8 +1334,9 @@ function proposalLongDate(d) {
     return `${String(d.getDate()).padStart(2, '0')} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
 }
 
-function buildProposalHtml(planName, d, cfg, proposalCode) {
+function buildProposalHtml(planName, d, cfg, proposalCode, margins) {
     cfg = cfg || {};
+    margins = margins || { top: 10, bottom: 10, left: 15, right: 15 };
     const primary = cfg.colorBrandPrimary || '#2563eb';
     const brand = escapeHtml(cfg.businessName || 'PacoTicket');
     const logo = cfg.logoPdf
@@ -1407,7 +1408,7 @@ function buildProposalHtml(planName, d, cfg, proposalCode) {
   * { box-sizing: border-box; }
   body { font-family: Arial, Helvetica, sans-serif; color: #1f2937; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .page { padding: 0 ${padX}px ${padY}px; }
-  .header { background: linear-gradient(120deg, #0a1733 0%, ${primary} 100%); color: #fff; padding: 22px ${padX}px; display: flex; justify-content: space-between; align-items: center; }
+  .header { background: linear-gradient(120deg, #0a1733 0%, ${primary} 100%); color: #fff; margin: -${margins.top}mm -${margins.right}mm 0 -${margins.left}mm; padding: calc(${margins.top}mm + 18px) calc(${margins.right}mm + ${padX}px) 22px calc(${margins.left}mm + ${padX}px); display: flex; justify-content: space-between; align-items: center; }
   .header-logo { display: flex; align-items: center; gap: 8px; }
   .header-right { text-align: right; }
   .header-title { font-size: 18px; font-weight: 700; }
@@ -1555,17 +1556,26 @@ async function generateProposalPDF(savePlan = true) {
         }
     }
 
+    // Margens da página (mm) — determinísticas, para o header full-bleed bater exatamente
+    const mmv = (v, def) => { const n = parseFloat(v); return isNaN(n) ? def : n; };
+    const margins = {
+        top: mmv(cfg.pdfMarginTop, 10),
+        bottom: mmv(cfg.pdfMarginBottom, 10),
+        left: mmv(cfg.pdfMarginLeft, 15),
+        right: mmv(cfg.pdfMarginRight, 15)
+    };
+
     const payload = {
-        html: buildProposalHtml(planName, d, cfg, proposalCode),
+        html: buildProposalHtml(planName, d, cfg, proposalCode, margins),
         planName,
         proposalCode,
         leadId,
         setupFeeBase: d.baseSetup,
         setupFeeExtra: d.setupExtra,
-        pdfMarginTop: cfg.pdfMarginTop,
-        pdfMarginBottom: cfg.pdfMarginBottom,
-        pdfMarginLeft: cfg.pdfMarginLeft,
-        pdfMarginRight: cfg.pdfMarginRight
+        pdfMarginTop: margins.top,
+        pdfMarginBottom: margins.bottom,
+        pdfMarginLeft: margins.left,
+        pdfMarginRight: margins.right
     };
 
     try {
