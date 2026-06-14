@@ -115,6 +115,22 @@ body {
     color: white;
 }
 
+.sidebar-logo-img {
+    max-width: 100%;
+    max-height: 44px;
+    width: auto;
+    height: auto;
+    display: block;
+}
+
+.login-logo {
+    display: block;
+    max-width: 220px;
+    width: auto;
+    height: auto;
+    margin: 0 auto 1.5rem;
+}
+
 .sidebar-nav {
     flex: 1;
     padding: 1rem 0;
