@@ -816,11 +816,31 @@ function tierSupportText(mode) {
         : 'Você é o ponto de contato do cliente';
 }
 
+// Resolve o tier atual do parceiro a partir de tiersData (DB), de forma robusta:
+// 1) por nome (partnerData.tier); 2) pela faixa de clientes ativos; 3) tier de entrada.
+function resolveCurrentTier() {
+    const active = (tiersData || []).filter(t => t.isActive).sort((a, b) => a.order - b.order);
+    if (active.length === 0) return null;
+
+    const name = partnerData?.tier;
+    let tier = name ? active.find(t => t.name === name) : null;
+
+    if (!tier) {
+        const c = partnerData?.activeClients || 0;
+        active.forEach(t => {
+            const min = t.minClients;
+            const max = t.maxClients == null ? Infinity : t.maxClients;
+            if (c >= min && c <= max) tier = t;
+        });
+    }
+
+    return tier || active[0];
+}
+
 function renderTiersDisplay() {
     const container = document.getElementById('tiersDisplay');
     const activeTiers = tiersData.filter(t => t.isActive).sort((a, b) => a.order - b.order);
-    const currentName = partnerData?.tier || 'Indicador';
-    const currentTier = activeTiers.find(t => t.name === currentName) || activeTiers[0];
+    const currentTier = resolveCurrentTier();
 
     container.innerHTML = activeTiers.map(t => {
         const range = `${t.minClients}${t.maxClients ? '-' + t.maxClients : '+'} clientes`;
@@ -1184,8 +1204,7 @@ function updateProposalSummary() {
     // Tier duration warning box (DB-driven)
     const durBox = document.getElementById('propCommissionDuration');
     if (durBox) {
-        const tierName = partnerData?.tier || 'Indicador';
-        const tier = (tiersData || []).find(t => t.name === tierName);
+        const tier = resolveCurrentTier();
         const dur = tier ? tier.durationMonths : 0;
         const durText = dur > 0
             ? `Tier atual: comissão por <strong>${dur} ${dur === 1 ? 'mês' : 'meses'}</strong> a partir do cadastro de cada cliente.`
