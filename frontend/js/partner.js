@@ -1430,6 +1430,7 @@ function buildProposalHtml(planName, d, cfg, proposalCode, margins) {
   .cost-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
   .cost-desc { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5; }
   .sec-title { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #9ca3af; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin: 28px 0 16px; break-after: avoid; page-break-after: avoid; break-inside: avoid; }
+  .block { break-inside: avoid; page-break-inside: avoid; }
   .infra-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
   .infra-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; break-inside: avoid; page-break-inside: avoid; }
   .infra-top { display: flex; align-items: center; gap: 8px; }
@@ -1485,11 +1486,15 @@ function buildProposalHtml(planName, d, cfg, proposalCode, margins) {
       </div>
     </div>
 
-    <div class="sec-title">O que está incluído no seu plano</div>
-    <div class="infra-grid">${infraCards}</div>
+    <div class="block">
+      <div class="sec-title">O que está incluído no seu plano</div>
+      <div class="infra-grid">${infraCards}</div>
+    </div>
 
-    <div class="sec-title">Recursos e integrações ativadas</div>
-    <div class="mods-grid">${moduleCards}</div>
+    <div class="block">
+      <div class="sec-title">Recursos e integrações ativadas</div>
+      <div class="mods-grid">${moduleCards}</div>
+    </div>
 
     <div class="price-box">
       <div class="price-name">${escapeHtml(planName)}</div>
