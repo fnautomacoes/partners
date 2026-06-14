@@ -60,9 +60,16 @@ class PdfController
             return;
         }
 
-        $partnerDir = $this->storagePath . '/' . $partnerId;
-        if (!is_dir($partnerDir)) {
-            mkdir($partnerDir, 0755, true);
+        $storageReal = realpath($this->storagePath);
+        if ($storageReal === false) {
+            $response->error('STORAGE_ERROR', 'Diretório base de PDFs não existe: ' . $this->storagePath, 500);
+            return;
+        }
+
+        $partnerDir = $storageReal . '/' . $partnerId;
+        if (!is_dir($partnerDir) && !@mkdir($partnerDir, 0775, true) && !is_dir($partnerDir)) {
+            $response->error('STORAGE_ERROR', 'Não foi possível criar o diretório de PDFs (verifique as permissões de escrita em ' . $this->storagePath . '): ' . $partnerDir, 500);
+            return;
         }
 
         $timestamp = date('Ymd_His');
@@ -71,12 +78,20 @@ class PdfController
         $filePath = $partnerDir . '/' . $filename;
 
         $resolved = realpath($partnerDir);
-        if ($resolved === false || !str_starts_with($resolved, realpath($this->storagePath))) {
+        if ($resolved === false || !str_starts_with($resolved, $storageReal)) {
             $response->error('STORAGE_ERROR', 'Invalid storage path', 500);
             return;
         }
 
-        file_put_contents($filePath, $pdfContent);
+        if (!is_writable($partnerDir)) {
+            $response->error('STORAGE_ERROR', 'Diretório de PDFs sem permissão de escrita: ' . $partnerDir, 500);
+            return;
+        }
+
+        if (file_put_contents($filePath, $pdfContent) === false) {
+            $response->error('STORAGE_ERROR', 'Falha ao gravar o arquivo PDF em disco: ' . $filePath, 500);
+            return;
+        }
 
         $htmlHash = hash('sha256', $html);
 
