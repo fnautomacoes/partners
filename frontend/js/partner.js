@@ -1121,8 +1121,8 @@ function renderProposalModulesGrid() {
     }
 
     container.innerHTML = modulePrices.map(m => `
-        <label class="prop-module-check" onclick="toggleModule(this)">
-            <input type="checkbox" name="module_${m.moduleKey}" value="${m.price}">
+        <label class="prop-module-check">
+            <input type="checkbox" name="module_${m.moduleKey}" value="${m.price}" onchange="onModuleToggle(this)">
             <span class="prop-check-box"></span>
             <span class="prop-module-info">
                 <span class="prop-module-name">${escapeHtml(m.label)}</span>
@@ -1132,10 +1132,9 @@ function renderProposalModulesGrid() {
     `).join('');
 }
 
-function toggleModule(el) {
-    el.classList.toggle('checked');
-    const cb = el.querySelector('input');
-    if (cb) cb.checked = el.classList.contains('checked');
+function onModuleToggle(input) {
+    const label = input.closest('.prop-module-check');
+    if (label) label.classList.toggle('checked', input.checked);
     updateProposalSummary();
 }
 
